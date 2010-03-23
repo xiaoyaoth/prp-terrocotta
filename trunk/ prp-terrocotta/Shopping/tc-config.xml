@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:tc-config xmlns:con="http://www.terracotta.org/config">
+  <servers>
+    <server host="%i" name="localhost">
+      <dso-port>9510</dso-port>
+      <jmx-port>9520</jmx-port>
+      <data>terracotta/server-data</data>
+      <logs>terracotta/server-logs</logs>
+      <statistics>terracotta/cluster-statistics</statistics>
+    </server>
+  </servers>
+  <clients>
+    <logs>terracotta/client-logs</logs>
+    <statistics>terracotta/client-statistics/%D</statistics>
+  </clients>
+  <application>
+    <dso>
+      <instrumented-classes>
+        <include>
+          <class-expression>Agent</class-expression>
+        </include>
+        <include>
+          <class-expression>DefaultBelief</class-expression>
+        </include>
+        <include>
+          <class-expression>ClockTick</class-expression>
+        </include>
+        <include>
+          <class-expression>GUI</class-expression>
+        </include>
+        <include>
+          <class-expression>javax.swing.JFrame</class-expression>
+        </include>
+        <include>
+          <class-expression>java.awt.Frame</class-expression>
+        </include>
+        <include>
+          <class-expression>java.awt.Window</class-expression>
+        </include>
+        <include>
+          <class-expression>java.awt.Container</class-expression>
+        </include>
+        <include>
+          <class-expression>java.awt.Component</class-expression>
+        </include>
+        <include>
+          <class-expression>ClientMachine</class-expression>
+        </include>
+        <include>
+          <class-expression>java.lang.Thread</class-expression>
+        </include>
+        <include>
+          <class-expression>Main</class-expression>
+        </include>
+        <include>
+          <class-expression>ShowAgent</class-expression>
+        </include>
+        <include>
+          <class-expression>ServerMachine</class-expression>
+        </include>
+      </instrumented-classes>
+      <roots>
+        <root>
+          <field-name>ClientMachine.JVM_counter</field-name>
+        </root>
+        <root>
+          <field-name>ClientMachine.cases</field-name>
+        </root>
+        <root>
+          <field-name>ClockTick.goOn</field-name>
+        </root>
+        <root>
+          <field-name>ServerMachine.conv_fini</field-name>
+        </root>
+      </roots>
+      <locks>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getFrus()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getItems()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getTrips()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getRow()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getCol()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getTRow()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getTCol()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getRRow()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>int Agent.getRCol()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>char Agent.getTItem()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>char Agent.getRItem()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.run()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.__INIT__(int, int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.init(boolean)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.add(Agent)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.clean()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void Agent.draw()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void GUI.main(java.lang.String[])</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void GUI.__INIT__(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+      </locks>
+    </dso>
+  </application>
+</con:tc-config>
