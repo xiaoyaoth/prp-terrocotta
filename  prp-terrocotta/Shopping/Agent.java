@@ -50,6 +50,8 @@ public class Agent extends DefaultBelief implements Runnable
 	private synchronized void draw()
 	{
 		Main.a[this.row][this.col] = (char)(48 + this.getID());
+		System.out.println("this.getID(), this.row, this.col, this.status");
+		System.out.println(this.getID()+" "+ this.row+" "+  this.col+" "+  this.status);
 		GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
 	}
 
