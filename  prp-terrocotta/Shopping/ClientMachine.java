@@ -22,6 +22,7 @@ public class ClientMachine extends Thread {
 		pointer = 0;
 		while (true) {
 			if (cases.size()-1>=pointer) {
+				System.out.println("pointer "+pointer + "cases.size "+cases.size());
 				ServerMachine oneSenario = cases.get(pointer);
 				if (oneSenario.conv_fini) {
 					ArrayList<ArrayList<Integer>> oneCase = oneSenario.caseTable;
@@ -31,7 +32,7 @@ public class ClientMachine extends Thread {
 						ArrayList<Integer> one = oneCase.get(i);
 						if (one.get(0).equals(id)) {
 							System.out.println(one.get(1)+" "+one.get(2));
-							ag = new Agent(one.get(1),one.get(2));
+							ag = new Agent(one.get(1),one.get(2), oneSenario.clk, oneSenario.gui);
 							synchronized (oneSenario.map) {
 								oneSenario.map.put(ag.getID(), ag);
 							}

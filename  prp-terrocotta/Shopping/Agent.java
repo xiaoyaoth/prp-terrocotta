@@ -2,26 +2,34 @@ import java.util.*;
 
 public class Agent extends DefaultBelief implements Runnable
 {
-	public static ArrayList<Agent> agentList = new ArrayList<Agent>();
+	//public static ArrayList<Agent> agentList = new ArrayList<Agent>();
 	public static int waiting = 15;
 	public static int memory = 10;
 
-	private int row, col, tRow, tCol, rRow, rCol;
+	public int row, col, tRow, tCol, rRow, rCol;
 	private char tItem = ' ', rItem = ' ';
-	private String status = "";
+	public String status = "";
 	private int frus, items, trips;
+	
+	ClockTick clk;
+	GUI gui;
 
-	public Agent(int id, int frus)
+	public Agent(int id, int frus, ClockTick clock, GUI gui)
 	{
 		super(id, 0, -1);
+		
+		this.clk = clock;
+		this.gui = gui;
+		
 		this.rItem = (char)(65 + (int)(Math.random() * 26));
 		this.rRow = Main.maxRow - 1;
 		this.rCol = Main.maxCol - 1;
+		//System.out.println("this.rRow,this.rCol "+this.rRow+" "+this.rCol);
 		this.init(true);
 		this.frus = frus;
 		this.items = 0;
 		this.trips = 0;
-		add(this);
+//		add(this);
 	}
 
 	private void init(boolean b)
@@ -36,23 +44,23 @@ public class Agent extends DefaultBelief implements Runnable
 		if (b) this.draw();
 	}
 	
-	private synchronized static void add(Agent agent)
-	{
-		agentList.add(agent);
-	}
+//	private synchronized static void add(Agent agent)
+//	{
+//		agentList.add(agent);
+//	}
 
 	private synchronized void clean()
 	{
 		Main.a[this.row][this.col] = '~';
-		GUI.setBtnColor(this.getID(), this.row, this.col, "");
+		gui.setBtnColor(this.getID(), this.row, this.col, "");
 	}
 
 	private synchronized void draw()
 	{
 		Main.a[this.row][this.col] = (char)(48 + this.getID());
-		System.out.println("this.getID(), this.row, this.col, this.status");
-		System.out.println(this.getID()+" "+ this.row+" "+  this.col+" "+  this.status);
-		GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+		//System.out.println("this.getID(), this.row, this.col, this.status");
+		//System.out.println(this.getID()+" "+ this.row+" "+  this.col+" "+  this.status);
+		gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 	}
 
 	public int getFrus()
@@ -114,13 +122,14 @@ public class Agent extends DefaultBelief implements Runnable
 	{
 		while (this.getLifeCycle() == -1 || this.isNoLife())
 		{
-			synchronized (ClockTick.nowLock)
+			synchronized (clk.nowLock)
 			{
 				try {
-					while (this.getTick() >= ClockTick.getTick() || ClockTick.getNow() == 0) ClockTick.nowLock.wait();
+					while (this.getTick() >= clk.getTick() || clk.getNow() == 0) clk.nowLock.wait();
 					this.addTick();
 					this.shop();
-					ClockTick.decNow();
+					clk.decNow();
+					System.out.println("Shop()"+clk.getNow());
 				}
 				catch (Exception e) { e.printStackTrace(); }
 			}
@@ -136,6 +145,7 @@ public class Agent extends DefaultBelief implements Runnable
 		else if (this.frus > (int)(Math.random() * 100)) this.moveRandomly();
 		else this.moveToTarget();
 		this.lookAround();
+		gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 	}
 
 	private void checkWait()
@@ -143,7 +153,7 @@ public class Agent extends DefaultBelief implements Runnable
 		if ((int)(Math.random() * 100) < waiting) 
 		{
 			this.status = "Browsing";
-			GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+			gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 			this.trips++;
 		}
 	}
@@ -153,7 +163,7 @@ public class Agent extends DefaultBelief implements Runnable
 		if (this.tItem == '$')
 		{
 			this.status = "Leaving";
-			GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+			gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 			this.tItem = ' ';
 		}
 		else {
@@ -164,7 +174,7 @@ public class Agent extends DefaultBelief implements Runnable
 				this.rCol = this.col;
 			}
 			this.status = "Checkout";
-			GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+			gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 			this.tItem = '$';
 			this.tRow = 2;
 			this.tCol = Main.maxCol - 3 * (int)(Math.random() * 6);
@@ -219,7 +229,7 @@ public class Agent extends DefaultBelief implements Runnable
 			if (tempX > 0 && tempX <= Main.maxRow && tempY > 0 && tempY <= Main.maxCol && Main.a[tempX][tempY] == this.tItem)
 			{
 				this.status = "Found";
-				GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+				gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 			}
 		}
 	}
@@ -253,7 +263,7 @@ public class Agent extends DefaultBelief implements Runnable
 			if (this.status.equals("Browsing"))
 			{
 				this.status = "Checkout";
-				GUI.setBtnColor(this.getID(), this.row, this.col, this.status);
+				gui.setBtnColor(this.getID(), this.row, this.col, this.status);
 				this.tItem = '$';
 				this.tRow = 2;
 				this.tCol = Main.maxCol - 3 * (int)(Math.random() * 6);
