@@ -1,23 +1,34 @@
 public class ClockTick implements Runnable
 {
-	private static int tick, left, now;
-	public static boolean goOn;
-	private static Object tickLock = new Object();
-	public static Object nowLock = new Object();
+//	private static int tick, left;
+//	private static int now;
+//	public static boolean goOn;
+//	private static Object tickLock = new Object();
+//	public static Object nowLock = new Object();
+//	ServerMachine one;
+	
+	private int tick, left;
+	private int now;
+	public boolean goOn;
+	private Object tickLock = new Object();
+	public Object nowLock = new Object();
+	
+	public ServerMachine one;
     
-	public ClockTick()
+	public ClockTick(ServerMachine one)
 	{
 		tick = 0;
 		left = 0;
 		goOn = false;
+		this.one = one;
 	}
 
-	public static void incLeft(int incr)
+	public void incLeft(int incr)
 	{
 		left += incr;
 	}
 
-	public static int getTick()
+	public int getTick()
 	{
 		return tick;
 	}
@@ -29,6 +40,12 @@ public class ClockTick implements Runnable
 		{
 			while (goOn && tick < left)
 			{
+				try {
+					Thread.sleep(2);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				synchronized (tickLock)
 				{
 					try {
@@ -38,22 +55,23 @@ public class ClockTick implements Runnable
 				}
 				synchronized (nowLock)
 				{
-					GUI.lb2.setText("Tick：" + ++tick);
-					now = Agent.agentList.size();
+					one.gui.lb2.setText("Tick：" + ++tick);
+					now = one.caseTable.size();
+					System.out.println("now"+now);
 					nowLock.notifyAll();
 				}
 			}
 		}
 		goOn = false;
-		GUI.startBtn.setLabel("开始仿真");
+		one.gui.startBtn.setLabel("开始仿真");
 	}
 
-	public static int getNow()
+	public int getNow()
 	{
 		synchronized (nowLock) { return now; }
 	}
 
-	public static void decNow()
+	public void decNow()
 	{
 		synchronized (nowLock) { now--; }
 		if (now <= 0) synchronized (tickLock) {	tickLock.notifyAll(); }
