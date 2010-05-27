@@ -1,0 +1,122 @@
+<?xml version="1.0"?>
+<snr>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="false"/>
+<RoleInfos>
+<RoleInfo name="Agent"/>
+<RoleInfo name="Shopper"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="Pt" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="25">
+<Instance id="0">
+<frus value="25"/>
+</Instance>
+<Instance id="1">
+<frus value="25"/>
+</Instance>
+<Instance id="2">
+<frus value="25"/>
+</Instance>
+<Instance id="3">
+<frus value="25"/>
+</Instance>
+<Instance id="4">
+<frus value="25"/>
+</Instance>
+<Instance id="5">
+<frus value="25"/>
+</Instance>
+<Instance id="6">
+<frus value="25"/>
+</Instance>
+<Instance id="7">
+<frus value="25"/>
+</Instance>
+<Instance id="8">
+<frus value="25"/>
+</Instance>
+<Instance id="9">
+<frus value="25"/>
+</Instance>
+<Instance id="10">
+<frus value="25"/>
+</Instance>
+<Instance id="11">
+<frus value="25"/>
+</Instance>
+<Instance id="12">
+<frus value="25"/>
+</Instance>
+<Instance id="13">
+<frus value="25"/>
+</Instance>
+<Instance id="14">
+<frus value="25"/>
+</Instance>
+<Instance id="15">
+<frus value="25"/>
+</Instance>
+<Instance id="16">
+<frus value="25"/>
+</Instance>
+<Instance id="17">
+<frus value="25"/>
+</Instance>
+<Instance id="18">
+<frus value="25"/>
+</Instance>
+<Instance id="19">
+<frus value="25"/>
+</Instance>
+<Instance id="20">
+<frus value="25"/>
+</Instance>
+<Instance id="21">
+<frus value="25"/>
+</Instance>
+<Instance id="22">
+<frus value="25"/>
+</Instance>
+<Instance id="23">
+<frus value="25"/>
+</Instance>
+<Instance id="24">
+<frus value="25"/>
+</Instance>
+</Instances>
+</Role>
+<Role index="1">
+<Instances instanceNum="6">
+<Instance id="25">
+<name value="111"/>
+</Instance>
+<Instance id="26">
+<name value="111"/>
+</Instance>
+<Instance id="27">
+<name value="111"/>
+</Instance>
+<Instance id="28">
+<name value="111"/>
+</Instance>
+<Instance id="29">
+<name value="111"/>
+</Instance>
+<Instance id="30">
+<name value="111"/>
+</Instance>
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences></Influences></snr>
