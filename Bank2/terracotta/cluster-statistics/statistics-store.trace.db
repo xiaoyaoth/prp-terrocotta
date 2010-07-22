@@ -1,0 +1,77 @@
+05-27 11:33:14 database: SET LOG 0
+05-27 11:33:32 database: SET LOG 0
+05-27 11:35:50 database: SET LOG 0
+05-27 11:38:32 database: SET LOG 0
+05-27 11:40:09 database: SET LOG 0
+06-10 09:55:58 database: SET LOG 0
+06-10 09:59:59 database: SET LOG 0
+06-10 10:02:43 database: SET LOG 0
+06-28 18:16:07 database: SET LOG 0
+06-28 19:22:22 database: SET LOG 0
+06-28 19:23:25 database: SET LOG 0
+06-28 19:33:08 database: SET LOG 0
+06-28 19:35:03 database: SET LOG 0
+06-28 19:36:07 database: SET LOG 0
+06-28 19:38:18 database: SET LOG 0
+06-28 19:44:35 database: SET LOG 0
+06-28 19:47:07 database: SET LOG 0
+06-28 19:48:27 database: SET LOG 0
+06-28 19:50:39 database: SET LOG 0
+06-28 20:35:40 database: SET LOG 0
+06-28 20:36:59 database: SET LOG 0
+06-28 20:38:06 database: SET LOG 0
+06-28 20:39:58 database: SET LOG 0
+06-28 20:44:41 database: SET LOG 0
+06-28 20:46:07 database: SET LOG 0
+06-28 20:51:04 database: SET LOG 0
+06-28 20:55:21 database: SET LOG 0
+06-28 21:44:16 database: SET LOG 0
+06-28 21:45:01 database: SET LOG 0
+06-28 21:56:51 database: SET LOG 0
+06-28 22:00:16 database: SET LOG 0
+06-28 22:03:05 database: SET LOG 0
+06-28 22:07:53 database: SET LOG 0
+06-28 22:11:26 database: SET LOG 0
+06-29 12:46:02 database: SET LOG 0
+06-29 12:47:00 database: SET LOG 0
+06-29 12:55:47 database: SET LOG 0
+06-29 13:12:29 database: SET LOG 0
+06-29 13:13:56 database: SET LOG 0
+06-29 13:15:09 database: SET LOG 0
+07-06 20:17:54 database: SET LOG 0
+07-06 20:33:42 database: SET LOG 0
+07-06 20:35:46 database: SET LOG 0
+07-06 20:38:27 database: SET LOG 0
+07-06 20:56:22 database: opening F:\我的文件夹\Workspace\Bank\terracotta\cluster-statistics\statistics-store
+org.h2.jdbc.JdbcSQLException: Database may be already in use: Locked by another process. Possible solutions: close all other connection(s); use the server mode [90020-67]
+	at org.h2.message.Message.getSQLException(Message.java:89)
+	at org.h2.message.Message.getSQLException(Message.java:93)
+	at org.h2.message.Message.getSQLException(Message.java:71)
+	at org.h2.store.FileLock.error(FileLock.java:313)
+	at org.h2.store.FileLock.lockFile(FileLock.java:176)
+	at org.h2.store.FileLock.lock(FileLock.java:72)
+	at org.h2.engine.Database.open(Database.java:451)
+	at org.h2.engine.Database.<init>(Database.java:197)
+	at org.h2.engine.Engine.openSession(Engine.java:52)
+	at org.h2.engine.Engine.getSession(Engine.java:100)
+	at org.h2.engine.Session.createSession(Session.java:182)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:965)
+	at org.h2.jdbc.JdbcConnection.<init>(JdbcConnection.java:946)
+	at org.h2.Driver.connect(Driver.java:52)
+	at java.sql.DriverManager.getConnection(DriverManager.java:582)
+	at java.sql.DriverManager.getConnection(DriverManager.java:185)
+	at com.tc.statistics.database.impl.H2StatisticsDatabase.openConnection(H2StatisticsDatabase.java:64)
+	at com.tc.statistics.database.impl.AbstractStatisticsDatabase.open(AbstractStatisticsDatabase.java:50)
+	at com.tc.statistics.database.impl.H2StatisticsDatabase.open(H2StatisticsDatabase.java:57)
+	at com.tc.statistics.store.h2.H2StatisticsStoreImpl$1.execute(H2StatisticsStoreImpl.java:110)
+	at com.tc.util.concurrent.FileLockGuard.guard(FileLockGuard.java:37)
+	at com.tc.statistics.store.h2.H2StatisticsStoreImpl.open(H2StatisticsStoreImpl.java:106)
+	at com.tc.statistics.StatisticsGathererSubSystem.setup(StatisticsGathererSubSystem.java:67)
+	at com.tc.server.TCServerImpl.<init>(TCServerImpl.java:132)
+	at com.tc.server.TCServerImpl.<init>(TCServerImpl.java:121)
+	at com.tc.server.StandardServerFactory.createServer(StandardServerFactory.java:12)
+	at com.tc.server.TCServerMain.main(TCServerMain.java:27)
+07-06 20:56:34 database: SET LOG 0
+07-06 21:07:28 database: SET LOG 0
+07-06 21:23:53 database: SET LOG 0
+07-07 13:17:32 database: SET LOG 0

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:tc-config xmlns:con="http://www.terracotta.org/config">
+  <servers>
+    <server host="%i" name="localhost">
+      <dso-port>9510</dso-port>
+      <jmx-port>9520</jmx-port>
+      <data>terracotta/server-data</data>
+      <logs>terracotta/server-logs</logs>
+      <statistics>terracotta/cluster-statistics</statistics>
+    </server>
+  </servers>
+  <clients>
+    <logs>terracotta/client-logs</logs>
+    <statistics>terracotta/client-statistics/%D</statistics>
+  </clients>
+  <application>
+    <dso>
+      <roots>
+        <root>
+          <field-name>simulation.runtime.Server.cases</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.Server.JVM_counter</field-name>
+        </root>
+      </roots>
+      <locks>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Client.main(java.lang.String[])</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Client.__INIT__()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.__INIT__()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.main(java.lang.String[])</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.ClockTick.incLeft(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.ClockTick.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.ClockTick.decNow()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.addTick()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setTick(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.addMess(boolean, simulation.modeling.MessageInfo)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.removeMess(boolean, int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.addConn(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.removeConn(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>java.lang.String simulation.modeling.DefaultBelief.toString()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setLifeCycle(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setID(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setMain(simulation.modeling.MainInterface)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.run()</method-expression>
+        </autolock>
+      </locks>
+      <instrumented-classes>
+        <include>
+          <class-expression>*</class-expression>
+        </include>
+      </instrumented-classes>
+    </dso>
+  </application>
+</con:tc-config>
