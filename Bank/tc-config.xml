@@ -102,6 +102,14 @@
         <autolock auto-synchronized="false">
           <method-expression>void simulation.modeling.DefaultBelief.run()</method-expression>
         </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.migrate()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setMigrate(boolean)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
       </locks>
       <instrumented-classes>
         <include>

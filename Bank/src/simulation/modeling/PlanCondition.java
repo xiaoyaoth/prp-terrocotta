@@ -1,8 +1,9 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PlanCondition
+public class PlanCondition implements Serializable
 {
 	private int id, interval, needTicks;
 	private String planName;

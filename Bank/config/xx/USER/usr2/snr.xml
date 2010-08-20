@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<snr>
+<sln>sln03</sln>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="false"/>
+<RoleInfos>
+<RoleInfo name="Bank2"/>
+<RoleInfo name="Customer2"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="Pt" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="2">
+<Instance id="0">
+<cash value="1000"/>
+</Instance>
+<Instance id="1">
+<cash value="1000"/>
+</Instance>
+</Instances>
+</Role>
+<Role index="1">
+<Instances instanceNum="4">
+<Instance id="2">
+<cash value="100"/>
+</Instance>
+<Instance id="3">
+<cash value="100"/>
+</Instance>
+<Instance id="4">
+<cash value="100"/>
+</Instance>
+<Instance id="5">
+<cash value="100"/>
+</Instance>
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences></Influences></snr>

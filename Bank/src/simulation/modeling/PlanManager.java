@@ -1,8 +1,9 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PlanManager
+public class PlanManager implements Serializable
 {
 	private ArrayList<PlanInstance> plans = new ArrayList<PlanInstance>();
 	private DefaultBelief sub;

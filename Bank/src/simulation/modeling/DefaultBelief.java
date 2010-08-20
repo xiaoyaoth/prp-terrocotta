@@ -3,16 +3,18 @@ package simulation.modeling;
 import java.io.Serializable;
 import java.util.*;
 
-public class DefaultBelief extends PlanManager implements Runnable, Serializable {
+public class DefaultBelief extends PlanManager implements Runnable,
+		Serializable {
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
 	private boolean migrate = false;
-	protected MainInterface main;
+	protected transient MainInterface main;
 	private int caseID;
 	private ArrayList<MessageInfo> sndMessageBox = new ArrayList<MessageInfo>();
 	private ArrayList<MessageInfo> rcvMessageBox = new ArrayList<MessageInfo>();
 	private ArrayList<Integer> connectIDs = new ArrayList<Integer>();
+	private Lock tcLock = new Lock();
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -46,7 +48,8 @@ public class DefaultBelief extends PlanManager implements Runnable, Serializable
 
 	/* Default Action */
 	public void run() {
-		while ((this.getLifeCycle() == -1 || this.isNoLife()) && !migrate) {
+		while ((this.getLifeCycle() == -1 || this.isNoLife())
+				&& !this.isMigrate()) {
 			synchronized (this.main.getClock().getNowLock()) {
 				try {
 					while (this.getTick() >= this.main.getClock().getTick()
@@ -64,8 +67,10 @@ public class DefaultBelief extends PlanManager implements Runnable, Serializable
 	}
 
 	public void setMain(MainInterface main) {
-		this.caseID = main.hashCode();
-		this.main = main;
+		synchronized (tcLock) {
+			this.caseID = main.getCaseID();
+			this.main = main;
+		}
 	}
 
 	public MainInterface getMain() {
@@ -179,7 +184,7 @@ public class DefaultBelief extends PlanManager implements Runnable, Serializable
 			MessageInfo mi = this.sndMessageBox.get(i);
 			if (!mi.getSFlag()) {
 				mi.setSFlag();
-				mi.getRcv().addMess(false, mi);
+				this.main.getAgent(mi.getRcv()).addMess(false, mi);
 			}
 		}
 	}
@@ -205,12 +210,23 @@ public class DefaultBelief extends PlanManager implements Runnable, Serializable
 
 	public String toString() {
 		return "Agent" + this.id;
+//		return this.pCounter + " " + this.pc + " " + this.id + " " + this.tick
+//		+ " " + this.lifeCycle + " " + this.ownTick + " " + this.migrate
+//		+ " " + this.main + " " + this.caseID + " "
+//		+ this.sndMessageBox + " " + this.rcvMessageBox + " "
+//		+ this.connectIDs;
 	}
 
 	/* End of Default Action */
 
 	public void setMigrate(boolean migrate) {
-		this.migrate = migrate;
+		synchronized (tcLock) {
+			this.migrate = migrate;
+		}
+	}
+
+	public boolean isMigrate() {
+		return this.migrate;
 	}
 
 	public void setCaseID(int caseID) {

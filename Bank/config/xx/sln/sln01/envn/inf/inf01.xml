@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<inf01>
+<Type val="infXml"/>
+<InfList>
+<Influence>
+<nowValue val="4"/>
+<BasicData>
+<Info name="custNum" className="int" description=""/>
+<ValFlag val="false"/>
+<Ress>
+</Ress>
+<MaxFlag val="false" obj="null"/>
+<MinFlag val="false" obj="null"/>
+</BasicData>
+</Influence>
+<Influence>
+<nowValue val="2"/>
+<BasicData>
+<Info name="bankNum" className="int" description=""/>
+<ValFlag val="false"/>
+<Ress>
+</Ress>
+<MaxFlag val="false" obj="null"/>
+<MinFlag val="false" obj="null"/>
+</BasicData>
+</Influence>
+</InfList>
+</inf01>

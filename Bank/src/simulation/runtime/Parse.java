@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +20,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class Parse {
+public class Parse implements Serializable {
 	ArrayList<Tuple> table = new ArrayList<Tuple>();
 	private String slnPath;
 	private Map<Integer, String> roleTy = new HashMap<Integer, String>();
@@ -106,7 +107,7 @@ public class Parse {
 	}*/
 }
 
-class Tuple {
+class Tuple implements Serializable {
 	String agTy;
 	Path path;
 	int JVM_id, id;

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<sln01>
+<Type val="solution"/>
+<Agents>
+<Agent fileName="res/sln/sln01/src/Bank.java"/>
+<Agent fileName="res/sln/sln01/src/Customer.java"/>
+<Agent fileName="res/sln/sln01/src/Agent.java"/>
+</Agents>
+<Structure fileName="res/sln/sln01/strc/SingleNode.xml"/>
+<Environment fileName="res/sln/sln01/envn/envn.xml"/>
+<Reports>
+<Report fileName="res/sln/sln01/rep/rep01.xml"/>
+</Reports>
+</sln01>

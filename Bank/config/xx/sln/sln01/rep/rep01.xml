@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<rep01>
+<Type val="report"/>
+<Interval val="1"/>
+<Beliefs>
+<Belief agentName="Bank" beliefName="cash"/>
+<Belief agentName="Customer" beliefName="cash"/>
+</Beliefs>
+</rep01>

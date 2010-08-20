@@ -1,14 +1,15 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class MessageInfo
+public class MessageInfo implements Serializable
 {
-	private DefaultBelief snd, rcv;
+	private int snd, rcv;
 	private boolean sFlag, rFlag;
 	private String content;
 	
-	public MessageInfo(DefaultBelief snd, DefaultBelief rcv, String content)
+	public MessageInfo(int snd, int rcv, String content)
 	{
 		this.snd = snd;
 		this.rcv = rcv;
@@ -17,12 +18,12 @@ public class MessageInfo
 		this.rFlag = false;
 	}
 
-	public DefaultBelief getSnd()
+	public int getSnd()
 	{
 		return this.snd;
 	}
 
-	public DefaultBelief getRcv()
+	public int getRcv()
 	{
 		return this.rcv;
 	}

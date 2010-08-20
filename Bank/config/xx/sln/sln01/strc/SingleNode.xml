@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<SingleNode>
+<Type val="structure"/>
+<Description val=""/>
+<IsTree val="true"/>
+<RoleInfos>
+<RoleInfo name="Bank" description="" maxDefault="4" minDefault="1" agentName="Bank"/>
+<RoleInfo name="Customer" description="" maxDefault="8" minDefault="2" agentName="Customer"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="SingleNode" description=""/>
+<Roles>
+<Role index="0" max="4" min="1"/>
+<Role index="1" max="8" min="2"/>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+</SingleNode>

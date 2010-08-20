@@ -1,89 +1,90 @@
 package simulation.modeling;
 
-public class ClockTick implements Runnable
-{
+import java.io.Serializable;
+
+public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
 	private boolean goOn;
-	private Object tickLock = new Object();
-	private Object nowLock = new Object();
-	private Object tcLock = new Object();
+	private Lock tickLock = new Lock();
+	private Lock nowLock = new Lock();
+	private Lock tcLock = new Lock();
 	private MainInterface main;
-	
-	public Object getTickLock()
-	{
+
+	public Object getTickLock() {
 		return this.tickLock;
 	}
-	
-	public Object getNowLock()
-	{
+
+	public Object getNowLock() {
 		return this.nowLock;
 	}
-	
-	public void setGoOn(boolean goOn)
-	{
+
+	public void setGoOn(boolean goOn) {
 		this.goOn = goOn;
 	}
-    
-	public ClockTick(MainInterface main)
-	{
+	
+	public boolean isGoOn(){
+		return this.goOn;
+	}
+
+	public ClockTick(MainInterface main) {
 		tick = 0;
 		left = 0;
 		goOn = false;
 		this.main = main;
 	}
 
-	public void incLeft(int incr)
-	{
-		synchronized(tcLock){
-		this.left += incr;}
+	public void incLeft(int incr) {
+		synchronized (tcLock) {
+			this.left += incr;
+		}
 	}
 
-	public int getTick()
-	{
+	public int getTick() {
 		return this.tick;
 	}
 
-	public void run()
-	{
-		synchronized(tcLock){
-		this.goOn = true;}
-		while (this.tick < this.left)
-		{
-			while (this.goOn && this.tick < this.left)
-			{
-				synchronized (this.tickLock)
-				{
+	public void run() {
+		synchronized (tcLock) {
+			this.goOn = true;
+		}
+		while (this.tick < this.left) {
+			while (this.goOn && this.tick < this.left) {
+				synchronized (this.tickLock) {
 					try {
-						while (this.now > 0) this.tickLock.wait();
+						while (this.now > 0)
+							this.tickLock.wait();
+					} catch (Exception e) {
 					}
-					catch (Exception e) {}
 				}
-				synchronized (nowLock)
-				{
+				synchronized (nowLock) {
 					++this.tick;
-					System.out.println("\nTick£º" + tick);
+				}
+				//System.out.println("\nTick£º" + tick);
+				synchronized (nowLock) {
 					this.now = this.main.getTotal();
 					this.nowLock.notifyAll();
 				}
 			}
 		}
-		synchronized(tcLock)
-		{
-			goOn = false;		
+		synchronized (tcLock) {
+			goOn = false;
 		}
 	}
 
-	public int getNow()
-	{
-		synchronized (this.nowLock) { return now; }
+	public int getNow() {
+		synchronized (this.nowLock) {
+			return now;
+		}
 	}
 
-	public void decNow()
-	{
-		synchronized (this.nowLock) { now--; }
-		if (this.now <= 0) synchronized (this.tickLock) 
-		{	
-			this.tickLock.notifyAll(); 
+	public void decNow() {
+		synchronized (this.nowLock) {
+//			System.out.println(--now);
+			--now;
 		}
+		if (this.now <= 0)
+			synchronized (this.tickLock) {
+				this.tickLock.notifyAll();
+			}
 	}
 }

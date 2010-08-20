@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<Environment>
+<Description val=""/>
+<Stimulates>
+</Stimulates>
+<InfXmls>
+<InfXml fileName="res/sln/sln01/envn/inf/inf01.xml"/>
+</InfXmls>
+<DataXmls>
+</DataXmls>
+</Environment>

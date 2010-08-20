@@ -2,17 +2,20 @@ package simulation.runtime;
 
 import simulation.modeling.*;
 
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Server implements Runnable {
+public class Server implements Runnable, Serializable {
 	private Object tcLock;
 	private int JVM_id;
 	private int pointer;
@@ -30,8 +33,8 @@ public class Server implements Runnable {
 
 	public static void main(String[] args) {
 		Server c = new Server();
-		synchronized (servers) {
-			servers.add(c);
+		synchronized (Server.servers) {
+			Server.servers.add(c);
 		}
 		new Thread(c).start();
 	}
@@ -42,9 +45,15 @@ public class Server implements Runnable {
 			this.pointer = 0;
 		}
 		while (true) {
-			for(DefaultBelief ag: waitList){
+			for (DefaultBelief ag : waitList) {
 				ag.setMain(cases.get(ag.getCaseID()));
 				new Thread(ag).run();
+				synchronized (this.agents) {
+					this.agents.add(ag);
+				}
+				synchronized (this.waitList) {
+					this.waitList.remove(ag);
+				}
 			}
 			if (cases.size() - 1 >= pointer) {
 				System.out.println("pointer " + pointer + "cases.size "
@@ -96,7 +105,9 @@ public class Server implements Runnable {
 					System.out
 							.println("[This scenario is completely arranged!]");
 					System.out.println();
-					oneCase.control(1, oneCase.getTicks());
+					//oneCase.control(1, oneCase.getTicks());
+					if(!oneCase.getClock().isGoOn())
+						oneCase.startClock();
 					synchronized (tcLock) {
 						pointer++;
 					}
@@ -125,33 +136,117 @@ public class Server implements Runnable {
 		}
 	}
 
-	public static int assign() {
-		int sel = (int) (Math.random() * servers.size());
-		return servers.get(sel).JVM_id;
-	}
-	
-	public void migrate() throws IOException, ClassNotFoundException{
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();		
-		ObjectOutputStream out = new ObjectOutputStream(bout);		
-		for(DefaultBelief ag: this.agents){
-			ag.setMigrate(true);
-			out.writeObject(ag);
-			this.agents.remove(ag);
+	public static int assign(int mode) {
+		int sel;
+		switch (mode) {
+		case 0:
+			sel = (int) (Math.random() * servers.size());
+			return Server.servers.get(sel).JVM_id;
+		case 1:
+			Server se = Server.servers.get(0);
+			for (Server s : Server.servers)
+				if (s.agents.size() + s.waitList.size() < se.agents.size()
+						+ se.waitList.size())
+					se = s;
+			return se.JVM_id;
+		case 2:
+			
+		default:
+			return -1;
 		}
-		out.writeObject("end of serialize");
+	}
+
+	public void migrate() throws IOException, ClassNotFoundException {
+		java.util.Scanner input = new java.util.Scanner(System.in);
+		System.out.println(cases);
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		ObjectOutputStream out = new ObjectOutputStream(bout);
+
+		DefaultBelief a = this.agents.get(0);
+		a.setMigrate(true);
+		System.out.println(a);
+		out.writeObject(a);
+		synchronized (this.agents) {
+			this.agents.remove(0);
+		}
+		out.writeObject("haha");
 		out.flush();
-		
-		Server.servers.remove(this);
-		
+
+//		 synchronized (Server.servers) {
+//		 Server.servers.remove(this);
+//		 }
+
+		input.next();
 		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
 		ObjectInputStream in = new ObjectInputStream(bin);
-		Object newAg = in.readObject();
-		DefaultBelief ag = (DefaultBelief)newAg;
-		if(!(newAg instanceof String)){			
-			Client c = cases.get(ag.getCaseID());
+		DefaultBelief ag = (DefaultBelief) in.readObject();
+
+		Client c = Server.cases.get(ag.getCaseID());
+		synchronized (c.agentList) {
 			c.agentList.put(ag.getID(), ag);
-			Server s = Server.servers.get(assign());
+		}
+		ag.setMain(Server.cases.get(ag.getCaseID()));
+		ag.setMigrate(false);
+		System.out.println(ag);
+		Server s = Server.servers.get((int) Math.random()
+				* Server.servers.size());
+		synchronized (s.waitList) {
 			s.waitList.add(ag);
 		}
+	}
+
+	public void migrateAll() throws IOException, ClassNotFoundException {
+		java.util.Scanner input = new java.util.Scanner(System.in);
+		System.out.println(cases);
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		ObjectOutputStream out = new ObjectOutputStream(bout);
+		System.out.println(this.agents);
+		int size = this.agents.size();
+		synchronized (this.agents) {
+			for (int i = 0; i < size; i++) {
+				DefaultBelief ag = this.agents.get(i);
+				ag.setMigrate(true);
+				out.writeObject(ag);
+				System.out.println(ag);
+			}
+
+			this.agents.clear();
+		}
+
+		out.writeObject("haha");
+		out.flush();
+
+		// synchronized (Server.servers) {
+		// Server.servers.remove(this);
+		// }
+
+		System.out.println(this.agents);
+		System.out.println("\nstuck in the middle");
+		input.next();
+		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+		ObjectInputStream in = new ObjectInputStream(bin);
+		while (true) {
+			Object newAg = in.readObject();
+			System.out.println(newAg);
+			if (newAg instanceof String)
+				break;
+			DefaultBelief ag = (DefaultBelief) newAg;
+			Client c = cases.get(ag.getCaseID());
+			if (c == null)
+				System.out.println(ag.getCaseID());
+			if (ag == null)
+				System.out.println(" tnnd i'm null ");
+			synchronized (c.agentList) {
+				c.agentList.put(ag.getID(), ag);
+			}
+			Server s = Server.servers.get((int) Math.random()
+					* Server.servers.size());
+			synchronized (s.waitList) {
+				s.waitList.add(ag);
+			}
+		}
+		System.out.println(this.agents);
+		System.out.println("Migrate fini");
+		input.next();
 	}
 }

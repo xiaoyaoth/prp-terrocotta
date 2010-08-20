@@ -2,10 +2,11 @@
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.Serializable;
 import java.util.*;
 import simulation.modeling.*; //仿真建模的系统类
 
-public class Bank extends DefaultBelief
+public class Bank extends DefaultBelief implements Serializable
 {
 	private int cash;
 
@@ -35,14 +36,14 @@ public class Bank extends DefaultBelief
 		ArrayList<Customer> custList = this.main.getAgentList(Customer.class);
 		int temp = (int)(Math.random() * 20), index = (int)(Math.random() * custList.size());
 		Customer cust = custList.get(index);
-		this.addMess(true, new MessageInfo(this, cust, "receiveMoney(" + temp + ")"));
+		this.addMess(true, new MessageInfo(this.getID(), cust.getID(), "receiveMoney(" + temp + ")"));
 		this.cash -= temp;
 		System.out.println("" + this + " Sent $" + temp + " to " + cust);
 	}
 
 	public String toString()
 	{
-		return "Bank" + this.getID() + "（Cash：$" + this.cash + "）";
+		return "Tick:" + this.getTick() + " Bank" + this.getID() + "(Cash：$" + this.cash + ") ";
 	}
 
 	public void myPrint()

@@ -1,8 +1,9 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Path {
+public class Path implements Serializable{
 	private ArrayList<Integer> path = new ArrayList<Integer>();
 
 	public Path() {

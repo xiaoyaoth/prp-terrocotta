@@ -8,6 +8,8 @@ public interface MainInterface
 
 	<T> ArrayList<T> getAgentList(Class<T> targetClass);
 	<T> ArrayList<T> getAgentList(Class<T> targetClass, Path path);
+	DefaultBelief getAgent(int id);
 	
 	ClockTick getClock();
+	int getCaseID();
 }

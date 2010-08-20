@@ -1,8 +1,9 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class PlanInstance
+public class PlanInstance implements Serializable
 {
 	private int tickLeft, pcID, agentID;
 	private String planName;

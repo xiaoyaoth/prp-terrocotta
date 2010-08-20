@@ -1,8 +1,9 @@
 package simulation.modeling;
 
+import java.io.Serializable;
 import java.lang.reflect.*;
 
-public class InvokeMethod
+public class InvokeMethod implements Serializable
 {
 	public static Object invokeMethod(Object owner, String methodName, Object[] args) throws Exception
 	{

@@ -2,6 +2,7 @@ package simulation.runtime;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,10 +13,10 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-public class Client implements MainInterface {
+public class Client implements MainInterface,Serializable {
 
 	/**** 构建分布式系统需要的成员 ****/
-	private static String root = "C:\\Users\\xiaoyaoth\\Desktop\\xx\\";
+	private static String root = "config\\xx\\";
 	private boolean finished = false;
 	private ArrayList<Tuple> caseTable;
 	private ClockTick clk;
@@ -24,6 +25,7 @@ public class Client implements MainInterface {
 	private ArrayList<Integer> idList;
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
+	private int caseID;
 	
 	public boolean isFinished()
 	{
@@ -81,6 +83,8 @@ public class Client implements MainInterface {
 		agentNum = 0;
 		idList = new ArrayList<Integer>();
 		pathList = new ArrayList<Path>();
+		this.caseID = this.hashCode();
+		this.control(1, this.getTicks());
 	}
 
 	public static void main(String[] args) throws IOException 
@@ -92,16 +96,19 @@ public class Client implements MainInterface {
 			for (int i = 0; i < oneCase.caseTable.size(); i++) 
 			{
 				Tuple oneTuple = oneCase.caseTable.get(i);
-				oneTuple.JVM_id = Server.assign();
+				oneTuple.JVM_id = Server.assign(0);
 				oneCase.agentNum++;
 			}
 			synchronized (Server.cases) {
-				Server.cases.put(oneCase.hashCode(),oneCase);
+				Server.cases.put(oneCase.caseID,oneCase);
 				oneCase.finished = true;
 			}
 			synchronized (Server.casesID){
-				Server.casesID.add(oneCase.hashCode());
+				Server.casesID.add(oneCase.caseID);
 			}
+			Scanner input = new Scanner(System.in);
+			input.next();
+			Server.servers.get(0).migrate();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -112,7 +119,7 @@ public class Client implements MainInterface {
 		if (order == 1) {
 			System.out.println("\nSimulation Started...");
 			clk.incLeft(totalTicks);
-			new Thread(clk).start();
+			//new Thread(clk).start();
 		} else if (order == 2) {
 			System.out.println("\nSimulation Paused...");
 			clk.setGoOn(false);
@@ -120,6 +127,10 @@ public class Client implements MainInterface {
 			System.out.println("\nSimulation Continued...");
 			clk.setGoOn(true);
 		}
+	}
+	
+	public void startClock(){
+		new Thread(clk).start();
 	}
 
 	public int getTotal() {
@@ -130,9 +141,9 @@ public class Client implements MainInterface {
 	{
 		ArrayList<T> ans = new ArrayList<T>();
 		try {
-			for (int i = 0; i < agentList.size(); i++)
-				if (agentList.get(i).getClass().equals(targetClass))
-					ans.add((T) agentList.get(i));
+			for (int i = 0; i < idList.size(); i++)
+				if (agentList.get(idList.get(i)).getClass().equals(targetClass))
+					ans.add((T) agentList.get(idList.get(i)));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		} finally {
@@ -144,11 +155,21 @@ public class Client implements MainInterface {
 	{
 		ArrayList<T> ans = new ArrayList<T>();
 		for (int i = 0; i < idList.size(); i++)
-			if (pathList.get(i).equals(path))
+			if (pathList.get(i).equals(path) && agentList.get(i).getClass().equals(targetClass))
 				ans.add((T) agentList.get(idList.get(i)));
 		return ans;
 	}
-
+	
+	@Override
+	public DefaultBelief getAgent(int id) {
+		// TODO Auto-generated method stub
+		return this.agentList.get(id);
+	}
+	
+	public int getCaseID(){
+		return this.caseID;
+	}
+	
 	public void getFileList(String slnPath)
 	{
 		File file = new File(slnPath + "\\flc");
@@ -173,7 +194,7 @@ public class Client implements MainInterface {
 		}
 	}
 
-	class Func 
+	class Func implements Serializable
 	{
 		String funcName, cName;
 		int interval;
@@ -187,4 +208,6 @@ public class Client implements MainInterface {
 			this.needTicks = needTicks;
 		}
 	}
+
+	
 }

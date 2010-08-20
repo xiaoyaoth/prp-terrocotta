@@ -2,10 +2,11 @@
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.Serializable;
 
 import simulation.modeling.*; //仿真建模的系统类
 
-public class Customer extends DefaultBelief
+public class Customer extends DefaultBelief implements Serializable
 {
 	private int cash;
 	
@@ -46,7 +47,7 @@ public class Customer extends DefaultBelief
 
 	public String toString()
 	{
-		return "Customer" + this.getID() + "（Cash：$" + this.cash + "）";
+		return "Tick:" + this.getTick() +  " Customer" + this.getID() + "(Cash：$" + this.cash + ")";
 	}
 
 	public void myPrint()
