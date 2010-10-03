@@ -110,6 +110,10 @@
           <method-expression>void simulation.modeling.DefaultBelief.setMigrate(boolean)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
       </locks>
       <instrumented-classes>
         <include>

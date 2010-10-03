@@ -8,7 +8,11 @@ public class ClockTick implements Runnable, Serializable {
 	private Lock tickLock = new Lock();
 	private Lock nowLock = new Lock();
 	private Lock tcLock = new Lock();
-	private MainInterface main;
+	private transient MainInterface main;
+	
+	public void setMain(MainInterface main){
+		this.main = main;
+	}
 
 	public Object getTickLock() {
 		return this.tickLock;

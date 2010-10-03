@@ -2,22 +2,34 @@ package simulation.runtime;
 
 import simulation.modeling.*;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Server implements Runnable, Serializable {
-	private Object tcLock;
+	/**
+	 * 
+	 */
+	private final String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
+	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn//";
+	private final static int PORT = 10000;
 	private int JVM_id;
+	private String ip;
+
+	private static final long serialVersionUID = 1L;
+	private Object tcLock;
 	private int pointer;
 	public static Map<Integer, Client> cases = new HashMap<Integer, Client>();
 	public static ArrayList<Integer> casesID = new ArrayList<Integer>();
@@ -25,10 +37,28 @@ public class Server implements Runnable, Serializable {
 	private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
 	private List<DefaultBelief> waitList = new ArrayList<DefaultBelief>();
 
+	private int cpuUsage;
+	private int memAvail;
+	private int machineAbility;
+	private int loopCount;
+
+
 	Server() {
+		new GetFile(PORT).start();
 		tcLock = new Object();
-		JVM_id = this.hashCode();
-		System.out.println("JVM " + JVM_id + " starts");
+		this.JVM_id = this.hashCode();
+		try {
+			this.ip = InetAddress.getLocalHost().getHostAddress().toString();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		}
+		this.cpuUsage = 0;
+		this.memAvail = 0;
+		System.out.println("JVM " + this.JVM_id + " starts");
+	}
+
+	public int getJVMId() {
+		return this.JVM_id;
 	}
 
 	public static void main(String[] args) {
@@ -43,8 +73,27 @@ public class Server implements Runnable, Serializable {
 		Integer id = this.JVM_id;
 		synchronized (this.tcLock) {
 			this.pointer = 0;
+			this.loopCount = 0;
 		}
 		while (true) {
+			try {
+				Server.recover();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (ClassNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			synchronized (this.tcLock) {
+				int cpuTemp = CPU.INSTANCE.getCpuUsage();
+				if (cpuTemp < 100)
+					this.cpuUsage = (this.cpuUsage + cpuTemp)
+							/ (++this.loopCount);
+				this.memAvail = MEM.INSTANCE.getMEMUsage();
+				this.machineAbility = this.memAvail * this.cpuUsage;
+			}
 			for (DefaultBelief ag : waitList) {
 				ag.setMain(cases.get(ag.getCaseID()));
 				new Thread(ag).run();
@@ -80,6 +129,7 @@ public class Server implements Runnable, Serializable {
 									ag = (DefaultBelief) tempObj;
 									ag.setMain(oneCase);
 									ag.setID(one.id);
+									ag.setPath(one.path);
 									this.addPc(oneCase, ag);
 									synchronized (tcLock) {
 										this.agents.add(ag);
@@ -105,8 +155,8 @@ public class Server implements Runnable, Serializable {
 					System.out
 							.println("[This scenario is completely arranged!]");
 					System.out.println();
-					//oneCase.control(1, oneCase.getTicks());
-					if(!oneCase.getClock().isGoOn())
+					// oneCase.control(1, oneCase.getTicks());
+					if (!oneCase.getClock().isGoOn())
 						oneCase.startClock();
 					synchronized (tcLock) {
 						pointer++;
@@ -136,63 +186,37 @@ public class Server implements Runnable, Serializable {
 		}
 	}
 
-	public static int assign(int mode) {
+	public static Server assign() {
+		int mode = 0;
 		int sel;
+		Server se;
+
 		switch (mode) {
-		case 0:
+		case 0:// random choose
 			sel = (int) (Math.random() * servers.size());
-			return Server.servers.get(sel).JVM_id;
-		case 1:
-			Server se = Server.servers.get(0);
+			return Server.servers.get(sel);
+		case 1:// based on agent_list size and wait_list size
+			se = Server.servers.get(0);
 			for (Server s : Server.servers)
 				if (s.agents.size() + s.waitList.size() < se.agents.size()
 						+ se.waitList.size())
 					se = s;
-			return se.JVM_id;
-		case 2:
-			
+			return se;
+		case 2:// based on machine performance
+			se = Server.servers.get(0);
+			for (Server s : Server.servers)
+				if (s.machineAbility < se.machineAbility)
+					se = s;
+			return se;
+		case 3:// based on agents' relationship with each other
 		default:
-			return -1;
+			return null;
 		}
 	}
 
-	public void migrate() throws IOException, ClassNotFoundException {
-		java.util.Scanner input = new java.util.Scanner(System.in);
-		System.out.println(cases);
-		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		ObjectOutputStream out = new ObjectOutputStream(bout);
+	public static int assignByGroup(DefaultBelief agent) {
 
-		DefaultBelief a = this.agents.get(0);
-		a.setMigrate(true);
-		System.out.println(a);
-		out.writeObject(a);
-		synchronized (this.agents) {
-			this.agents.remove(0);
-		}
-		out.writeObject("haha");
-		out.flush();
-
-//		 synchronized (Server.servers) {
-//		 Server.servers.remove(this);
-//		 }
-
-		input.next();
-		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
-		ObjectInputStream in = new ObjectInputStream(bin);
-		DefaultBelief ag = (DefaultBelief) in.readObject();
-
-		Client c = Server.cases.get(ag.getCaseID());
-		synchronized (c.agentList) {
-			c.agentList.put(ag.getID(), ag);
-		}
-		ag.setMain(Server.cases.get(ag.getCaseID()));
-		ag.setMigrate(false);
-		System.out.println(ag);
-		Server s = Server.servers.get((int) Math.random()
-				* Server.servers.size());
-		synchronized (s.waitList) {
-			s.waitList.add(ag);
-		}
+		return 0;
 	}
 
 	public void migrateAll() throws IOException, ClassNotFoundException {
@@ -216,9 +240,9 @@ public class Server implements Runnable, Serializable {
 		out.writeObject("haha");
 		out.flush();
 
-		// synchronized (Server.servers) {
-		// Server.servers.remove(this);
-		// }
+		synchronized (Server.servers) {
+			Server.servers.remove(this);
+		}
 
 		System.out.println(this.agents);
 		System.out.println("\nstuck in the middle");
@@ -248,5 +272,105 @@ public class Server implements Runnable, Serializable {
 		System.out.println(this.agents);
 		System.out.println("Migrate fini");
 		input.next();
+	}
+
+	public void migrate_old() throws IOException, ClassNotFoundException {
+		java.util.Scanner input = new java.util.Scanner(System.in);
+		System.out.println(cases);
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		ObjectOutputStream out = new ObjectOutputStream(bout);
+
+		DefaultBelief a = this.agents.get(0);
+		a.setMigrate(true);
+		System.out.println(a);
+		out.writeObject(a);
+		synchronized (this.agents) {
+			this.agents.remove(0);
+		}
+		out.writeObject("haha");
+		out.flush();
+
+		synchronized (Server.servers) {
+			Server.servers.remove(this);
+		}
+
+		input.next();
+		ByteArrayInputStream bin = new ByteArrayInputStream(bout.toByteArray());
+		ObjectInputStream in = new ObjectInputStream(bin);
+		DefaultBelief ag = (DefaultBelief) in.readObject();/*
+															 * can't recover the
+															 * agent here,
+															 * because this
+															 * machine will be
+															 * closed, if
+															 * recovered here,
+															 * the agent will
+															 * diminish with the
+															 * closing of
+															 * machine, which
+															 * loses the
+															 * essential of
+															 * migrate
+															 */
+
+		Client c = Server.cases.get(ag.getCaseID());
+		synchronized (c.agentList) {
+			c.agentList.put(ag.getID(), ag);
+		}
+		ag.setMain(Server.cases.get(ag.getCaseID()));
+		ag.setMigrate(false);
+		System.out.println(ag);
+		Server s = Server.servers.get((int) Math.random()
+				* Server.servers.size());
+		synchronized (s.waitList) {
+			s.waitList.add(ag);
+		}
+	}
+
+	public void migrate() throws IOException, ClassNotFoundException {
+		System.out.println(cases);
+
+		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.ip
+				+ System.currentTimeMillis());
+		FileOutputStream fout = new FileOutputStream(mig);
+		ObjectOutputStream objout = new ObjectOutputStream(fout);
+
+		DefaultBelief a = this.agents.get(0);
+		a.setMigrate(true);
+		System.out.println(a);
+		objout.writeObject(a);
+		synchronized (this.agents) {
+			this.agents.remove(0);
+		}
+		objout.writeObject("haha");
+		objout.flush();
+
+		Server res;
+		if ((res = Server.assign()) != null)
+			new SendFile(res.ip, PORT, mig).start();
+	}
+
+	public static void recover() throws IOException, ClassNotFoundException {
+		File dir = new File(AGENTS_IN_FILE_FOLDER);
+		File[] flist = dir.listFiles();
+
+		for (File f : flist) {
+			File mig = f;
+			FileInputStream fin = new FileInputStream(mig);
+			ObjectInputStream objin = new ObjectInputStream(fin);
+			DefaultBelief ag = (DefaultBelief) objin.readObject();
+			Client c = Server.cases.get(ag.getCaseID());
+			synchronized (c.agentList) {
+				c.agentList.put(ag.getID(), ag);
+			}
+			ag.setMain(Server.cases.get(ag.getCaseID()));
+			ag.setMigrate(false);
+			System.out.println(ag);
+			Server s = Server.servers.get((int) Math.random()
+					* Server.servers.size());
+			synchronized (s.waitList) {
+				s.waitList.add(ag);
+			}
+		}
 	}
 }

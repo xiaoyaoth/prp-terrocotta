@@ -13,7 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-public class Client implements MainInterface,Serializable {
+public class Client implements MainInterface, Serializable {
 
 	/**** 构建分布式系统需要的成员 ****/
 	private static String root = "config\\xx\\";
@@ -26,34 +26,28 @@ public class Client implements MainInterface,Serializable {
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private int caseID;
-	
-	public boolean isFinished()
-	{
+
+	public boolean isFinished() {
 		return this.finished;
 	}
-	
-	public ArrayList<Tuple> getTable()
-	{
+
+	public ArrayList<Tuple> getTable() {
 		return this.caseTable;
 	}
-	
-	public ArrayList<Integer> getIDList()
-	{
+
+	public ArrayList<Integer> getIDList() {
 		return this.idList;
 	}
-	
-	public ArrayList<Path> getPathList()
-	{
+
+	public ArrayList<Path> getPathList() {
 		return this.pathList;
 	}
-	
-	public int getTicks()
-	{
+
+	public int getTicks() {
 		return this.totalTicks;
 	}
-		
-	public ArrayList<Func> getPC()
-	{
+
+	public ArrayList<Func> getPC() {
 		return this.pc;
 	}
 
@@ -70,8 +64,7 @@ public class Client implements MainInterface,Serializable {
 	}
 
 	public Client(String path, int totalTicks) throws IOException,
-			ParserConfigurationException, SAXException 
-	{
+			ParserConfigurationException, SAXException {
 		this.totalTicks = totalTicks;
 		Parse p = new Parse(path);
 		caseTable = p.table;
@@ -87,39 +80,39 @@ public class Client implements MainInterface,Serializable {
 		this.control(1, this.getTicks());
 	}
 
-	public static void main(String[] args) throws IOException 
-	{
+	public static void main(String[] args) throws IOException {
 		try {
 			Client oneCase = new Client(
-					root + "USER\\" + args[0] + "\\snr.xml", Integer.parseInt(args[1]));
-					//"snr.xml", 50);
-			for (int i = 0; i < oneCase.caseTable.size(); i++) 
-			{
+					root + "USER\\" + args[0] + "\\snr.xml", Integer
+							.parseInt(args[1]));
+			// "snr.xml", 50);
+			for (int i = 0; i < oneCase.caseTable.size(); i++) {
 				Tuple oneTuple = oneCase.caseTable.get(i);
-				oneTuple.JVM_id = Server.assign(0);
+				oneTuple.JVM_id = Server.assign().getJVMId();
 				oneCase.agentNum++;
 			}
 			synchronized (Server.cases) {
-				Server.cases.put(oneCase.caseID,oneCase);
+				Server.cases.put(oneCase.caseID, oneCase);
 				oneCase.finished = true;
 			}
-			synchronized (Server.casesID){
+			synchronized (Server.casesID) {
 				Server.casesID.add(oneCase.caseID);
 			}
 			Scanner input = new Scanner(System.in);
-			input.next();
-			Server.servers.get(0).migrate();
+			while (true) {
+				input.next();
+				Server.servers.get(0).migrate();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public void control(int order, int totalTicks) 
-	{
+	public void control(int order, int totalTicks) {
 		if (order == 1) {
 			System.out.println("\nSimulation Started...");
 			clk.incLeft(totalTicks);
-			//new Thread(clk).start();
+			// new Thread(clk).start();
 		} else if (order == 2) {
 			System.out.println("\nSimulation Paused...");
 			clk.setGoOn(false);
@@ -128,8 +121,8 @@ public class Client implements MainInterface,Serializable {
 			clk.setGoOn(true);
 		}
 	}
-	
-	public void startClock(){
+
+	public void startClock() {
 		new Thread(clk).start();
 	}
 
@@ -137,8 +130,7 @@ public class Client implements MainInterface,Serializable {
 		return agentNum;
 	}
 
-	public <T> ArrayList<T> getAgentList(Class<T> targetClass) 
-	{
+	public <T> ArrayList<T> getAgentList(Class<T> targetClass) {
 		ArrayList<T> ans = new ArrayList<T>();
 		try {
 			for (int i = 0; i < idList.size(); i++)
@@ -151,57 +143,57 @@ public class Client implements MainInterface,Serializable {
 		}
 	}
 
-	public <T> ArrayList<T> getAgentList(Class<T> targetClass, Path path)
-	{
+	public <T> ArrayList<T> getAgentList(Class<T> targetClass, Path path) {
 		ArrayList<T> ans = new ArrayList<T>();
 		for (int i = 0; i < idList.size(); i++)
-			if (pathList.get(i).equals(path) && agentList.get(i).getClass().equals(targetClass))
+			if (pathList.get(i).equals(path)
+					&& agentList.get(i).getClass().equals(targetClass))
 				ans.add((T) agentList.get(idList.get(i)));
 		return ans;
 	}
-	
+
 	@Override
 	public DefaultBelief getAgent(int id) {
 		// TODO Auto-generated method stub
 		return this.agentList.get(id);
 	}
-	
-	public int getCaseID(){
+
+	public int getCaseID() {
 		return this.caseID;
 	}
-	
-	public void getFileList(String slnPath)
-	{
+
+	public void getFileList(String slnPath) {
 		File file = new File(slnPath + "\\flc");
-		if (file.isDirectory())
-		{
+		if (file.isDirectory()) {
 			String[] strList = file.list();
-			for (int i = 0; i < strList.length; i++) 
-			{
+			for (int i = 0; i < strList.length; i++) {
 				String temp = strList[i];
-				int pos = temp.indexOf("_");
-				String cName = temp.substring(0, pos);
-				temp = temp.substring(pos + 1);
-				pos = temp.indexOf("(");
-				String fName = temp.substring(0, pos);
-				temp = temp.substring(temp.indexOf("^") + 1);
 				System.out.println(temp);
-				int interval = Integer.parseInt(temp.substring(0, temp.indexOf("^")));
-				temp = temp.substring(temp.indexOf("^") + 1);
-				int needTicks = Integer.parseInt(temp.substring(0, temp.indexOf("^")));
-				pc.add(new Func(cName, fName ,interval, needTicks));
+				if (!temp.equals(".svn")) {
+					int pos = temp.indexOf("_");
+					String cName = temp.substring(0, pos);
+					temp = temp.substring(pos + 1);
+					pos = temp.indexOf("(");
+					String fName = temp.substring(0, pos);
+					temp = temp.substring(temp.indexOf("^") + 1);
+					System.out.println(temp);
+					int interval = Integer.parseInt(temp.substring(0, temp
+							.indexOf("^")));
+					temp = temp.substring(temp.indexOf("^") + 1);
+					int needTicks = Integer.parseInt(temp.substring(0, temp
+							.indexOf("^")));
+					pc.add(new Func(cName, fName, interval, needTicks));
+				}
 			}
 		}
 	}
 
-	class Func implements Serializable
-	{
+	class Func implements Serializable {
 		String funcName, cName;
 		int interval;
 		int needTicks;
-		
-		Func(String cName, String funcName, int interval, int needTicks)
-		{
+
+		Func(String cName, String funcName, int interval, int needTicks) {
 			this.cName = cName;
 			this.funcName = funcName;
 			this.interval = interval;
@@ -209,5 +201,4 @@ public class Client implements MainInterface,Serializable {
 		}
 	}
 
-	
 }

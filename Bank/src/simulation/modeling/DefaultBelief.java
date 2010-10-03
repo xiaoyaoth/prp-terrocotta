@@ -14,6 +14,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private ArrayList<MessageInfo> sndMessageBox = new ArrayList<MessageInfo>();
 	private ArrayList<MessageInfo> rcvMessageBox = new ArrayList<MessageInfo>();
 	private ArrayList<Integer> connectIDs = new ArrayList<Integer>();
+	private Path path;
 	private Lock tcLock = new Lock();
 
 	public DefaultBelief() {
@@ -70,11 +71,20 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		synchronized (tcLock) {
 			this.caseID = main.getCaseID();
 			this.main = main;
+			this.main.getClock().setMain(main);
 		}
 	}
 
 	public MainInterface getMain() {
 		return this.main;
+	}
+	
+	public void setPath(Path p){
+		this.path = p;
+	}
+	
+	public Path getPath(){
+		return this.path;
 	}
 
 	public void setID(int id) {
