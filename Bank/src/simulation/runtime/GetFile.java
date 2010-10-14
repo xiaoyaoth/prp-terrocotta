@@ -9,10 +9,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class GetFile extends Thread {
-	private static ServerSocket serSocket;
+	private ServerSocket serSocket;
 	int defaultBindPort = 10000;
 	int tryBindTimes = 0;
-	//int currentBindPort = defaultBindPort + tryBindTimes;
+
+	// int currentBindPort = defaultBindPort + tryBindTimes;
 
 	public static void main(String args[]) {
 		GetFile getFile = null;
@@ -28,18 +29,17 @@ public class GetFile extends Thread {
 
 	public GetFile(int port) {
 		try {
-			//this.currentBindPort = port;
 			serSocket = new ServerSocket(port);
-		} catch (Exception e) {
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println(e.toString());
-			//throw new Exception("绑定端口不成功!");
 		}
 	}
 
 	public void run() {
 		while (true) {
 			try {
+				System.out.println("&&&&&&&&&&&&& Accept New File &&&&&&&&&&&&&&&&&");
 				Socket tempSocket = serSocket.accept();
 				new Thread(new DealWithReq(tempSocket)).start();
 			} catch (Exception e) {
@@ -51,7 +51,7 @@ public class GetFile extends Thread {
 
 final class DealWithReq implements Runnable {
 	Socket tempSocket;
-	InputStream inSocket;
+	InputStream is;
 	RandomAccessFile inFile = null;
 	byte byteBuffer[] = new byte[1024];
 	private final String IN_AGENT_FOLDER = "agentsIn//";
@@ -59,32 +59,30 @@ final class DealWithReq implements Runnable {
 
 	public DealWithReq(Socket s) throws IOException {
 		this.tempSocket = s;
-		this.inSocket = s.getInputStream();
 	}
 
 	public void run() {
+		File f;
 		try {
-			File f = new File(this.IN_AGENT_FOLDER + filecounter++);
+			f = new File(this.IN_AGENT_FOLDER + filecounter++);
 			this.inFile = new RandomAccessFile(f, "rw");
-			System.out.println("wait for..." + '\n' + "等待对方接入");
+			//System.out.println("wait for..." + '\n' + "等待对方接入");
 		} catch (Exception ex) {
-			System.out.println(ex.toString());
 			ex.printStackTrace();
 			return;
 		}
 
 		int amount;
 		try {
-			while ((amount = inSocket.read(byteBuffer)) != -1) {
+			this.is = this.tempSocket.getInputStream();
+			while ((amount = is.read(byteBuffer)) != -1) {
 				inFile.write(byteBuffer, 0, amount);
 			}
-			inSocket.close();
-			System.out.println("Get OK");
-			System.out.println("接收完毕!");
+			is.close();
 			inFile.close();
 			tempSocket.close();
+			//System.out.println("接收完毕!");
 		} catch (IOException e) {
-			System.out.println(e.toString());
 			e.printStackTrace();
 		}
 	}

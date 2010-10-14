@@ -200,5 +200,4 @@ public class Client implements MainInterface, Serializable {
 			this.needTicks = needTicks;
 		}
 	}
-
 }

@@ -35,14 +35,14 @@ public class Customer extends DefaultBelief implements Serializable
 	public void receiveMoney(Integer incr)
 	{
 		this.cash += incr;
-		System.out.println("" + this + "£º$" + incr + " received");
+		//System.out.println("" + this + "£º$" + incr + " received");
 	}
 
 	public void consumeMoney()
 	{
 		int temp = (int)(Math.random() * 10);
 		this.cash -= temp;
-		System.out.println("" + this + "£º$" + temp + " consumed");
+		//System.out.println("" + this + "£º$" + temp + " consumed");
 	}
 
 	public String toString()
@@ -52,6 +52,6 @@ public class Customer extends DefaultBelief implements Serializable
 
 	public void myPrint()
 	{
-		System.out.println("" + this);
+		//System.out.println("" + this);
 	}
 }

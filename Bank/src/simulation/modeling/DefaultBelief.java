@@ -1,14 +1,29 @@
 package simulation.modeling;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.*;
 
+import simulation.runtime.SendFile;
+import simulation.runtime.Server;
+
 public class DefaultBelief extends PlanManager implements Runnable,
 		Serializable {
+	/* Global Const */
+	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
+	private final static int PORT = 10000;
+
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
+
 	private boolean migrate = false;
+	private boolean nextTick = true;
+
 	protected transient MainInterface main;
 	private int caseID;
 	private ArrayList<MessageInfo> sndMessageBox = new ArrayList<MessageInfo>();
@@ -49,8 +64,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
-		while ((this.getLifeCycle() == -1 || this.isNoLife())
-				&& !this.isMigrate()) {
+		while ((this.getLifeCycle() == -1 || this.isNoLife()) && this.nextTick) {
 			synchronized (this.main.getClock().getNowLock()) {
 				try {
 					while (this.getTick() >= this.main.getClock().getTick()
@@ -59,6 +73,11 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();
+
+					if (this.migrate) {
+						this.migrate();
+					}
+
 					this.main.getClock().decNow();
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -71,19 +90,18 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		synchronized (tcLock) {
 			this.caseID = main.getCaseID();
 			this.main = main;
-			this.main.getClock().setMain(main);
 		}
 	}
 
 	public MainInterface getMain() {
 		return this.main;
 	}
-	
-	public void setPath(Path p){
+
+	public void setPath(Path p) {
 		this.path = p;
 	}
-	
-	public Path getPath(){
+
+	public Path getPath() {
 		return this.path;
 	}
 
@@ -220,23 +238,51 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public String toString() {
 		return "Agent" + this.id;
-//		return this.pCounter + " " + this.pc + " " + this.id + " " + this.tick
-//		+ " " + this.lifeCycle + " " + this.ownTick + " " + this.migrate
-//		+ " " + this.main + " " + this.caseID + " "
-//		+ this.sndMessageBox + " " + this.rcvMessageBox + " "
-//		+ this.connectIDs;
+		// return this.pCounter + " " + this.pc + " " + this.id + " " +
+		// this.tick
+		// + " " + this.lifeCycle + " " + this.ownTick + " " + this.migrate
+		// + " " + this.main + " " + this.caseID + " "
+		// + this.sndMessageBox + " " + this.rcvMessageBox + " "
+		// + this.connectIDs;
 	}
 
 	/* End of Default Action */
+
+	// This function violate everything I learn from the principle of SW design.
+	public void migrate() throws IOException {
+		System.out.println(this);
+
+		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.id + "rr" + System.currentTimeMillis());
+		FileOutputStream fout = new FileOutputStream(mig);
+		ObjectOutputStream objout = new ObjectOutputStream(fout);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			objout.writeObject(this);
+			objout.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		Server res;
+		if ((res = Server.assign()) != null)
+			new SendFile(res.getIp(), PORT, mig).start();
+		synchronized (this.tcLock) {
+			this.nextTick = false;
+		}
+		objout.close();
+		fout.close();
+		//mig.delete();
+	}
 
 	public void setMigrate(boolean migrate) {
 		synchronized (tcLock) {
 			this.migrate = migrate;
 		}
-	}
-
-	public boolean isMigrate() {
-		return this.migrate;
 	}
 
 	public void setCaseID(int caseID) {
@@ -246,4 +292,5 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public int getCaseID() {
 		return caseID;
 	}
+
 }

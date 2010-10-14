@@ -38,7 +38,7 @@ public class Bank extends DefaultBelief implements Serializable
 		Customer cust = custList.get(index);
 		this.addMess(true, new MessageInfo(this.getID(), cust.getID(), "receiveMoney(" + temp + ")"));
 		this.cash -= temp;
-		System.out.println("" + this + " Sent $" + temp + " to " + cust);
+		//System.out.println("" + this + " Sent $" + temp + " to " + cust);
 	}
 
 	public String toString()
@@ -48,6 +48,6 @@ public class Bank extends DefaultBelief implements Serializable
 
 	public void myPrint()
 	{
-		System.out.println("" + this);
+		//System.out.println("" + this);
 	}
 }

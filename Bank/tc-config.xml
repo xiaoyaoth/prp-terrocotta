@@ -114,6 +114,26 @@
           <method-expression>void simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.ClockTick.setMain(simulation.modeling.MainInterface)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.recover()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.migrate()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.initLoop()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server.mainLoop()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
       </locks>
       <instrumented-classes>
         <include>
