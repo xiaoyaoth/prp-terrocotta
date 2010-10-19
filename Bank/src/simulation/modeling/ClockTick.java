@@ -59,10 +59,16 @@ public class ClockTick implements Runnable, Serializable {
 				synchronized (nowLock) {
 					++this.tick;
 				}
-				//System.out.println("\nTick£º" + tick);
+				System.out.println("Tick " + tick + " :" + this.now);
 				synchronized (nowLock) {
 					this.now = this.main.getTotal();
 					this.nowLock.notifyAll();
+				}
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
 			}
 		}

@@ -35,7 +35,7 @@ public class Server implements Runnable, Serializable {
 	public static ArrayList<Integer> casesID = new ArrayList<Integer>();
 	public static ArrayList<Server> servers = new ArrayList<Server>();
 	private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
-	private List<DefaultBelief> waitList = new ArrayList<DefaultBelief>();
+	// private List<DefaultBelief> waitList = new ArrayList<DefaultBelief>();
 
 	private int cpuUsage;
 	private int memAvail;
@@ -113,8 +113,7 @@ public class Server implements Runnable, Serializable {
 		case 1:// based on agent_list size and wait_list size
 			se = Server.servers.get(0);
 			for (Server s : Server.servers)
-				if (s.agents.size() + s.waitList.size() < se.agents.size()
-						+ se.waitList.size())
+				if (s.agents.size() < se.agents.size())
 					se = s;
 			return se;
 		case 2:// based on machine performance
@@ -145,7 +144,6 @@ public class Server implements Runnable, Serializable {
 
 	public void recover() throws IOException, ClassNotFoundException {
 		File[] flist = dir.listFiles();
-		System.out.println(flist);
 		for (File f : flist) {
 			File mig = f;
 			FileInputStream fin = new FileInputStream(mig);
@@ -155,23 +153,25 @@ public class Server implements Runnable, Serializable {
 			synchronized (c.agentList) {
 				c.agentList.put(ag.getID(), ag);
 			}
+			/* newly modified */
+			synchronized (this.agents) {
+				this.agents.add(ag);
+			}
 			ag.setMain(Server.cases.get(ag.getCaseID()));
 			ag.setMigrate(false);
-			System.out.println(ag);
-			Server s = Server.servers.get((int) Math.random()
-					* Server.servers.size());
-			synchronized (s.waitList) {
-				s.waitList.add(ag);
-			}
-
+			new Thread(ag).start();
+			
 			try {
 				objin.close();
 				fin.close();
 				f.delete();
-				System.out.println("******" + ag + "*****");
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			
+			System.out.print("&&" + ag.getOwnTick()+ " ");
+			System.out.print(ag);
+			System.out.println(" Clock now is " + ag.getMain().getClock().getNow());
 		}
 	}
 
@@ -207,19 +207,6 @@ public class Server implements Runnable, Serializable {
 		// this.memAvail = MEM.INSTANCE.getMEMUsage();
 		// this.machineAbility = this.memAvail * this.cpuUsage;
 		// }
-		System.out.println("init Loop 2");
-		for (DefaultBelief ag : this.waitList) {
-			ag.setMain(Server.cases.get(ag.getCaseID()));
-			synchronized (this.agents) {
-				this.agents.add(ag);
-			}
-			synchronized (this.waitList) {
-				this.waitList.remove(ag);
-			}
-			new Thread(ag).start();// the problem is here, I once wrote it as
-			// new Thread(ag).run()
-		}
-		System.out.println("init Loop 3");
 	}
 
 	public void mainLoop() {

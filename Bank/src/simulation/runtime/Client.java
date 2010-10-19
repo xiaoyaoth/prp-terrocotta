@@ -151,6 +151,10 @@ public class Client implements MainInterface, Serializable {
 				ans.add((T) agentList.get(idList.get(i)));
 		return ans;
 	}
+	
+	public Map<Integer, DefaultBelief> getAgentList(){
+		return this.agentList;
+	}
 
 	@Override
 	public DefaultBelief getAgent(int id) {

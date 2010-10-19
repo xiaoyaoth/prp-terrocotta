@@ -250,8 +250,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	// This function violate everything I learn from the principle of SW design.
 	public void migrate() throws IOException {
-		System.out.println(this);
-
 		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.id + "rr" + System.currentTimeMillis());
 		FileOutputStream fout = new FileOutputStream(mig);
 		ObjectOutputStream objout = new ObjectOutputStream(fout);
@@ -276,7 +274,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 		objout.close();
 		fout.close();
-		//mig.delete();
 	}
 
 	public void setMigrate(boolean migrate) {
