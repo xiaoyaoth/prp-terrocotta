@@ -15,6 +15,10 @@ import org.xml.sax.SAXException;
 
 public class Client implements MainInterface, Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	/**** 构建分布式系统需要的成员 ****/
 	private static String root = "config\\xx\\";
 	private boolean finished = false;
@@ -26,6 +30,9 @@ public class Client implements MainInterface, Serializable {
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private int caseID;
+
+	private Path tempPath = null;
+	private Server tempJVM = null;
 
 	public boolean isFinished() {
 		return this.finished;
@@ -108,6 +115,28 @@ public class Client implements MainInterface, Serializable {
 		}
 	}
 
+	/* newly added */
+	public void assignAgentsLogically() {
+		int mode = 0;
+		switch (mode) {
+		case 0:
+			for (Tuple t : this.caseTable) {
+				if (this.tempPath == null)
+					this.tempPath = t.path;
+				if (this.tempJVM == null)
+					this.tempJVM = Server.assign();
+				if (this.isPathOK(t))
+					t.JVM_id = this.tempJVM.getJVMId();
+				else
+					t.JVM_id = Server.assign().getJVMId();
+			}
+		}
+	}
+	
+	public boolean isPathOK(Tuple t){
+		return t.path.isLowerPath(this.tempPath) && this.tempJVM.isStillAvailable();
+	}
+
 	public void control(int order, int totalTicks) {
 		if (order == 1) {
 			System.out.println("\nSimulation Started...");
@@ -130,6 +159,7 @@ public class Client implements MainInterface, Serializable {
 		return agentNum;
 	}
 
+	@SuppressWarnings( { "finally", "unchecked" })
 	public <T> ArrayList<T> getAgentList(Class<T> targetClass) {
 		ArrayList<T> ans = new ArrayList<T>();
 		try {
@@ -143,6 +173,7 @@ public class Client implements MainInterface, Serializable {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> ArrayList<T> getAgentList(Class<T> targetClass, Path path) {
 		ArrayList<T> ans = new ArrayList<T>();
 		for (int i = 0; i < idList.size(); i++)
@@ -151,8 +182,8 @@ public class Client implements MainInterface, Serializable {
 				ans.add((T) agentList.get(idList.get(i)));
 		return ans;
 	}
-	
-	public Map<Integer, DefaultBelief> getAgentList(){
+
+	public Map<Integer, DefaultBelief> getAgentList() {
 		return this.agentList;
 	}
 
@@ -193,6 +224,10 @@ public class Client implements MainInterface, Serializable {
 	}
 
 	class Func implements Serializable {
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
 		String funcName, cName;
 		int interval;
 		int needTicks;

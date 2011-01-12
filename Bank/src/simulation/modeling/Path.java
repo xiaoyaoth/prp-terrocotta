@@ -61,4 +61,8 @@ public class Path implements Serializable{
 		}
 		return true;
 	}
+	
+	/*newly added*/
+	public boolean isUpperPath(Path p){return true;}
+	public boolean isLowerPath(Path p){return true;}
 }

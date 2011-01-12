@@ -1,10 +1,15 @@
+/*
+ * 今天用了新的eclipse和terracotta，装terracotta的时候遇到一个问题
+ * 说什么pde.core和pde.ui没有找到
+ * 在help的install new software里搜索pde，
+ * 把一个buckminister pde support, pde resources he pde tools description下载下来就好了
+ */
 package simulation.runtime;
 
 import simulation.modeling.*;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -35,7 +40,6 @@ public class Server implements Runnable, Serializable {
 	public static ArrayList<Integer> casesID = new ArrayList<Integer>();
 	public static ArrayList<Server> servers = new ArrayList<Server>();
 	private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
-	// private List<DefaultBelief> waitList = new ArrayList<DefaultBelief>();
 
 	private int cpuUsage;
 	private int memAvail;
@@ -57,6 +61,8 @@ public class Server implements Runnable, Serializable {
 		}
 		this.cpuUsage = 0;
 		this.memAvail = 0;
+		this.pointer = 0;
+		this.loopCount = 0;
 
 		System.out.println("JVM " + this.JVM_id + " starts");
 	}
@@ -78,10 +84,6 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public void run() {
-		synchronized (this.tcLock) {
-			this.pointer = 0;
-			this.loopCount = 0;
-		}
 		while (true) {
 			this.initLoop();
 			this.mainLoop();
@@ -123,13 +125,14 @@ public class Server implements Runnable, Serializable {
 					se = s;
 			return se;
 		case 3:// based on agents' relationship with each other
+				/*actually it should be the logic of the Client
+				 * instead, the Server just responsible for return
+				 * proper JVM_id from the perspective of Hardware
+				 * thus should not burden the work to assign a agent
+				 * a specific JVM_id*/
 		default:
 			return null;
 		}
-	}
-
-	public static int assignByGroup(DefaultBelief agent) {
-		return 0;
 	}
 
 	public void migrate() throws IOException, ClassNotFoundException {
@@ -160,7 +163,7 @@ public class Server implements Runnable, Serializable {
 			ag.setMain(Server.cases.get(ag.getCaseID()));
 			ag.setMigrate(false);
 			new Thread(ag).start();
-			
+
 			try {
 				objin.close();
 				fin.close();
@@ -168,10 +171,11 @@ public class Server implements Runnable, Serializable {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
-			System.out.print("&&" + ag.getOwnTick()+ " ");
+
+			System.out.print("&&" + ag.getOwnTick() + " ");
 			System.out.print(ag);
-			System.out.println(" Clock now is " + ag.getMain().getClock().getNow());
+			System.out.println(" Clock now is "
+					+ ag.getMain().getClock().getNow());
 		}
 	}
 
@@ -198,15 +202,18 @@ public class Server implements Runnable, Serializable {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		//			
-		// synchronized (this.tcLock) {
-		// int cpuTemp = CPU.INSTANCE.getCpuUsage();
-		// if (cpuTemp < 100)
-		// this.cpuUsage = (this.cpuUsage + cpuTemp)
-		// / (++this.loopCount);
-		// this.memAvail = MEM.INSTANCE.getMEMUsage();
-		// this.machineAbility = this.memAvail * this.cpuUsage;
-		// }
+
+		synchronized (this.tcLock) {
+			int cpuTemp = CPU.INSTANCE.getCpuUsage();
+			if (cpuTemp < 100){
+				this.loopCount++;
+				this.cpuUsage += cpuTemp;
+				this.cpuUsage = this.cpuUsage/this.loopCount;/*java cannot do calculation?*/
+			}
+			this.memAvail = MEM.INSTANCE.getMEMUsage();
+			this.machineAbility = this.memAvail * this.cpuUsage;
+			System.out.println(" LoopCount:" + this.loopCount + " CpuTemp:" + cpuTemp + " MEM:"+this.memAvail+" CPU:"+this.cpuUsage);
+		}
 	}
 
 	public void mainLoop() {
@@ -228,7 +235,7 @@ public class Server implements Runnable, Serializable {
 
 						Object tempObj;
 						try {
-							System.out.println(one.agTy);
+							System.out.println("agent_type"+one.agTy);
 							tempObj = InvokeMethod.newInstance(one.agTy, args);
 							if (tempObj instanceof DefaultBelief) {
 								ag = (DefaultBelief) tempObj;
@@ -274,5 +281,9 @@ public class Server implements Runnable, Serializable {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public boolean isStillAvailable(){
+		return true;
 	}
 }

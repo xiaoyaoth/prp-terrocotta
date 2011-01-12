@@ -28,6 +28,9 @@ public class Main {
 		DefaultBelief ag = (DefaultBelief) newAg;
 		System.out.println(ag.getClass());*/
 		System.out.println(System.getProperty("java.library.path"));
+		int t = 1;
+		int cpu = 0;
+		int temp = 0;
 		while(true){
 			try {
 				Thread.sleep(1000);
@@ -35,7 +38,12 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("MEM Usage: "+MEM.INSTANCE.getMEMUsage());
+			temp = CPU.INSTANCE.getCpuUsage();
+			if(temp<=100){
+				cpu += temp;
+				System.out.println("CPU Usage: "+cpu/t);
+				t++;
+			}			
 		}
 		
 	}
