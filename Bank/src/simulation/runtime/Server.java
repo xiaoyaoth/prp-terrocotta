@@ -4,6 +4,11 @@
  * 在help的install new software里搜索pde，
  * 把一个buckminister pde support, pde resources he pde tools description下载下来就好了
  */
+/* 
+ * Feb 12 : 设置一个config file， 在config file写上ip地址
+ * 或者如何根据网卡获取ip地址？
+ * 环境变量中记录了一个ip地址，是tc-config文件所在计算机的ip地址；
+ */
 package simulation.runtime;
 
 import simulation.modeling.*;
@@ -30,7 +35,7 @@ public class Server implements Runnable, Serializable {
 	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn//";
 	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
 	private final static int PORT = 10000;
-	private String ip;
+	private String ip = "192.168.131.1";
 	private int JVM_id;
 
 	private static final long serialVersionUID = 1L;

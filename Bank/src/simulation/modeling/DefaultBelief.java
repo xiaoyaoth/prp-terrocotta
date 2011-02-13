@@ -20,6 +20,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
+	private String ip;
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
@@ -111,6 +112,14 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public int getID() {
 		return this.id;
+	}
+	
+	public void setIp(String ip){
+		this.ip = ip;
+	}
+	
+	public String getIp(){
+		return this.ip;
 	}
 
 	public int getOwnTick() {

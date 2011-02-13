@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.Socket;
+import java.util.Scanner;
 
 /**
  * 在服务器端开启的情况下 实例化套接字 并发送文件
@@ -53,10 +54,12 @@ public class SendFile extends Thread {
 	}
 
 	public static void main(String args[]) {
-		SendFile sf1 = new SendFile("127.0.0.1", 10000, new File("agentsOut//a"));
-		SendFile sf2 = new SendFile("127.0.0.1", 10000, new File("agentsOut//b"));
-		SendFile sf3 = new SendFile("127.0.0.1", 10000, new File("agentsOut//c"));
-		SendFile sf4 = new SendFile("127.0.0.1", 10000, new File("agentsOut//d"));
+		Scanner in = new Scanner(System.in);
+		String ip = in.next();
+		SendFile sf1 = new SendFile(ip, 10000, new File("agentsOut//a"));
+		SendFile sf2 = new SendFile(ip, 10000, new File("agentsOut//b"));
+		SendFile sf3 = new SendFile(ip, 10000, new File("agentsOut//c"));
+		SendFile sf4 = new SendFile(ip, 10000, new File("agentsOut//d"));
 		sf1.start();
 		sf2.start();
 		sf3.start();

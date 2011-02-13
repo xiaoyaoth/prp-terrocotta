@@ -8,6 +8,7 @@ public class MessageInfo implements Serializable
 	private int snd, rcv;
 	private boolean sFlag, rFlag;
 	private String content;
+	private String ip;
 	
 	public MessageInfo(int snd, int rcv, String content)
 	{
@@ -51,6 +52,14 @@ public class MessageInfo implements Serializable
 	public String getContent()
 	{
 		return this.content;
+	}
+	
+	public void setIp(String ip){
+		this.ip = ip;
+	}
+	
+	public String getIp(){
+		return this.ip;
 	}
 
 	public String toString()
