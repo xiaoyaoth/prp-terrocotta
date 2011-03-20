@@ -11,8 +11,6 @@
  */
 package simulation.runtime;
 
-import simulation.modeling.*;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -24,6 +22,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
+
+import simulation.modeling.DefaultBelief;
+import simulation.modeling.InvokeMethod;
+import simulation.modeling.PlanCondition;
 
 //import java.util.Scanner;
 
@@ -56,7 +59,7 @@ public class Server implements Runnable, Serializable {
 
 	Server() {
 		Server.deleteAllAgentsFile();
-		new GetFile(PORT).start();
+		//new GetFile(PORT).start();
 		tcLock = new Object();
 		this.JVM_id = this.hashCode();
 		try {
@@ -81,7 +84,9 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public static void main(String[] args) {
+		Scanner in = new Scanner(System.in);
 		Server c = new Server();
+		c.setIp(in.next());
 		synchronized (Server.servers) {
 			Server.servers.add(c);
 		}
@@ -217,7 +222,7 @@ public class Server implements Runnable, Serializable {
 			}
 			this.memAvail = MEM.INSTANCE.getMEMUsage();
 			this.machineAbility = this.memAvail * this.cpuUsage;
-			System.out.println(" LoopCount:" + this.loopCount + " CpuTemp:" + cpuTemp + " MEM:"+this.memAvail+" CPU:"+this.cpuUsage);
+			//System.out.println(" LoopCount:" + this.loopCount + " CpuTemp:" + cpuTemp + " MEM:"+this.memAvail+" CPU:"+this.cpuUsage);
 		}
 	}
 
@@ -247,6 +252,7 @@ public class Server implements Runnable, Serializable {
 								ag.setMain(oneCase);
 								ag.setID(one.id);
 								ag.setPath(one.path);
+								ag.setIp(this.ip);
 								this.addPc(oneCase, ag);
 								synchronized (tcLock) {
 									this.agents.add(ag);
@@ -290,5 +296,9 @@ public class Server implements Runnable, Serializable {
 
 	public boolean isStillAvailable(){
 		return true;
+	}
+	
+	public void setIp(String ip){
+		this.ip = ip;
 	}
 }

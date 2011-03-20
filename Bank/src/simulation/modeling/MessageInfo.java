@@ -10,13 +10,14 @@ public class MessageInfo implements Serializable
 	private String content;
 	private String ip;
 	
-	public MessageInfo(int snd, int rcv, String content)
+	public MessageInfo(int snd, int rcv, String content, String ip)
 	{
 		this.snd = snd;
 		this.rcv = rcv;
 		this.content = content;
 		this.sFlag = false;
 		this.rFlag = false;
+		this.ip = ip;
 	}
 
 	public int getSnd()

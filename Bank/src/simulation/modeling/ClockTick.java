@@ -1,6 +1,7 @@
 package simulation.modeling;
 
 import java.io.Serializable;
+import java.util.Date;
 
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
@@ -9,6 +10,9 @@ public class ClockTick implements Runnable, Serializable {
 	private Lock nowLock = new Lock();
 	private Lock tcLock = new Lock();
 	private MainInterface main;
+	
+	private long duration;
+	private boolean fini;
 
 	public Object getTickLock() {
 		return this.tickLock;
@@ -21,8 +25,8 @@ public class ClockTick implements Runnable, Serializable {
 	public void setGoOn(boolean goOn) {
 		this.goOn = goOn;
 	}
-	
-	public boolean isGoOn(){
+
+	public boolean isGoOn() {
 		return this.goOn;
 	}
 
@@ -30,6 +34,7 @@ public class ClockTick implements Runnable, Serializable {
 		tick = 0;
 		left = 0;
 		goOn = false;
+		fini = false;
 		this.main = main;
 	}
 
@@ -43,9 +48,13 @@ public class ClockTick implements Runnable, Serializable {
 		return this.tick;
 	}
 
-	public void run() {
+	public void run() {		
+		long start,end;
 		synchronized (tcLock) {
 			this.goOn = true;
+			Date time = new Date();
+			start = time.getTime();
+			System.out.println(start);
 		}
 		while (this.tick < this.left) {
 			while (this.goOn && this.tick < this.left) {
@@ -72,8 +81,16 @@ public class ClockTick implements Runnable, Serializable {
 				}
 			}
 		}
-		synchronized (tcLock) {
+		synchronized (tcLock) {		
 			goOn = false;
+			Date time = new Date();
+			end = time.getTime();
+			System.out.println(start);
+			System.out.println(end);
+			System.out.print("time consumed ");
+			System.out.println(end-start);
+			this.duration = end - start;
+			fini = true;
 		}
 	}
 
@@ -85,12 +102,20 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void decNow() {
 		synchronized (this.nowLock) {
-//			System.out.println(--now);
+			// System.out.println(--now);
 			--now;
 		}
 		if (this.now <= 0)
 			synchronized (this.tickLock) {
 				this.tickLock.notifyAll();
 			}
+	}
+	
+	public long getDuration(){
+		return this.duration;
+	}
+	
+	public boolean isFini(){
+		return this.fini;
 	}
 }

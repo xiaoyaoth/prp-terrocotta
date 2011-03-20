@@ -1,12 +1,13 @@
 package simulation.modeling;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import simulation.runtime.SendFile;
 import simulation.runtime.Server;
@@ -20,7 +21,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
+	
 	private String ip;
+	private Map<String,Integer>ipCount = new HashMap<String, Integer>();
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
@@ -75,6 +78,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.createPlans();
 					this.submitPlans();
 
+					//System.out.println(this.id+" "+this.ipCount);
 					if (this.migrate) {
 						this.migrate();
 					}
@@ -184,8 +188,15 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		for (int i = 0; i < this.rcvMessageBox.size(); i++) {
 			MessageInfo mi = this.rcvMessageBox.get(i);
 			if (!mi.getRFlag()) {
+				/* edited by Xiaosong */
+				this.addIpCount(mi.getIp());
+				/* edited fini*/				
 				mi.setRFlag();
 				String temp = mi.getContent();
+				/* edited by Xiaosong
+				if(temp.endsWith("aaaaaaaaaaaaaaaa"))
+					System.out.print("1");
+				edited fini*/
 				int kh = temp.indexOf("(");
 				if (kh > -1) {
 					String pn = temp.substring(0, kh);
@@ -298,5 +309,25 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public int getCaseID() {
 		return caseID;
 	}
-
+	
+	/*edited by Xiaosong*/
+	private void addIpCount(String ip){
+		if(this.ipCount.containsKey(ip)){
+			int count = this.ipCount.get(ip);
+			this.ipCount.put(ip, count+1);
+		}else
+			this.ipCount.put(ip, 1);
+	}
+	
+	private String getMaxIp(){
+		int tempCount = 0;
+		String resIp = "127.0.0.1";
+		for(String s:this.ipCount.keySet()){
+			int count = this.ipCount.get(s);
+			if(count > tempCount)
+				resIp = s;
+		}
+		return resIp;
+	}
+	/*edit fini*/
 }

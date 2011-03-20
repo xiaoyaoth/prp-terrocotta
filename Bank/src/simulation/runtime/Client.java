@@ -1,17 +1,22 @@
 package simulation.runtime;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Scanner;
-import simulation.modeling.*;
 
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
+
+import simulation.modeling.ClockTick;
+import simulation.modeling.DefaultBelief;
+import simulation.modeling.MainInterface;
+import simulation.modeling.Path;
 
 public class Client implements MainInterface, Serializable {
 
@@ -90,26 +95,33 @@ public class Client implements MainInterface, Serializable {
 	public static void main(String[] args) throws IOException {
 		try {
 			Client oneCase = new Client(
-					root + "USER\\" + args[0] + "\\snr.xml", Integer
-							.parseInt(args[1]));
+					root + "USER\\" + args[0] + "\\snr.xml",
+					Integer.parseInt(args[1]));
 			// "snr.xml", 50);
 			for (int i = 0; i < oneCase.caseTable.size(); i++) {
 				Tuple oneTuple = oneCase.caseTable.get(i);
 				oneTuple.JVM_id = Server.assign().getJVMId();
 				oneCase.agentNum++;
 			}
+			synchronized (Server.casesID) {
+				Server.casesID.add(oneCase.caseID);
+			}
 			synchronized (Server.cases) {
 				Server.cases.put(oneCase.caseID, oneCase);
 				oneCase.finished = true;
 			}
-			synchronized (Server.casesID) {
-				Server.casesID.add(oneCase.caseID);
+			
+//			Scanner input = new Scanner(System.in);
+//			while (true) {
+//				input.next();
+//				Server.servers.get(0).migrate();
+//			}
+			while(!oneCase.getClock().isFini()){
+				Thread.sleep(1000);
 			}
-			Scanner input = new Scanner(System.in);
-			while (true) {
-				input.next();
-				Server.servers.get(0).migrate();
-			}
+			System.out.println("fini");
+			oneCase.output(oneCase.getClock().getDuration()+"");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -132,9 +144,10 @@ public class Client implements MainInterface, Serializable {
 			}
 		}
 	}
-	
-	public boolean isPathOK(Tuple t){
-		return t.path.isLowerPath(this.tempPath) && this.tempJVM.isStillAvailable();
+
+	public boolean isPathOK(Tuple t) {
+		return t.path.isLowerPath(this.tempPath)
+				&& this.tempJVM.isStillAvailable();
 	}
 
 	public void control(int order, int totalTicks) {
@@ -159,7 +172,7 @@ public class Client implements MainInterface, Serializable {
 		return agentNum;
 	}
 
-	@SuppressWarnings( { "finally", "unchecked" })
+	@SuppressWarnings({ "finally", "unchecked" })
 	public <T> ArrayList<T> getAgentList(Class<T> targetClass) {
 		ArrayList<T> ans = new ArrayList<T>();
 		try {
@@ -212,11 +225,11 @@ public class Client implements MainInterface, Serializable {
 					String fName = temp.substring(0, pos);
 					temp = temp.substring(temp.indexOf("^") + 1);
 					System.out.println(temp);
-					int interval = Integer.parseInt(temp.substring(0, temp
-							.indexOf("^")));
+					int interval = Integer.parseInt(temp.substring(0,
+							temp.indexOf("^")));
 					temp = temp.substring(temp.indexOf("^") + 1);
-					int needTicks = Integer.parseInt(temp.substring(0, temp
-							.indexOf("^")));
+					int needTicks = Integer.parseInt(temp.substring(0,
+							temp.indexOf("^")));
 					pc.add(new Func(cName, fName, interval, needTicks));
 				}
 			}
@@ -238,5 +251,15 @@ public class Client implements MainInterface, Serializable {
 			this.interval = interval;
 			this.needTicks = needTicks;
 		}
+	}
+
+	public void output(String s) throws IOException {
+		File fo = new File("statistics\\"+this.hashCode()+".txt");
+		FileWriter fw = new FileWriter(fo);
+		BufferedWriter bw = new BufferedWriter(fw);
+		bw.write(s);
+		bw.flush();
+		bw.close();
+		fw.close();
 	}
 }
