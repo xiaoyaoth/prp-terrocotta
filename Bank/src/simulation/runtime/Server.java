@@ -9,6 +9,9 @@
  * 或者如何根据网卡获取ip地址？
  * 环境变量中记录了一个ip地址，是tc-config文件所在计算机的ip地址；
  */
+/*
+ * March 21:删除了Server下的agent的Arraylist,不然内存一直释放不掉
+ */
 package simulation.runtime;
 
 import java.io.File;
@@ -20,7 +23,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -34,66 +38,111 @@ public class Server implements Runnable, Serializable {
 	/**
 	 * 
 	 */
+	private static final long serialVersionUID = 1L;
+	
+	private Object tcLock;
+	private int pointer;
+	
 	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
 	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn//";
 	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
-	private final static int PORT = 10000;
-	private String ip = "192.168.131.1";
-	private int JVM_id;
 
-	private static final long serialVersionUID = 1L;
-	private Object tcLock;
-	private int pointer;
+	public static int finiCaseNumber;
 	public static Map<Integer, Client> cases = new HashMap<Integer, Client>();
-	public static ArrayList<Integer> casesID = new ArrayList<Integer>();
-	public static ArrayList<Server> servers = new ArrayList<Server>();
-	private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
+	public static LinkedList<Client> casesID = new LinkedList<Client>();
+	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
+	//public static ArrayList<Server> servers = new ArrayList<Server>();
+	// private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
+	private ServerInformation sInfo;
+	private PerformanceThread perfthread;
+	
+	private class PerformanceThread implements Runnable {
+		private int cpuUsage;
+		private int memAvail;
+		private int machineAbility;
+		private int loopCount;
 
-	private int cpuUsage;
-	private int memAvail;
-	private int machineAbility;
-	private int loopCount;
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			while(true){
+				synchronized (tcLock) {
+					int cpuTemp = CPU.INSTANCE.getCpuUsage();
+					int cpuAve = 0;
+					if (cpuTemp <= 100) {
+						this.loopCount++;
+						this.cpuUsage += cpuTemp;
+						cpuAve = this.cpuUsage / this.loopCount;
+					}
+					this.memAvail = MEM.INSTANCE.getMEMUsage();
+					this.machineAbility = this.memAvail * (100-cpuAve);
+					System.out.println(" LoopCount:" + this.loopCount + " CpuTemp:"
+							+ cpuTemp + " MEM:" + this.memAvail + " CPU:"
+							+ cpuAve);
+				}
+				synchronized(serverInfo){
+					sInfo.perf = this.machineAbility;
+					serverInfo.put(sInfo.JVM_id, sInfo);
+				}
+				try {
+					Thread.sleep(10000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}		
+	}
 
+	public class ServerInformation {
+		private final static int PORT = 10000;
+		private String ip = "192.168.131.1";
+		private int JVM_id;
+		private int perf;
+		
+		public String getIp(){
+			return this.ip;
+		}
+	}
 	/* debug */
 	// private Scanner in = new Scanner(System.in);
 
 	Server() {
 		Server.deleteAllAgentsFile();
-		//new GetFile(PORT).start();
+		this.sInfo = new ServerInformation();
+		this.perfthread = new PerformanceThread();
+		// new GetFile(PORT).start();
 		tcLock = new Object();
-		this.JVM_id = this.hashCode();
+		this.sInfo.JVM_id = this.hashCode();
 		try {
-			this.ip = InetAddress.getLocalHost().getHostAddress().toString();
+			this.sInfo.ip = InetAddress.getLocalHost().getHostAddress().toString();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		this.cpuUsage = 0;
-		this.memAvail = 0;
-		this.pointer = 0;
-		this.loopCount = 0;
-
-		System.out.println("JVM " + this.JVM_id + " starts");
+		
+		System.out.println("JVM " + this.sInfo.JVM_id + " starts");
 	}
 
 	public int getJVMId() {
-		return this.JVM_id;
+		return this.sInfo.JVM_id;
 	}
 
 	public String getIp() {
-		return this.ip;
+		return this.sInfo.ip;
 	}
 
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
 		Server c = new Server();
 		c.setIp(in.next());
-		synchronized (Server.servers) {
-			Server.servers.add(c);
-		}
 		new Thread(c).start();
 	}
 
 	public void run() {
+		synchronized (this.tcLock) {
+			this.pointer = Server.finiCaseNumber;
+		}
+		new Thread(this.perfthread).start();
 		while (true) {
 			this.initLoop();
 			this.mainLoop();
@@ -113,50 +162,60 @@ public class Server implements Runnable, Serializable {
 		}
 	}
 
-	public static Server assign() {
+	public static Integer assign() {
 		int mode = 0;
-		int sel;
-		Server se;
+		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();
 
 		switch (mode) {
 		case 0:// random choose
-			sel = (int) (Math.random() * servers.size());
-			return Server.servers.get(sel);
-		case 1:// based on agent_list size and wait_list size
-			se = Server.servers.get(0);
-			for (Server s : Server.servers)
-				if (s.agents.size() < se.agents.size())
-					se = s;
-			return se;
-		case 2:// based on machine performance
-			se = Server.servers.get(0);
-			for (Server s : Server.servers)
-				if (s.machineAbility < se.machineAbility)
-					se = s;
-			return se;
+			int res = 0;
+			for(int i = 0; i<Server.serverInfo.size()*Math.random(); i++)
+				res = iter.next();
+			return res;
+			// case 1:// based on agent_list size and wait_list size
+			// se = Server.servers.get(0);
+			// for (Server s : Server.servers)
+			// if (s.agents.size() < se.agents.size())
+			// se = s;
+			// return se;
+		case 2:// based on machine performance	
+			int bestPerf = 0;
+			int bestId = -1;
+			while(iter.hasNext()){
+				int tempId = iter.next();
+				int tempPerf = Server.serverInfo.get(tempId).perf;
+				if(tempPerf>=bestPerf){
+					bestPerf = tempPerf;
+					bestId = tempId;
+				}
+			}
+			return bestId;
 		case 3:// based on agents' relationship with each other
-				/*actually it should be the logic of the Client
-				 * instead, the Server just responsible for return
-				 * proper JVM_id from the perspective of Hardware
-				 * thus should not burden the work to assign a agent
-				 * a specific JVM_id*/
+			/*
+			 * actually it should be the logic of the Client instead, the Server
+			 * just responsible for return proper JVM_id from the perspective of
+			 * Hardware thus should not burden the work to assign a agent a
+			 * specific JVM_id
+			 */
+		case 4:
+			
 		default:
 			return null;
 		}
 	}
 
 	public void migrate() throws IOException, ClassNotFoundException {
-		System.out.println(Server.cases);
-		DefaultBelief a = this.agents.get(0);
-		System.out.println(a);
-		a.setMigrate(true);
-		synchronized (this.agents) {
-			this.agents.remove(a);
-		}
+		// System.out.println(Server.cases);
+		// DefaultBelief a = this.agents.get(0);
+		// System.out.println(a);
+		// a.setMigrate(true);
+		// synchronized (this.agents) {
+		// this.agents.remove(a);
+		// }
 	}
 
 	public void recover() throws IOException, ClassNotFoundException {
-		File[] flist = dir.listFiles();
+		File[] flist = Server.dir.listFiles();
 		for (File f : flist) {
 			File mig = f;
 			FileInputStream fin = new FileInputStream(mig);
@@ -167,9 +226,9 @@ public class Server implements Runnable, Serializable {
 				c.agentList.put(ag.getID(), ag);
 			}
 			/* newly modified */
-			synchronized (this.agents) {
-				this.agents.add(ag);
-			}
+			// synchronized (this.agents) {
+			// this.agents.add(ag);
+			// }
 			ag.setMain(Server.cases.get(ag.getCaseID()));
 			ag.setMigrate(false);
 			new Thread(ag).start();
@@ -190,7 +249,7 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public static void deleteAllAgentsFile() {
-		File dir = new File(AGENTS_IN_FILE_FOLDER);
+		File dir = new File(Server.AGENTS_IN_FILE_FOLDER);
 		File[] flist = dir.listFiles();
 		for (File f : flist) {
 			f.delete();
@@ -212,32 +271,22 @@ public class Server implements Runnable, Serializable {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-
-		synchronized (this.tcLock) {
-			int cpuTemp = CPU.INSTANCE.getCpuUsage();
-			if (cpuTemp < 100){
-				this.loopCount++;
-				this.cpuUsage += cpuTemp;
-				this.cpuUsage = this.cpuUsage/this.loopCount;/*java cannot do calculation?*/
-			}
-			this.memAvail = MEM.INSTANCE.getMEMUsage();
-			this.machineAbility = this.memAvail * this.cpuUsage;
-			//System.out.println(" LoopCount:" + this.loopCount + " CpuTemp:" + cpuTemp + " MEM:"+this.memAvail+" CPU:"+this.cpuUsage);
-		}
 	}
 
 	public void mainLoop() {
-		if (cases.size() - 1 >= pointer) {
-			System.out.println("pointer " + pointer + " cases.size "
-					+ cases.size());
-			Client oneCase = cases.get(casesID.get(pointer));
+		int realPointer = this.pointer - Server.finiCaseNumber;
+//		System.out.println("casesID's size is " + casesID.size()
+//				+ ", realPointer is " + realPointer);
+		if (Server.casesID.size() > realPointer) {
+			Client oneCase = casesID.get(realPointer);
 			if (oneCase.isFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
 				System.out.println(table);
 				for (int i = 0; i < table.size(); i++) {
+					System.out.println("i<table.size()");
 					DefaultBelief ag = null;
 					Tuple one = table.get(i);
-					if (one.JVM_id == this.JVM_id) {
+					if (one.JVM_id == this.sInfo.JVM_id) {
 						Object[] args = new Object[one.args.size()];
 						for (int j = 0; j < one.args.size(); j++)
 							args[j] = Integer.parseInt(one.args.get(j)
@@ -245,18 +294,18 @@ public class Server implements Runnable, Serializable {
 
 						Object tempObj;
 						try {
-							System.out.println("agent_type"+one.agTy);
+							System.out.println("agent_type" + one.agTy);
 							tempObj = InvokeMethod.newInstance(one.agTy, args);
 							if (tempObj instanceof DefaultBelief) {
 								ag = (DefaultBelief) tempObj;
 								ag.setMain(oneCase);
 								ag.setID(one.id);
 								ag.setPath(one.path);
-								ag.setIp(this.ip);
+								ag.setIp(this.sInfo.ip);
 								this.addPc(oneCase, ag);
-								synchronized (tcLock) {
-									this.agents.add(ag);
-								}
+								// synchronized (tcLock) {
+								// this.agents.add(ag);
+								// }
 							}
 						} catch (Exception e) {
 							// TODO Auto-generated catch block
@@ -277,11 +326,12 @@ public class Server implements Runnable, Serializable {
 				}
 				System.out.println("[This scenario is completely arranged!]");
 				System.out.println();
+
 				// oneCase.control(1, oneCase.getTicks());
 				if (!oneCase.getClock().isGoOn())
 					oneCase.startClock();
-				synchronized (tcLock) {
-					pointer++;
+				synchronized (this.tcLock) {
+					this.pointer++;
 				}
 			}
 		} else {
@@ -294,11 +344,11 @@ public class Server implements Runnable, Serializable {
 		}
 	}
 
-	public boolean isStillAvailable(){
+	public boolean isStillAvailable() {
 		return true;
 	}
-	
-	public void setIp(String ip){
-		this.ip = ip;
+
+	public void setIp(String ip) {
+		this.sInfo.ip = ip;
 	}
 }

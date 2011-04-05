@@ -38,6 +38,12 @@ public class Client implements MainInterface, Serializable {
 
 	private Path tempPath = null;
 	private Server tempJVM = null;
+	
+	private int removeMutex;
+	
+	public int decMutex(){
+		return this.removeMutex--;
+	}
 
 	public boolean isFinished() {
 		return this.finished;
@@ -98,36 +104,49 @@ public class Client implements MainInterface, Serializable {
 					root + "USER\\" + args[0] + "\\snr.xml",
 					Integer.parseInt(args[1]));
 			// "snr.xml", 50);
+			System.out.println("client half fini2");
+			//System.out.println("lastAssignID:"+lastAssignID);
 			for (int i = 0; i < oneCase.caseTable.size(); i++) {
 				Tuple oneTuple = oneCase.caseTable.get(i);
-				oneTuple.JVM_id = Server.assign().getJVMId();
+				oneTuple.JVM_id = Server.assign();
 				oneCase.agentNum++;
 			}
+			System.out.println("client half fini3");
 			synchronized (Server.casesID) {
-				Server.casesID.add(oneCase.caseID);
+				Server.casesID.add(oneCase);
 			}
+			System.out.println("client half fini4");
 			synchronized (Server.cases) {
 				Server.cases.put(oneCase.caseID, oneCase);
 				oneCase.finished = true;
 			}
-			
-//			Scanner input = new Scanner(System.in);
-//			while (true) {
-//				input.next();
-//				Server.servers.get(0).migrate();
-//			}
-			while(!oneCase.getClock().isFini()){
+			System.out.println("client half fini5");
+			// Scanner input = new Scanner(System.in);
+			// while (true) {
+			// input.next();
+			// Server.servers.get(0).migrate();
+			// }
+			while (!oneCase.getClock().isFini()) {
 				Thread.sleep(1000);
 			}
+			/* added on March 21 */
+			synchronized (Server.cases) {
+				Server.cases.remove(oneCase);
+			}
+			synchronized (Server.casesID) {
+				Server.casesID.remove(oneCase);
+				Server.finiCaseNumber++;
+			}
+			/* fini */
 			System.out.println("fini");
-			oneCase.output(oneCase.getClock().getDuration()+"");
+			oneCase.output(oneCase.getClock().getDuration() + "");
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	/* newly added */
+	/* newly added *//* deleted on Mar 28th by xiaoyaoth
 	public void assignAgentsLogically() {
 		int mode = 0;
 		switch (mode) {
@@ -144,6 +163,7 @@ public class Client implements MainInterface, Serializable {
 			}
 		}
 	}
+	*/
 
 	public boolean isPathOK(Tuple t) {
 		return t.path.isLowerPath(this.tempPath)
@@ -254,7 +274,7 @@ public class Client implements MainInterface, Serializable {
 	}
 
 	public void output(String s) throws IOException {
-		File fo = new File("statistics\\"+this.hashCode()+".txt");
+		File fo = new File("statistics\\" + this.hashCode() + ".txt");
 		FileWriter fw = new FileWriter(fo);
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);

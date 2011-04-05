@@ -11,6 +11,7 @@ import java.util.Map;
 
 import simulation.runtime.SendFile;
 import simulation.runtime.Server;
+import simulation.runtime.Server.ServerInformation;
 
 public class DefaultBelief extends PlanManager implements Runnable,
 		Serializable {
@@ -286,9 +287,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Server res;
-		if ((res = Server.assign()) != null)
-			new SendFile(res.getIp(), PORT, mig).start();
+		/*edited on Mar 28th by xiaoyaoth*/
+		ServerInformation si = Server.serverInfo.get(Server.assign());
+		if (si != null)
+			new SendFile(si.getIp(), PORT, mig).start();
 		synchronized (this.tcLock) {
 			this.nextTick = false;
 		}
