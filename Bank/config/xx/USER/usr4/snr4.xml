@@ -1,0 +1,146 @@
+<?xml version="1.0"?>
+<snr>
+<sln>sln02</sln>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="false"/>
+<RoleInfos>
+<RoleInfo name="Bank"/>
+<RoleInfo name="Customer"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="Pt" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="2">
+<Instance id="0">
+<cash value="1000"/>
+</Instance>
+<Instance id="1">
+<cash value="1000"/>
+</Instance>
+<Instance id="10">
+<cash value="1000"/>
+</Instance>
+<Instance id="11">
+<cash value="1000"/>
+</Instance>
+<Instance id="20">
+<cash value="1000"/>
+</Instance>
+<Instance id="21">
+<cash value="1000"/>
+</Instance>
+</Instances>
+</Role>
+<Role index="1">
+<Instances instanceNum="4">
+<Instance id="2">
+<cash value="100"/>
+</Instance>
+<Instance id="3">
+<cash value="100"/>
+</Instance>
+<Instance id="4">
+<cash value="100"/>
+</Instance>
+<Instance id="5">
+<cash value="100"/>
+</Instance>
+<Instance id="12">
+<cash value="100"/>
+</Instance>
+<Instance id="13">
+<cash value="100"/>
+</Instance>
+<Instance id="14">
+<cash value="100"/>
+</Instance>
+<Instance id="15">
+<cash value="100"/>
+</Instance>
+<!--
+<Instance id="102">
+<cash value="100"/>
+</Instance>
+<Instance id="103">
+<cash value="100"/>
+</Instance>
+<Instance id="104">
+<cash value="100"/>
+</Instance>
+<Instance id="105">
+<cash value="100"/>
+</Instance>
+<Instance id="112">
+<cash value="100"/>
+</Instance>
+<Instance id="113">
+<cash value="100"/>
+</Instance>
+<Instance id="114">
+<cash value="100"/>
+</Instance>
+<Instance id="115">
+<cash value="100"/>
+</Instance>
+<Instance id="122">
+<cash value="100"/>
+</Instance>
+<Instance id="123">
+<cash value="100"/>
+</Instance>
+<Instance id="124">
+<cash value="100"/>
+</Instance>
+<Instance id="125">
+<cash value="100"/>
+</Instance>
+<Instance id="132">
+<cash value="100"/>
+</Instance>
+<Instance id="133">
+<cash value="100"/>
+</Instance>
+<Instance id="134">
+<cash value="100"/>
+</Instance>
+<Instance id="135">
+<cash value="100"/>
+</Instance>
+<Instance id="142">
+<cash value="100"/>
+</Instance>
+<Instance id="143">
+<cash value="100"/>
+</Instance>
+<Instance id="144">
+<cash value="100"/>
+</Instance>
+<Instance id="145">
+<cash value="100"/>
+</Instance>
+<Instance id="152">
+<cash value="100"/>
+</Instance>
+<Instance id="153">
+<cash value="100"/>
+</Instance>
+<Instance id="154">
+<cash value="100"/>
+</Instance>
+<Instance id="155">
+<cash value="100"/>
+</Instance>
+-->
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences></Influences></snr>

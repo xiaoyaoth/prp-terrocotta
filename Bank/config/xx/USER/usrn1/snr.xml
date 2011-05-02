@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<snr>
+<sln>slnn1</sln>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="true"/>
+<RoleInfos>
+<RoleInfo name="Producer"/>
+<RoleInfo name="Consumer"/>
+<RoleInfo name="Restaurant"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="root" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="2">
+<Instance id="0">
+<cash value="100"/>
+</Instance>
+<Instance id="1">
+<cash value="100"/>
+</Instance>
+<Instance id="10">
+<cash value="100"/>
+</Instance>
+<Instance id="11">
+<cash value="100"/>
+</Instance>
+<Instance id="20">
+<cash value="100"/>
+</Instance>
+<Instance id="21">
+<cash value="100"/>
+</Instance>
+<Instance id="30">
+<cash value="100"/>
+</Instance>
+<Instance id="31">
+<cash value="100"/>
+</Instance>
+<Instance id="40">
+<cash value="100"/>
+</Instance>
+<Instance id="41">
+<cash value="100"/>
+</Instance>
+</Instances>
+</Role>
+<Role index="1">
+<Instances instanceNum="2">
+<Instance id="2">
+<cash value="100"/>
+</Instance>
+<Instance id="3">
+<cash value="100"/>
+</Instance>
+<Instance id="12">
+<cash value="100"/>
+</Instance>
+<Instance id="13">
+<cash value="100"/>
+</Instance>
+<Instance id="22">
+<cash value="100"/>
+</Instance>
+<Instance id="23">
+<cash value="100"/>
+</Instance>
+<Instance id="32">
+<cash value="100"/>
+</Instance>
+<Instance id="33">
+<cash value="100"/>
+</Instance>
+<Instance id="42">
+<cash value="100"/>
+</Instance>
+<Instance id="43">
+<cash value="100"/>
+</Instance>
+</Instances>
+</Role>
+<Role index="2">
+<Instances instanceNum="2">
+<Instance id="4">
+<cash value="100"/>
+</Instance>
+<Instance id="5">
+<cash value="100"/>
+</Instance>
+<Instance id="14">
+<cash value="100"/>
+</Instance>
+<Instance id="15">
+<cash value="100"/>
+</Instance>
+<Instance id="24">
+<cash value="100"/>
+</Instance>
+<Instance id="25">
+<cash value="100"/>
+</Instance>
+<Instance id="34">
+<cash value="100"/>
+</Instance>
+<Instance id="35">
+<cash value="100"/>
+</Instance>
+<Instance id="44">
+<cash value="100"/>
+</Instance>
+<Instance id="45">
+<cash value="100"/>
+</Instance>
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences>
+</Influences>
+</snr>
