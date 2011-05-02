@@ -7,6 +7,13 @@
       <data>terracotta/server-data</data>
       <logs>terracotta/server-logs</logs>
       <statistics>terracotta/cluster-statistics</statistics>
+      <dso>
+        <garbage-collection>
+          <enabled>true</enabled>
+          <verbose>false</verbose>
+          <interval>60</interval>
+        </garbage-collection>
+      </dso>
     </server>
   </servers>
   <clients>
@@ -27,16 +34,21 @@
           <field-name>simulation.runtime.Server.casesID</field-name>
         </root>
         <root>
-          <field-name>simulation.runtime.Server.servers</field-name>
+          <field-name>simulation.runtime.Server.finiCaseNumber</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.Server.serverInfo</field-name>
         </root>
       </roots>
       <locks>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.runtime.Client.__INIT__(java.lang.String, int)</method-expression>
+          <method-expression>void
+						simulation.runtime.Client.__INIT__(java.lang.String, int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.runtime.Client.main(java.lang.String[])</method-expression>
+          <method-expression>void
+						simulation.runtime.Client.main(java.lang.String[])</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -44,7 +56,8 @@
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.runtime.Server.main(java.lang.String[])</method-expression>
+          <method-expression>void
+						simulation.runtime.Server.main(java.lang.String[])</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -68,35 +81,44 @@
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setTick(int)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setTick(int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.addMess(boolean, simulation.modeling.MessageInfo)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.addMess(boolean,
+						simulation.modeling.MessageInfo)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.addConn(int)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.addConn(int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.removeConn(int)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.removeConn(int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>java.lang.String simulation.modeling.DefaultBelief.toString()</method-expression>
+          <method-expression>java.lang.String
+						simulation.modeling.DefaultBelief.toString()</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setLifeCycle(int)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setLifeCycle(int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setID(int)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setID(int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setMain(simulation.modeling.MainInterface)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setMain(simulation.modeling.MainInterface)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -108,11 +130,13 @@
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setMigrate(boolean)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setMigrate(boolean)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
+          <method-expression>void
+						simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -125,6 +149,11 @@
         </autolock>
         <autolock auto-synchronized="false">
           <method-expression>void simulation.runtime.Server.mainLoop()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void
+						simulation.runtime.Server$PerformanceThread.run()</method-expression>
           <lock-level>write</lock-level>
         </autolock>
       </locks>
