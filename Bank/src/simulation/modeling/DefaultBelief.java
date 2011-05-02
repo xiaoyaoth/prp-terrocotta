@@ -22,9 +22,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
-	
+
 	private String ip;
-	private Map<String,Integer>ipCount = new HashMap<String, Integer>();
+	private Map<String, Integer> ipCount = new HashMap<String, Integer>();
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
@@ -80,7 +80,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.createPlans();
 					this.submitPlans();
 
-					//System.out.println(this.id+" "+this.ipCount);
+					// System.out.println(this.id+" "+this.ipCount);
 					if (this.migrate) {
 						this.migrate();
 					}
@@ -119,12 +119,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public int getID() {
 		return this.id;
 	}
-	
-	public void setIp(String ip){
+
+	public void setIp(String ip) {
 		this.ip = ip;
 	}
-	
-	public String getIp(){
+
+	public String getIp() {
 		return this.ip;
 	}
 
@@ -187,30 +187,33 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void receiveMessages() {
-		/* edited by xiaoyaoth
-		for (int i = 0; i < this.rcvMessageBox.size(); i++) {
-			MessageInfo mi = this.rcvMessageBox.get(i);
-			*/
-		while(this.rcvMessageBox.size()>0){
+		/*
+		 * edited by xiaoyaoth for (int i = 0; i < this.rcvMessageBox.size();
+		 * i++) { MessageInfo mi = this.rcvMessageBox.get(i);
+		 */
+		while (this.rcvMessageBox.size() > 0) {
 			MessageInfo mi = this.rcvMessageBox.remove(0);
 			if (!mi.getRFlag()) {
 				/* edited by Xiaosong */
 				this.addIpCount(mi.getIp());
-				/* edited fini*/				
+				/* edited fini */
 				mi.setRFlag();
 				String temp = mi.getContent();
-				/* edited by Xiaosong
-				if(temp.endsWith("aaaaaaaaaaaaaaaa"))
-					System.out.print("1");
-				edited fini*/
+				/* edited on May 2nd*/
+				mi = null;
+				/* edited fini*/
+				/*
+				 * edited by Xiaosong if(temp.endsWith("aaaaaaaaaaaaaaaa"))
+				 * System.out.print("1"); edited fini
+				 */
 				int kh = temp.indexOf("(");
 				if (kh > -1) {
 					String pn = temp.substring(0, kh);
 					int pIndex = getPCIndex(pn);
 					if (pIndex > -1) {
 						PlanCondition tpc = pc.get(pIndex);
-						PlanInstance pi = new PlanInstance(this.getID(), tpc
-								.getID(), tpc.getNeedTicks(), pn);
+						PlanInstance pi = new PlanInstance(this.getID(),
+								tpc.getID(), tpc.getNeedTicks(), pn);
 						temp = temp.substring(1 + kh);
 						int dh = temp.indexOf(", "), yh = temp.indexOf(")");
 						if (yh != kh + 1) {
@@ -234,12 +237,13 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void sendMessages() {
-		/* edited by xiaoyaoth
 		for (int i = 0; i < this.sndMessageBox.size(); i++) {
 			MessageInfo mi = this.sndMessageBox.get(i);
-			*/
-		while(this.sndMessageBox.size()>0){
-			MessageInfo mi = this.sndMessageBox.remove(0);
+			/*
+			 * edited by xiaoyaoth 
+			 * /* while(this.sndMessageBox.size()>0){
+			 * MessageInfo mi = this.sndMessageBox.remove(0);
+			 */
 			if (!mi.getSFlag()) {
 				mi.setSFlag();
 				this.main.getAgent(mi.getRcv()).addMess(false, mi);
@@ -280,7 +284,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	// This function violate everything I learn from the principle of SW design.
 	public void migrate() throws IOException {
-		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.id + "rr" + System.currentTimeMillis());
+		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.id + "rr"
+				+ System.currentTimeMillis());
 		FileOutputStream fout = new FileOutputStream(mig);
 		ObjectOutputStream objout = new ObjectOutputStream(fout);
 		try {
@@ -296,7 +301,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*edited on Mar 28th by xiaoyaoth*/
+		/* edited on Mar 28th by xiaoyaoth */
 		ServerInformation si = Server.serverInfo.get(Server.assign());
 		if (si != null)
 			new SendFile(si.getIp(), PORT, mig).start();
@@ -320,34 +325,34 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public int getCaseID() {
 		return caseID;
 	}
-	
-	/*edited by Xiaosong*/
-	private void addIpCount(String ip){
-		if(this.ipCount.containsKey(ip)){
+
+	/* edited by Xiaosong */
+	private void addIpCount(String ip) {
+		if (this.ipCount.containsKey(ip)) {
 			int count = this.ipCount.get(ip);
-			this.ipCount.put(ip, count+1);
-		}else
+			this.ipCount.put(ip, count + 1);
+		} else
 			this.ipCount.put(ip, 1);
 	}
-	
-	private String getMaxIp(){
+
+	private String getMaxIp() {
 		int tempCount = 0;
 		String resIp = "127.0.0.1";
-		for(String s:this.ipCount.keySet()){
+		for (String s : this.ipCount.keySet()) {
 			int count = this.ipCount.get(s);
-			if(count > tempCount)
+			if (count > tempCount)
 				resIp = s;
 		}
 		return resIp;
 	}
-	
-	public void setHostServerID(int hostServerID){
+
+	public void setHostServerID(int hostServerID) {
 		this.hostServerID = hostServerID;
 	}
-	
-	public int getHostServerID(){
+
+	public int getHostServerID() {
 		return this.hostServerID;
 	}
-	
-	/*edit fini*/
+
+	/* edit fini */
 }

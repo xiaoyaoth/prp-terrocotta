@@ -53,8 +53,20 @@ public class Client implements MainInterface, Serializable {
 		return this.caseTable;
 	}
 
+	public void setTable(ArrayList<Tuple> table) {
+		synchronized (this.caseTable) {
+			this.caseTable = table;
+		}
+	}
+
 	public ArrayList<Integer> getIDList() {
 		return this.idList;
+	}
+
+	public void setIDList(ArrayList<Integer> idList) {
+		synchronized (this.idList) {
+			this.idList = idList;
+		}
 	}
 
 	public ArrayList<Path> getPathList() {
@@ -120,7 +132,7 @@ public class Client implements MainInterface, Serializable {
 				Server.cases.put(oneCase.caseID, oneCase);
 				oneCase.finished = true;
 			}
-			System.out.println("client half fini5");
+			System.out.println("client half fini5 " + oneCase.getCaseID());
 			// Scanner input = new Scanner(System.in);
 			// while (true) {
 			// input.next();
@@ -133,14 +145,14 @@ public class Client implements MainInterface, Serializable {
 			System.out.println("fini");
 			oneCase.output(oneCase.getClock().getDuration() + " " + args[0]
 					+ " " + args[1]);
-			synchronized (oneCase){
-				oneCase.caseTable.clear();
+			synchronized (oneCase) {
+				//oneCase.caseTable.clear();
 				oneCase.pc.clear();
 				oneCase.pathList.clear();
 				oneCase.idList.clear();
 				oneCase.agentList.clear();
-				oneCase.clk.setMain(null);
-				oneCase.clk = null;
+//				oneCase.clk.setMain(null);
+//				oneCase.clk = null;
 			}
 			synchronized (Server.cases) {
 				Server.cases.remove(oneCase);
@@ -149,9 +161,9 @@ public class Client implements MainInterface, Serializable {
 			synchronized (Server.casesID) {
 				Server.casesID.remove(oneCase);
 				Server.finiCaseNumber++;
+				oneCase = null;
 			}
 			/* fini */
-
 
 		} catch (Exception e) {
 			e.printStackTrace();

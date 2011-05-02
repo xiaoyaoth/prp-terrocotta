@@ -32,9 +32,9 @@ public class PlanManager implements Serializable
 				pi.invoke(this.sub);
 				/* edited by xiaoyaoth*/
 				Server.serverInfo.get(this.sub.getHostServerID()).addEventCount();
-				/* edited fini*/
 				this.plans.remove(i);
 				pi = null;
+				/* edited fini*/
 			}
 			else i++;
 		}

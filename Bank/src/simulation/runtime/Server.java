@@ -290,7 +290,7 @@ public class Server implements Runnable, Serializable {
 			Client oneCase = casesID.get(realPointer);
 			if (oneCase.isFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
-				System.out.println(table);
+				System.out.println(oneCase.getCaseID() + " " + table);
 				for (int i = 0; i < table.size(); i++) {
 					System.out.println("i<table.size()");
 					DefaultBelief ag = null;
@@ -304,7 +304,6 @@ public class Server implements Runnable, Serializable {
 						try {
 							System.out.println("agent_type " + one.agTy);
 							tempObj = InvokeMethod.newInstance(one.agTy, args);
-							args = null;
 							if (tempObj instanceof DefaultBelief) {
 								ag = (DefaultBelief) tempObj;
 								ag.setMain(oneCase);
@@ -332,8 +331,18 @@ public class Server implements Runnable, Serializable {
 							oneCase.getIDList().add(ag.getID());
 						}
 						new Thread(ag).start();
+						/* added on May 2nd */
+						args = null;
+						//one = null;
+						/**/
 					}
 				}
+				/* added on May 2nd
+				table = null;
+				synchronized (oneCase) {
+					oneCase.setTable(null);
+				}
+				/* */
 				System.out.println("[This scenario is completely arranged!]");
 				System.out.println();
 

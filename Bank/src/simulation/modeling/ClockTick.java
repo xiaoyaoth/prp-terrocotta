@@ -92,6 +92,7 @@ public class ClockTick implements Runnable, Serializable {
 			System.out.println(end-start);
 			this.duration = end - start;
 			fini = true;
+			this.main = null;
 		}
 	}
 
