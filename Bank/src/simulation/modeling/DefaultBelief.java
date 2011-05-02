@@ -36,6 +36,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private ArrayList<Integer> connectIDs = new ArrayList<Integer>();
 	private Path path;
 	private Lock tcLock = new Lock();
+	private Integer hostServerID;
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -186,8 +187,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void receiveMessages() {
+		/* edited by xiaoyaoth
 		for (int i = 0; i < this.rcvMessageBox.size(); i++) {
 			MessageInfo mi = this.rcvMessageBox.get(i);
+			*/
+		while(this.rcvMessageBox.size()>0){
+			MessageInfo mi = this.rcvMessageBox.remove(0);
 			if (!mi.getRFlag()) {
 				/* edited by Xiaosong */
 				this.addIpCount(mi.getIp());
@@ -229,8 +234,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void sendMessages() {
+		/* edited by xiaoyaoth
 		for (int i = 0; i < this.sndMessageBox.size(); i++) {
 			MessageInfo mi = this.sndMessageBox.get(i);
+			*/
+		while(this.sndMessageBox.size()>0){
+			MessageInfo mi = this.sndMessageBox.remove(0);
 			if (!mi.getSFlag()) {
 				mi.setSFlag();
 				this.main.getAgent(mi.getRcv()).addMess(false, mi);
@@ -331,5 +340,14 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 		return resIp;
 	}
+	
+	public void setHostServerID(int hostServerID){
+		this.hostServerID = hostServerID;
+	}
+	
+	public int getHostServerID(){
+		return this.hostServerID;
+	}
+	
 	/*edit fini*/
 }

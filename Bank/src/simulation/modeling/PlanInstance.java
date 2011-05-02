@@ -36,6 +36,7 @@ public class PlanInstance implements Serializable
 	{
 		try {
 			Object o = InvokeMethod.invokeMethod(sub, this.planName, this.para);
+			this.para = null;
 		}
 		catch (Exception e) {}
 	}

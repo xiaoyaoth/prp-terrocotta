@@ -38,10 +38,10 @@ public class Client implements MainInterface, Serializable {
 
 	private Path tempPath = null;
 	private Server tempJVM = null;
-	
+
 	private int removeMutex;
-	
-	public int decMutex(){
+
+	public int decMutex() {
 		return this.removeMutex--;
 	}
 
@@ -105,7 +105,7 @@ public class Client implements MainInterface, Serializable {
 					Integer.parseInt(args[1]));
 			// "snr.xml", 50);
 			System.out.println("client half fini2");
-			//System.out.println("lastAssignID:"+lastAssignID);
+			// System.out.println("lastAssignID:"+lastAssignID);
 			for (int i = 0; i < oneCase.caseTable.size(); i++) {
 				Tuple oneTuple = oneCase.caseTable.get(i);
 				oneTuple.JVM_id = Server.assign();
@@ -130,40 +130,43 @@ public class Client implements MainInterface, Serializable {
 				Thread.sleep(1000);
 			}
 			/* added on March 21 */
+			System.out.println("fini");
+			oneCase.output(oneCase.getClock().getDuration() + " " + args[0]
+					+ " " + args[1]);
+			synchronized (oneCase){
+				oneCase.caseTable.clear();
+				oneCase.pc.clear();
+				oneCase.pathList.clear();
+				oneCase.idList.clear();
+				oneCase.agentList.clear();
+				oneCase.clk.setMain(null);
+				oneCase.clk = null;
+			}
 			synchronized (Server.cases) {
 				Server.cases.remove(oneCase);
+				Server.cases.keySet().remove(oneCase.caseID);
 			}
 			synchronized (Server.casesID) {
 				Server.casesID.remove(oneCase);
 				Server.finiCaseNumber++;
 			}
 			/* fini */
-			System.out.println("fini");
-			oneCase.output(oneCase.getClock().getDuration() + "");
+
 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	/* newly added *//* deleted on Mar 28th by xiaoyaoth
-	public void assignAgentsLogically() {
-		int mode = 0;
-		switch (mode) {
-		case 0:
-			for (Tuple t : this.caseTable) {
-				if (this.tempPath == null)
-					this.tempPath = t.path;
-				if (this.tempJVM == null)
-					this.tempJVM = Server.assign();
-				if (this.isPathOK(t))
-					t.JVM_id = this.tempJVM.getJVMId();
-				else
-					t.JVM_id = Server.assign().getJVMId();
-			}
-		}
-	}
-	*/
+	/* newly added *//*
+					 * deleted on Mar 28th by xiaoyaoth public void
+					 * assignAgentsLogically() { int mode = 0; switch (mode) {
+					 * case 0: for (Tuple t : this.caseTable) { if
+					 * (this.tempPath == null) this.tempPath = t.path; if
+					 * (this.tempJVM == null) this.tempJVM = Server.assign(); if
+					 * (this.isPathOK(t)) t.JVM_id = this.tempJVM.getJVMId();
+					 * else t.JVM_id = Server.assign().getJVMId(); } } }
+					 */
 
 	public boolean isPathOK(Tuple t) {
 		return t.path.isLowerPath(this.tempPath)

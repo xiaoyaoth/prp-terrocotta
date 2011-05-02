@@ -3,6 +3,8 @@ package simulation.modeling;
 import java.io.Serializable;
 import java.util.*;
 
+import simulation.runtime.Server;
+
 public class PlanManager implements Serializable
 {
 	private ArrayList<PlanInstance> plans = new ArrayList<PlanInstance>();
@@ -28,7 +30,11 @@ public class PlanManager implements Serializable
 			if (pi.decTickLeft() < 0)
 			{
 				pi.invoke(this.sub);
+				/* edited by xiaoyaoth*/
+				Server.serverInfo.get(this.sub.getHostServerID()).addEventCount();
+				/* edited fini*/
 				this.plans.remove(i);
+				pi = null;
 			}
 			else i++;
 		}

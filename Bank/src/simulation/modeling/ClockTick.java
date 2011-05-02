@@ -119,4 +119,8 @@ public class ClockTick implements Runnable, Serializable {
 	public boolean isFini(){
 		return this.fini;
 	}
+	
+	public void setMain(MainInterface main){
+		this.main = main;
+	}
 }
