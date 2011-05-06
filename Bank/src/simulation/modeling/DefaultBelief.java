@@ -20,26 +20,31 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private final static int PORT = 10000;
 
 	private int pCounter = 0;
-	private ArrayList<PlanCondition> pc = new ArrayList<PlanCondition>();
+	private ArrayList<PlanCondition> pc;
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
 
 	private String ip;
-	private Map<String, Integer> ipCount = new HashMap<String, Integer>();
+	private Map<String, Integer> ipCount;
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
 
 	protected transient MainInterface main;
 	private int caseID;
-	private ArrayList<MessageInfo> sndMessageBox = new ArrayList<MessageInfo>();
-	private ArrayList<MessageInfo> rcvMessageBox = new ArrayList<MessageInfo>();
-	private ArrayList<Integer> connectIDs = new ArrayList<Integer>();
+	private ArrayList<MessageInfo> sndMessageBox;
+	private ArrayList<MessageInfo> rcvMessageBox;
+	private ArrayList<Integer> connectIDs;
 	private Path path;
 	private Lock tcLock = new Lock();
 	private Integer hostServerID;
 
 	public DefaultBelief() {
 		this.setSub(this);
+		this.pc = new ArrayList<PlanCondition>();
+		this.sndMessageBox = new ArrayList<MessageInfo>();
+		this.rcvMessageBox = new ArrayList<MessageInfo>();
+		this.connectIDs = new ArrayList<Integer>();
+		this.ipCount = new HashMap<String, Integer>();
 	}
 
 	/* ×Ô´øAction */
@@ -80,17 +85,34 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.createPlans();
 					this.submitPlans();
 
-					// System.out.println(this.id+" "+this.ipCount);
 					if (this.migrate) {
 						this.migrate();
 					}
 
 					this.main.getClock().decNow();
+					Server.serverInfo.get(this.hostServerID).addAgentCount();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		}
+		/* added on May 2nd by xiaoyaoth */
+		synchronized (tcLock) {
+			Server.serverInfo.get(this.hostServerID).decAgentTotal();
+			this.pc.clear();
+			this.pc = null;
+			this.ipCount.clear();
+			this.ipCount = null;
+			this.sndMessageBox.clear();
+			this.sndMessageBox = null;
+			this.rcvMessageBox.clear();
+			this.rcvMessageBox = null;
+			this.connectIDs.clear();
+			this.connectIDs = null;
+			this.path = null;
+			this.main = null;
+		}
+		/* added fini */
 	}
 
 	public void setMain(MainInterface main) {
@@ -141,7 +163,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	public boolean isNoLife() {
-		return --this.lifeCycle >= 0;
+		synchronized (this.tcLock) {
+			return this.lifeCycle-- > 0;
+		}
 	}
 
 	public void addTick() {
@@ -158,17 +182,21 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	public void addMess(boolean flag, MessageInfo mi) {
-		if (flag)
+		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.add(mi);
-		else
+		else if(this.rcvMessageBox != null)
 			this.rcvMessageBox.add(mi);
+		else
+			return;
 	}
 
 	public void removeMess(boolean flag, int index) {
-		if (flag)
+		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.remove(index);
-		else
+		else if(this.rcvMessageBox != null)
 			this.rcvMessageBox.remove(index);
+		else 
+			return;
 	}
 
 	protected void createPlans() {
@@ -187,10 +215,11 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void receiveMessages() {
-		/*
-		 * edited by xiaoyaoth for (int i = 0; i < this.rcvMessageBox.size();
-		 * i++) { MessageInfo mi = this.rcvMessageBox.get(i);
-		 */
+
+		// edited by xiaoyaoth
+		// for (int i = 0; i < this.rcvMessageBox.size(); i++) {
+		// MessageInfo mi = this.rcvMessageBox.get(i);
+
 		while (this.rcvMessageBox.size() > 0) {
 			MessageInfo mi = this.rcvMessageBox.remove(0);
 			if (!mi.getRFlag()) {
@@ -199,9 +228,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				/* edited fini */
 				mi.setRFlag();
 				String temp = mi.getContent();
-				/* edited on May 2nd*/
+				/* edited on May 2nd */
 				mi = null;
-				/* edited fini*/
+				/* edited fini */
 				/*
 				 * edited by Xiaosong if(temp.endsWith("aaaaaaaaaaaaaaaa"))
 				 * System.out.print("1"); edited fini
@@ -237,13 +266,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void sendMessages() {
-		for (int i = 0; i < this.sndMessageBox.size(); i++) {
-			MessageInfo mi = this.sndMessageBox.get(i);
-			/*
-			 * edited by xiaoyaoth 
-			 * /* while(this.sndMessageBox.size()>0){
-			 * MessageInfo mi = this.sndMessageBox.remove(0);
-			 */
+		// for (int i = 0; i < this.sndMessageBox.size(); i++) {
+		// MessageInfo mi = this.sndMessageBox.get(i);
+
+		// edited by xiaoyaoth
+		while (this.sndMessageBox.size() > 0) {
+			MessageInfo mi = this.sndMessageBox.remove(0);
 			if (!mi.getSFlag()) {
 				mi.setSFlag();
 				this.main.getAgent(mi.getRcv()).addMess(false, mi);
@@ -302,7 +330,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			e.printStackTrace();
 		}
 		/* edited on Mar 28th by xiaoyaoth */
-		ServerInformation si = Server.serverInfo.get(Server.assign());
+		ServerInformation si = Server.serverInfo.get(this.main.assign());
 		if (si != null)
 			new SendFile(si.getIp(), PORT, mig).start();
 		synchronized (this.tcLock) {

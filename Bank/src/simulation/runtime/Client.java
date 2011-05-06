@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -120,7 +121,7 @@ public class Client implements MainInterface, Serializable {
 			// System.out.println("lastAssignID:"+lastAssignID);
 			for (int i = 0; i < oneCase.caseTable.size(); i++) {
 				Tuple oneTuple = oneCase.caseTable.get(i);
-				oneTuple.JVM_id = Server.assign();
+				oneTuple.JVM_id = oneCase.assign();
 				oneCase.agentNum++;
 			}
 			System.out.println("client half fini3");
@@ -146,13 +147,13 @@ public class Client implements MainInterface, Serializable {
 			oneCase.output(oneCase.getClock().getDuration() + " " + args[0]
 					+ " " + args[1]);
 			synchronized (oneCase) {
-				//oneCase.caseTable.clear();
+				// oneCase.caseTable.clear();
 				oneCase.pc.clear();
 				oneCase.pathList.clear();
 				oneCase.idList.clear();
-				oneCase.agentList.clear();
-//				oneCase.clk.setMain(null);
-//				oneCase.clk = null;
+				// oneCase.agentList.clear();
+				// oneCase.clk.setMain(null);
+				// oneCase.clk = null;
 			}
 			synchronized (Server.cases) {
 				Server.cases.remove(oneCase);
@@ -180,10 +181,10 @@ public class Client implements MainInterface, Serializable {
 					 * else t.JVM_id = Server.assign().getJVMId(); } } }
 					 */
 
-	public boolean isPathOK(Tuple t) {
-		return t.path.isLowerPath(this.tempPath)
-				&& this.tempJVM.isStillAvailable();
-	}
+//	public boolean isPathOK(Tuple t) {
+//		return t.path.isLowerPath(this.tempPath)
+//				&& this.tempJVM.isStillAvailable();
+//	}
 
 	public void control(int order, int totalTicks) {
 		if (order == 1) {
@@ -296,5 +297,51 @@ public class Client implements MainInterface, Serializable {
 		bw.flush();
 		bw.close();
 		fw.close();
+	}
+
+	public Integer assign() {
+		int mode = 0;
+		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();
+
+		switch (mode) {
+		default:
+		case 0:
+			int res = 0;
+			for (int i = 0; i < Server.serverInfo.size() * Math.random(); i++)
+				res = iter.next();
+			return res;
+		case 1:// based on machine performance
+			int bestPerf = 0;
+			int bestId = -1;
+			while (iter.hasNext()) {
+				int tempId = iter.next();
+				int tempPerf = Server.serverInfo.get(tempId).getPerf();
+				if (tempPerf > bestPerf) {
+					bestPerf = tempPerf;
+					bestId = tempId;
+				}
+			}
+			return bestId;
+		case 2:
+			// case 1:// based on agent_list size and wait_list size
+			// se = Server.servers.get(0);
+			// for (Server s : Server.servers)
+			// if (s.agents.size() < se.agents.size())
+			// se = s;
+			// return se;
+		case 3:// based on agents' relationship with each other
+			/*
+			 * actually it should be the logic of the Client instead, the Server
+			 * just responsible for return proper JVM_id from the perspective of
+			 * Hardware thus should not burden the work to assign a agent a
+			 * specific JVM_id
+			 */
+			return -1;
+		}
+	}
+	
+	public void setMigrate(){
+		for(DefaultBelief ag : this.agentList.values())
+			ag.setMigrate(true);
 	}
 }

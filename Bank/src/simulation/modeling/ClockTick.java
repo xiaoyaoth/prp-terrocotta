@@ -3,6 +3,8 @@ package simulation.modeling;
 import java.io.Serializable;
 import java.util.Date;
 
+import simulation.runtime.Server;
+
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
 	private boolean goOn;
@@ -10,7 +12,7 @@ public class ClockTick implements Runnable, Serializable {
 	private Lock nowLock = new Lock();
 	private Lock tcLock = new Lock();
 	private MainInterface main;
-	
+
 	private long duration;
 	private boolean fini;
 
@@ -48,8 +50,8 @@ public class ClockTick implements Runnable, Serializable {
 		return this.tick;
 	}
 
-	public void run() {		
-		long start,end;
+	public void run() {
+		long start, end;
 		synchronized (tcLock) {
 			this.goOn = true;
 			Date time = new Date();
@@ -69,7 +71,7 @@ public class ClockTick implements Runnable, Serializable {
 				synchronized (nowLock) {
 					++this.tick;
 				}
-				System.out.println("Tick " + tick + " :" + this.now);
+				System.out.println(" Tick " + tick + " :" + this.now);
 				synchronized (nowLock) {
 					this.now = this.main.getTotal();
 					this.nowLock.notifyAll();
@@ -82,15 +84,19 @@ public class ClockTick implements Runnable, Serializable {
 				}
 			}
 		}
-		synchronized (tcLock) {		
+		synchronized (tcLock) {
 			goOn = false;
 			Date time = new Date();
 			end = time.getTime();
 			System.out.println(start);
 			System.out.println(end);
 			System.out.print("time consumed ");
-			System.out.println(end-start);
+			System.out.println(end - start);
 			this.duration = end - start;
+			/*
+			 * 这里不是fini,当clocktick把所有的agent唤醒，clocktick结束了，但是Agent还在运行。
+			 * 所以当所有Agent结束运行才是一切的终结，想办法弄一下
+			 */
 			fini = true;
 			this.main = null;
 		}
@@ -104,7 +110,7 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void decNow() {
 		synchronized (this.nowLock) {
-			System.out.print(now+" ");
+			System.out.print(now + " ");
 			--now;
 		}
 		if (this.now <= 0)
@@ -112,16 +118,16 @@ public class ClockTick implements Runnable, Serializable {
 				this.tickLock.notifyAll();
 			}
 	}
-	
-	public long getDuration(){
+
+	public long getDuration() {
 		return this.duration;
 	}
-	
-	public boolean isFini(){
+
+	public boolean isFini() {
 		return this.fini;
 	}
-	
-	public void setMain(MainInterface main){
+
+	public void setMain(MainInterface main) {
 		this.main = main;
 	}
 }

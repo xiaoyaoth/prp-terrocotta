@@ -18,14 +18,17 @@ public class SendFile extends Thread {
 	int port;
 	Socket tempSocket;
 	OutputStream os;
-	RandomAccessFile outFile;
+	//RandomAccessFile outFile;
+	File file;
 	byte byteBuffer[] = new byte[1024];
 
 	public SendFile(String remoteIPString, int port, File file) {
 		try {
+			System.out.println(remoteIPString + port);
 			this.remoteIPString = remoteIPString;
 			this.port = port;
-			outFile = new RandomAccessFile(file, "r");
+			this.file = file;
+			//outFile = new RandomAccessFile(file, "r");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -33,6 +36,7 @@ public class SendFile extends Thread {
 
 	public void run() {
 		try {
+			RandomAccessFile outFile = new RandomAccessFile(this.file, "r");
 			this.tempSocket = new Socket(this.remoteIPString, this.port);
 			//System.out.println("与服务器连接成功!");
 			os = tempSocket.getOutputStream();
@@ -47,6 +51,7 @@ public class SendFile extends Thread {
 			outFile.close();
 			os.close();
 			tempSocket.close();
+			this.file.delete();
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			e.printStackTrace();

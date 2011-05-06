@@ -156,6 +156,10 @@
 						simulation.runtime.Server$PerformanceThread.run()</method-expression>
           <lock-level>write</lock-level>
         </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>boolean simulation.modeling.DefaultBelief.isNoLife()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
       </locks>
     </dso>
   </application>

@@ -61,6 +61,8 @@ public class Server implements Runnable, Serializable {
 		private int memAvail;
 		private int machineAbility;
 		private int loopCount;
+		private int weakPoint;
+		private int JVM_id;
 
 		@Override
 		public void run() {
@@ -79,8 +81,28 @@ public class Server implements Runnable, Serializable {
 					System.out.println(" LoopCount:" + this.loopCount
 							+ " CpuTemp:" + cpuTemp + " MEM:" + this.memAvail
 							+ " CPU:" + cpuAve + " EventCount:"
-							+ sInfo.eventCount);
+							+ sInfo.eventCount + " AgentCount:"
+							+ sInfo.agentCount + " AgentTotal:"
+							+ sInfo.agentTotal + " ratio:"
+							+ (double) sInfo.agentCount
+							/ (sInfo.agentTotal + 1));
+					// if(sInfo.agentTotal>0){
+					// if(((double)sInfo.agentCount/sInfo.agentTotal)<0.1)
+					// weakPoint=1;
+					// else
+					// weakPoint=1;
+					// }else
+					// weakPoint=1;
+					if (this.weakPoint == 0 && Server.cases.size() > 0) {
+						Client c = Server.casesID.getLast();
+						if (c != null)
+							c.setMigrate();
+						else
+							System.out.println("Client is null");
+						this.weakPoint = 1;
+					}
 					sInfo.eventCount = 0;
+					sInfo.agentCount = 0;
 				}
 				synchronized (serverInfo) {
 					sInfo.perf = this.machineAbility;
@@ -102,6 +124,8 @@ public class Server implements Runnable, Serializable {
 		private int JVM_id;
 		private int perf;
 		private int eventCount;
+		private int agentCount;
+		private int agentTotal;
 
 		public String getIp() {
 			return this.ip;
@@ -109,6 +133,19 @@ public class Server implements Runnable, Serializable {
 
 		public void addEventCount() {
 			this.eventCount++;
+		}
+
+		public void addAgentCount() {
+			this.agentCount++;
+		}
+
+		public void decAgentTotal() {
+			// System.out.println("decAgentTotal Called");
+			this.agentTotal--;
+		}
+
+		public int getPerf() {
+			return this.perf;
 		}
 	}
 
@@ -122,6 +159,7 @@ public class Server implements Runnable, Serializable {
 		// new GetFile(PORT).start();
 		tcLock = new Object();
 		this.sInfo.JVM_id = this.hashCode();
+		this.perfthread.JVM_id = this.sInfo.JVM_id;
 		try {
 			this.sInfo.ip = InetAddress.getLocalHost().getHostAddress()
 					.toString();
@@ -143,8 +181,17 @@ public class Server implements Runnable, Serializable {
 	public static void main(String[] args) {
 		Scanner in = new Scanner(System.in);
 		Server c = new Server();
-		c.setIp(in.next());
+		c.setIp("localhost");
 		new Thread(c).start();
+		GetFile getFile = null;
+		try {
+			getFile = new GetFile(10000);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("无法传送文件!");
+			System.exit(1);
+		}
+		getFile.start();
 	}
 
 	public void run() {
@@ -168,48 +215,6 @@ public class Server implements Runnable, Serializable {
 								.get(i).funcName);
 				ag.addPC(pc);
 			}
-		}
-	}
-
-	public static Integer assign() {
-		int mode = 0;
-		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();
-
-		switch (mode) {
-		case 0:// random choose
-			int res = 0;
-			for (int i = 0; i < Server.serverInfo.size() * Math.random(); i++)
-				res = iter.next();
-			return res;
-			// case 1:// based on agent_list size and wait_list size
-			// se = Server.servers.get(0);
-			// for (Server s : Server.servers)
-			// if (s.agents.size() < se.agents.size())
-			// se = s;
-			// return se;
-		case 2:// based on machine performanc
-			int bestPerf = 0;
-			int bestId = -1;
-			while (iter.hasNext()) {
-				int tempId = iter.next();
-				int tempPerf = Server.serverInfo.get(tempId).perf;
-				if (tempPerf > bestPerf) {
-					bestPerf = tempPerf;
-					bestId = tempId;
-				}
-			}
-			return bestId;
-		case 3:// based on agents' relationship with each other
-			/*
-			 * actually it should be the logic of the Client instead, the Server
-			 * just responsible for return proper JVM_id from the perspective of
-			 * Hardware thus should not burden the work to assign a agent a
-			 * specific JVM_id
-			 */
-		case 4:
-
-		default:
-			return null;
 		}
 	}
 
@@ -245,7 +250,7 @@ public class Server implements Runnable, Serializable {
 			try {
 				objin.close();
 				fin.close();
-				f.delete();
+				//f.delete();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -310,6 +315,7 @@ public class Server implements Runnable, Serializable {
 								ag.setID(one.id);
 								ag.setPath(one.path);
 								ag.setIp(this.sInfo.ip);
+								ag.setLifeCycle(oneCase.getTicks());
 								ag.setHostServerID(this.getJVMId());
 								this.addPc(oneCase, ag);
 								// synchronized (tcLock) {
@@ -333,16 +339,17 @@ public class Server implements Runnable, Serializable {
 						new Thread(ag).start();
 						/* added on May 2nd */
 						args = null;
-						//one = null;
+						synchronized (tcLock) {
+							this.sInfo.agentTotal++;
+						}
+						// one = null;
 						/**/
 					}
 				}
-				/* added on May 2nd
-				table = null;
-				synchronized (oneCase) {
-					oneCase.setTable(null);
-				}
-				/* */
+				/*
+				 * added on May 2nd table = null; synchronized (oneCase) {
+				 * oneCase.setTable(null); } /*
+				 */
 				System.out.println("[This scenario is completely arranged!]");
 				System.out.println();
 
@@ -361,10 +368,6 @@ public class Server implements Runnable, Serializable {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public boolean isStillAvailable() {
-		return true;
 	}
 
 	public void setIp(String ip) {
