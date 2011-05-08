@@ -23,7 +23,7 @@ public class ScenarioGenerator {
 					+ "<Instances instanceNum=\"2\">\n";
 			bw.write(temp);
 			bw.flush();
-			for (int i = 0; i < 500; i++) {
+			for (int i = 0; i < 5000; i++) {
 				temp = "<Instance id=\"" + i + "\">\n"
 						+ "<cash value=\"1000\"/>\n" + "</Instance>\n";
 				bw.write(temp);
@@ -33,8 +33,8 @@ public class ScenarioGenerator {
 					+ "<Instances instanceNum=\"4\">\n";
 			bw.write(temp);
 			bw.flush();
-			for (int i = 0; i < 500; i++) {
-				int j = i + 501;
+			for (int i = 0; i < 5000; i++) {
+				int j = i + 5000;
 				temp = "<Instance id=\"" + j + "\">\n"
 						+ "<cash value=\"100\"/>\n" + "</Instance>\n";
 				bw.write(temp);

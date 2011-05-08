@@ -16,15 +16,15 @@ public class SendFile extends Thread {
 
 	String remoteIPString = null;
 	int port;
-	Socket tempSocket;
-	OutputStream os;
+	//Socket tempSocket;
+	//OutputStream os;
 	//RandomAccessFile outFile;
 	File file;
 	byte byteBuffer[] = new byte[1024];
 
 	public SendFile(String remoteIPString, int port, File file) {
 		try {
-			System.out.println(remoteIPString + port);
+			//System.out.println(remoteIPString + port);
 			this.remoteIPString = remoteIPString;
 			this.port = port;
 			this.file = file;
@@ -37,9 +37,10 @@ public class SendFile extends Thread {
 	public void run() {
 		try {
 			RandomAccessFile outFile = new RandomAccessFile(this.file, "r");
-			this.tempSocket = new Socket(this.remoteIPString, this.port);
+			System.out.println("sendfile " + this.file.getName());
+			Socket tempSocket = new Socket(this.remoteIPString, this.port);
 			//System.out.println("与服务器连接成功!");
-			os = tempSocket.getOutputStream();
+			OutputStream os = tempSocket.getOutputStream();
 
 			int amount;
 			//System.out.println("开始发送文件...");

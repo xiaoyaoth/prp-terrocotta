@@ -71,19 +71,20 @@ public class ClockTick implements Runnable, Serializable {
 				synchronized (nowLock) {
 					++this.tick;
 				}
-				System.out.println(" Tick " + tick + " :" + this.now);
+				System.out.println("\n Tick " + tick + " :" + this.now);
 				synchronized (nowLock) {
 					this.now = this.main.getTotal();
 					this.nowLock.notifyAll();
 				}
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				// try {
+				// Thread.sleep(500);
+				// } catch (InterruptedException e) {
+				// // TODO Auto-generated catch block
+				// e.printStackTrace();
+				// }
 			}
 		}
+		while(this.now != 0);
 		synchronized (tcLock) {
 			goOn = false;
 			Date time = new Date();
@@ -110,7 +111,7 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void decNow() {
 		synchronized (this.nowLock) {
-			System.out.print(now + " ");
+			//System.out.print(now + " ");
 			--now;
 		}
 		if (this.now <= 0)

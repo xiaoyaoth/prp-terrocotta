@@ -84,11 +84,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();
-
 					if (this.migrate) {
+						System.out.print(this.id + "migrate ");
 						this.migrate();
 					}
-
 					this.main.getClock().decNow();
 					Server.serverInfo.get(this.hostServerID).addAgentCount();
 				} catch (Exception e) {
@@ -335,6 +334,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			new SendFile(si.getIp(), PORT, mig).start();
 		synchronized (this.tcLock) {
 			this.nextTick = false;
+			System.out.println("migrate in DefaultBelief is called");
 		}
 		objout.close();
 		fout.close();
@@ -380,6 +380,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public int getHostServerID() {
 		return this.hostServerID;
+	}
+	
+	public boolean isNextTick(){
+		return this.nextTick;
 	}
 
 	/* edit fini */

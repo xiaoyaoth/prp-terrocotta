@@ -23,7 +23,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
@@ -57,8 +56,8 @@ public class Server implements Runnable, Serializable {
 	private PerformanceThread perfthread;
 
 	private class PerformanceThread implements Runnable {
-		private int cpuUsage;
-		private int memAvail;
+		// private int cpuUsage;
+		// private int memAvail;
 		private int machineAbility;
 		private int loopCount;
 		private int weakPoint;
@@ -69,37 +68,38 @@ public class Server implements Runnable, Serializable {
 			// TODO Auto-generated method stub
 			while (true) {
 				synchronized (tcLock) {
-					int cpuTemp = CPU.INSTANCE.getCpuUsage();
-					int cpuAve = 0;
-					if (cpuTemp <= 100) {
-						this.loopCount++;
-						this.cpuUsage += cpuTemp;
-						cpuAve = this.cpuUsage / this.loopCount;
-					}
-					this.memAvail = MEM.INSTANCE.getMEMUsage();
-					this.machineAbility = this.memAvail * (100 - cpuAve);
-					System.out.println(" LoopCount:" + this.loopCount
-							+ " CpuTemp:" + cpuTemp + " MEM:" + this.memAvail
-							+ " CPU:" + cpuAve + " EventCount:"
+					// int cpuTemp = CPU.INSTANCE.getCpuUsage();
+					// int cpuAve = 0;
+					// if (cpuTemp <= 100) {
+					// this.loopCount++;
+					// this.cpuUsage += cpuTemp;
+					// cpuAve = this.cpuUsage / this.loopCount;
+					// }
+					// this.memAvail = MEM.INSTANCE.getMEMUsage();
+					// this.machineAbility = this.memAvail * (100 - cpuAve);
+					System.out.println(" LoopCount:"
+							+ this.loopCount
+							// + " CpuTemp:" + cpuTemp + " MEM:" + this.memAvail
+							// + " CPU:" + cpuAve + " EventCount:"
 							+ sInfo.eventCount + " AgentCount:"
 							+ sInfo.agentCount + " AgentTotal:"
 							+ sInfo.agentTotal + " ratio:"
 							+ (double) sInfo.agentCount
 							/ (sInfo.agentTotal + 1));
-					// if(sInfo.agentTotal>0){
-					// if(((double)sInfo.agentCount/sInfo.agentTotal)<0.1)
-					// weakPoint=1;
-					// else
-					// weakPoint=1;
-					// }else
-					// weakPoint=1;
-					if (this.weakPoint == 0 && Server.cases.size() > 0) {
+					if (sInfo.agentTotal > 0) {
+						if (((double) sInfo.agentCount / sInfo.agentTotal) < 100)
+							weakPoint++;
+						else
+							weakPoint = 0;
+					} else
+						weakPoint = 0;
+					if (this.weakPoint == 3 && Server.cases.size() > 0) {
 						Client c = Server.casesID.getLast();
 						if (c != null)
 							c.setMigrate();
 						else
 							System.out.println("Client is null");
-						this.weakPoint = 1;
+						this.weakPoint = 4;
 					}
 					sInfo.eventCount = 0;
 					sInfo.agentCount = 0;
@@ -109,7 +109,7 @@ public class Server implements Runnable, Serializable {
 					serverInfo.put(sInfo.JVM_id, sInfo);
 				}
 				try {
-					Thread.sleep(10000);
+					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -245,20 +245,25 @@ public class Server implements Runnable, Serializable {
 			// }
 			ag.setMain(Server.cases.get(ag.getCaseID()));
 			ag.setMigrate(false);
+			synchronized (this.tcLock) {
+				this.sInfo.agentTotal++;
+			}
+			System.out.print(ag.getID() + " nextTick:" + ag.isNextTick() + " ");
 			new Thread(ag).start();
 
 			try {
 				objin.close();
 				fin.close();
-				//f.delete();
+				f.delete();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-
-			System.out.print("&&" + ag.getOwnTick() + " ");
-			System.out.print(ag);
-			System.out.println(" Clock now is "
-					+ ag.getMain().getClock().getNow());
+			System.out.println("recover " + ag.getID());
+			//
+			// System.out.print("&&" + ag.getOwnTick() + " ");
+			// System.out.print(ag);
+			// System.out.println(" Clock now is "
+			// + ag.getMain().getClock().getNow());
 		}
 	}
 
@@ -295,9 +300,9 @@ public class Server implements Runnable, Serializable {
 			Client oneCase = casesID.get(realPointer);
 			if (oneCase.isFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
-				System.out.println(oneCase.getCaseID() + " " + table);
+				//System.out.println(oneCase.getCaseID() + " " + table);
 				for (int i = 0; i < table.size(); i++) {
-					System.out.println("i<table.size()");
+					//System.out.println("i<table.size()");
 					DefaultBelief ag = null;
 					Tuple one = table.get(i);
 					if (one.JVM_id == this.sInfo.JVM_id) {
@@ -307,7 +312,7 @@ public class Server implements Runnable, Serializable {
 
 						Object tempObj;
 						try {
-							System.out.println("agent_type " + one.agTy);
+							//System.out.println("agent_type " + one.agTy);
 							tempObj = InvokeMethod.newInstance(one.agTy, args);
 							if (tempObj instanceof DefaultBelief) {
 								ag = (DefaultBelief) tempObj;

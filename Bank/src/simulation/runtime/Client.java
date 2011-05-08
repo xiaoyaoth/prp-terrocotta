@@ -341,6 +341,7 @@ public class Client implements MainInterface, Serializable {
 	}
 	
 	public void setMigrate(){
+		System.out.println("setMigrate in Client is called");
 		for(DefaultBelief ag : this.agentList.values())
 			ag.setMigrate(true);
 	}

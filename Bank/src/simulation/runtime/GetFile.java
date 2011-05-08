@@ -39,7 +39,7 @@ public class GetFile extends Thread {
 	public void run() {
 		while (true) {
 			try {
-				System.out.println("&&&&&&&&&&&&& Accept New File &&&&&&&&&&&&&&&&&");
+				//System.out.println("&&&&&&&&&&&&& Accept New File &&&&&&&&&&&&&&&&&");
 				Socket tempSocket = serSocket.accept();
 				new Thread(new DealWithReq(tempSocket)).start();
 			} catch (Exception e) {
@@ -81,6 +81,7 @@ final class DealWithReq implements Runnable {
 			is.close();
 			inFile.close();
 			tempSocket.close();
+			//f.delete();
 			//System.out.println("Ω” ’ÕÍ±œ!");
 		} catch (IOException e) {
 			e.printStackTrace();
