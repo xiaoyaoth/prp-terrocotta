@@ -315,12 +315,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				+ System.currentTimeMillis());
 		FileOutputStream fout = new FileOutputStream(mig);
 		ObjectOutputStream objout = new ObjectOutputStream(fout);
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			Thread.sleep(1000);
+//		} catch (InterruptedException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		try {
 			objout.writeObject(this);
 			objout.flush();

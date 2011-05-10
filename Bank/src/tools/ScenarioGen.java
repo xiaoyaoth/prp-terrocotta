@@ -1,13 +1,14 @@
-package simulation.runtime;
+package tools;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class ScenarioGenerator {
+public class ScenarioGen {
 	public static void main(String[] args) {
 		String filename = "snr.txt";
+		int num = 1000;
 		try {
 			File file = new File(filename);
 			FileWriter fw = new FileWriter(file);
@@ -23,7 +24,7 @@ public class ScenarioGenerator {
 					+ "<Instances instanceNum=\"2\">\n";
 			bw.write(temp);
 			bw.flush();
-			for (int i = 0; i < 5000; i++) {
+			for (int i = 0; i < num; i++) {
 				temp = "<Instance id=\"" + i + "\">\n"
 						+ "<cash value=\"1000\"/>\n" + "</Instance>\n";
 				bw.write(temp);
@@ -33,8 +34,8 @@ public class ScenarioGenerator {
 					+ "<Instances instanceNum=\"4\">\n";
 			bw.write(temp);
 			bw.flush();
-			for (int i = 0; i < 5000; i++) {
-				int j = i + 5000;
+			for (int i = 0; i < num; i++) {
+				int j = i + num;
 				temp = "<Instance id=\"" + j + "\">\n"
 						+ "<cash value=\"100\"/>\n" + "</Instance>\n";
 				bw.write(temp);

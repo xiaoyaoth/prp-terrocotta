@@ -77,18 +77,21 @@ public class Server implements Runnable, Serializable {
 					// }
 					// this.memAvail = MEM.INSTANCE.getMEMUsage();
 					// this.machineAbility = this.memAvail * (100 - cpuAve);
+					if (sInfo.agentTotal > 0)
+						sInfo.ratio = sInfo.agentCount / sInfo.agentTotal;
+					else
+						sInfo.ratio = 0;
 					System.out.println(" LoopCount:"
 							+ this.loopCount
 							// + " CpuTemp:" + cpuTemp + " MEM:" + this.memAvail
 							// + " CPU:" + cpuAve + " EventCount:"
 							+ sInfo.eventCount + " AgentCount:"
 							+ sInfo.agentCount + " AgentTotal:"
-							+ sInfo.agentTotal + " ratio:"
-							+ (double) sInfo.agentCount
-							/ (sInfo.agentTotal + 1));
+							+ sInfo.agentTotal + " ratio:" + sInfo.ratio);
 					if (sInfo.agentTotal > 0) {
-						if (((double) sInfo.agentCount / sInfo.agentTotal) < 100)
-							weakPoint++;
+						if (sInfo.ratio < 100)
+							// weakPoint++;
+							weakPoint = 0;
 						else
 							weakPoint = 0;
 					} else
@@ -126,6 +129,7 @@ public class Server implements Runnable, Serializable {
 		private int eventCount;
 		private int agentCount;
 		private int agentTotal;
+		private double ratio;
 
 		public String getIp() {
 			return this.ip;
@@ -146,6 +150,10 @@ public class Server implements Runnable, Serializable {
 
 		public int getPerf() {
 			return this.perf;
+		}
+		
+		public double getRatio(){
+			return this.ratio;
 		}
 	}
 
@@ -300,9 +308,9 @@ public class Server implements Runnable, Serializable {
 			Client oneCase = casesID.get(realPointer);
 			if (oneCase.isFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
-				//System.out.println(oneCase.getCaseID() + " " + table);
+				// System.out.println(oneCase.getCaseID() + " " + table);
 				for (int i = 0; i < table.size(); i++) {
-					//System.out.println("i<table.size()");
+					// System.out.println("i<table.size()");
 					DefaultBelief ag = null;
 					Tuple one = table.get(i);
 					if (one.JVM_id == this.sInfo.JVM_id) {
@@ -312,7 +320,7 @@ public class Server implements Runnable, Serializable {
 
 						Object tempObj;
 						try {
-							//System.out.println("agent_type " + one.agTy);
+							// System.out.println("agent_type " + one.agTy);
 							tempObj = InvokeMethod.newInstance(one.agTy, args);
 							if (tempObj instanceof DefaultBelief) {
 								ag = (DefaultBelief) tempObj;

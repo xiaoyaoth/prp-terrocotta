@@ -19,7 +19,7 @@ import simulation.modeling.DefaultBelief;
 import simulation.modeling.MainInterface;
 import simulation.modeling.Path;
 
-public class Client implements MainInterface, Serializable {
+public class Client implements Runnable, MainInterface, Serializable {
 
 	/**
 	 * 
@@ -94,10 +94,11 @@ public class Client implements MainInterface, Serializable {
 		return this.clk;
 	}
 
-	public Client(String path, int totalTicks) throws IOException,
+	public Client(String usr, String tick) throws IOException,
 			ParserConfigurationException, SAXException {
-		this.totalTicks = totalTicks;
-		Parse p = new Parse(path);
+		this.totalTicks = Integer.parseInt(tick);
+		String configPath = root + "USER\\" + usr + "\\snr.xml";
+		Parse p = new Parse(configPath);
 		caseTable = p.table;
 		getFileList(root + p.getSlnPath());
 		agentList = new HashMap<Integer, DefaultBelief>();
@@ -111,58 +112,53 @@ public class Client implements MainInterface, Serializable {
 		this.control(1, this.getTicks());
 	}
 
-	public static void main(String[] args) throws IOException {
+	public void run() {
 		try {
-			Client oneCase = new Client(
-					root + "USER\\" + args[0] + "\\snr.xml",
-					Integer.parseInt(args[1]));
-			// "snr.xml", 50);
 			System.out.println("client half fini2");
 			// System.out.println("lastAssignID:"+lastAssignID);
-			for (int i = 0; i < oneCase.caseTable.size(); i++) {
-				Tuple oneTuple = oneCase.caseTable.get(i);
-				oneTuple.JVM_id = oneCase.assign();
-				oneCase.agentNum++;
+			for (int i = 0; i < this.caseTable.size(); i++) {
+				Tuple oneTuple = this.caseTable.get(i);
+				oneTuple.JVM_id = this.assign();
+				this.agentNum++;
 			}
 			System.out.println("client half fini3");
 			synchronized (Server.casesID) {
-				Server.casesID.add(oneCase);
+				Server.casesID.add(this);
 			}
 			System.out.println("client half fini4");
 			synchronized (Server.cases) {
-				Server.cases.put(oneCase.caseID, oneCase);
-				oneCase.finished = true;
+				Server.cases.put(this.caseID, this);
+				this.finished = true;
 			}
-			System.out.println("client half fini5 " + oneCase.getCaseID());
+			System.out.println("client half fini5 " + this.getCaseID());
 			// Scanner input = new Scanner(System.in);
 			// while (true) {
 			// input.next();
 			// Server.servers.get(0).migrate();
 			// }
-			while (!oneCase.getClock().isFini()) {
+			while (!this.getClock().isFini()) {
 				Thread.sleep(1000);
 			}
 			/* added on March 21 */
 			System.out.println("fini");
-			oneCase.output(oneCase.getClock().getDuration() + " " + args[0]
-					+ " " + args[1]);
-			synchronized (oneCase) {
+			this.output(this.getClock().getDuration() + " " + " "
+					+ this.totalTicks);
+			synchronized (this) {
 				// oneCase.caseTable.clear();
-				oneCase.pc.clear();
-				oneCase.pathList.clear();
-				oneCase.idList.clear();
+				this.pc.clear();
+				this.pathList.clear();
+				this.idList.clear();
 				// oneCase.agentList.clear();
 				// oneCase.clk.setMain(null);
 				// oneCase.clk = null;
 			}
 			synchronized (Server.cases) {
-				Server.cases.remove(oneCase);
-				Server.cases.keySet().remove(oneCase.caseID);
+				Server.cases.remove(this);
+				Server.cases.keySet().remove(this.caseID);
 			}
 			synchronized (Server.casesID) {
-				Server.casesID.remove(oneCase);
+				Server.casesID.remove(this);
 				Server.finiCaseNumber++;
-				oneCase = null;
 			}
 			/* fini */
 
@@ -181,10 +177,10 @@ public class Client implements MainInterface, Serializable {
 					 * else t.JVM_id = Server.assign().getJVMId(); } } }
 					 */
 
-//	public boolean isPathOK(Tuple t) {
-//		return t.path.isLowerPath(this.tempPath)
-//				&& this.tempJVM.isStillAvailable();
-//	}
+	// public boolean isPathOK(Tuple t) {
+	// return t.path.isLowerPath(this.tempPath)
+	// && this.tempJVM.isStillAvailable();
+	// }
 
 	public void control(int order, int totalTicks) {
 		if (order == 1) {
@@ -301,6 +297,8 @@ public class Client implements MainInterface, Serializable {
 
 	public Integer assign() {
 		int mode = 0;
+		int bestId = -1;
+		int tempId = -1;
 		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();
 
 		switch (mode) {
@@ -312,9 +310,8 @@ public class Client implements MainInterface, Serializable {
 			return res;
 		case 1:// based on machine performance
 			int bestPerf = 0;
-			int bestId = -1;
 			while (iter.hasNext()) {
-				int tempId = iter.next();
+				tempId = iter.next();
 				int tempPerf = Server.serverInfo.get(tempId).getPerf();
 				if (tempPerf > bestPerf) {
 					bestPerf = tempPerf;
@@ -323,13 +320,23 @@ public class Client implements MainInterface, Serializable {
 			}
 			return bestId;
 		case 2:
+			double bestRatio = 0;
+			while (iter.hasNext()) {
+				tempId = iter.next();
+				double tempRatio = Server.serverInfo.get(tempId).getRatio();
+				if (tempRatio > bestRatio) {
+					bestRatio = tempRatio;
+					bestId = tempId;
+				}
+			}
+		case 3:
 			// case 1:// based on agent_list size and wait_list size
 			// se = Server.servers.get(0);
 			// for (Server s : Server.servers)
 			// if (s.agents.size() < se.agents.size())
 			// se = s;
 			// return se;
-		case 3:// based on agents' relationship with each other
+		case 4:// based on agents' relationship with each other
 			/*
 			 * actually it should be the logic of the Client instead, the Server
 			 * just responsible for return proper JVM_id from the perspective of
@@ -339,10 +346,11 @@ public class Client implements MainInterface, Serializable {
 			return -1;
 		}
 	}
-	
-	public void setMigrate(){
+
+	public void setMigrate() {
 		System.out.println("setMigrate in Client is called");
-		for(DefaultBelief ag : this.agentList.values())
+		for (DefaultBelief ag : this.agentList.values())
 			ag.setMigrate(true);
 	}
+
 }
