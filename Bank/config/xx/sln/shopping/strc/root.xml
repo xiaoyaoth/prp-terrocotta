@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<root>
+<Type val="structure"/>
+<Description val=""/>
+<IsTree val="true"/>
+<RoleInfos>
+<RoleInfo name="shoppingAgent" description="hh" maxDefault="10" minDefault="1" agentName="Agent"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="root" description=""/>
+<Roles>
+<Role index="0" max="12" min="8"/>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+</root>

@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<snr>
+<sln>shopping</sln>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="true"/>
+<RoleInfos>
+<RoleInfo name="Agent"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="root" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="30">
+<Instance id="0">
+<frus value="22"/>
+</Instance>
+<Instance id="1">
+<frus value="23"/>
+</Instance>
+<Instance id="2">
+<frus value="24"/>
+</Instance>
+<Instance id="3">
+<frus value="25"/>
+</Instance>
+<Instance id="4">
+<frus value="26"/>
+</Instance>
+<Instance id="5">
+<frus value="27"/>
+</Instance>
+<Instance id="6">
+<frus value="28"/>
+</Instance>
+<Instance id="7">
+<frus value="29"/>
+</Instance>
+<Instance id="8">
+<frus value="30"/>
+</Instance>
+<Instance id="9">
+<frus value="31"/>
+</Instance>
+<Instance id="10">
+<frus value="22"/>
+</Instance>
+<Instance id="11">
+<frus value="23"/>
+</Instance>
+<Instance id="12">
+<frus value="24"/>
+</Instance>
+<Instance id="13">
+<frus value="25"/>
+</Instance>
+<Instance id="14">
+<frus value="26"/>
+</Instance>
+<Instance id="15">
+<frus value="27"/>
+</Instance>
+<Instance id="16">
+<frus value="28"/>
+</Instance>
+<Instance id="17">
+<frus value="29"/>
+</Instance>
+<Instance id="18">
+<frus value="30"/>
+</Instance>
+<Instance id="19">
+<frus value="31"/>
+</Instance>
+<Instance id="20">
+<frus value="22"/>
+</Instance>
+<Instance id="21">
+<frus value="23"/>
+</Instance>
+<Instance id="22">
+<frus value="24"/>
+</Instance>
+<Instance id="23">
+<frus value="25"/>
+</Instance>
+<Instance id="24">
+<frus value="26"/>
+</Instance>
+<Instance id="25">
+<frus value="27"/>
+</Instance>
+<Instance id="26">
+<frus value="28"/>
+</Instance>
+<Instance id="27">
+<frus value="29"/>
+</Instance>
+<Instance id="28">
+<frus value="30"/>
+</Instance>
+<Instance id="29">
+<frus value="31"/>
+</Instance>
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences>
+</Influences>
+</snr>

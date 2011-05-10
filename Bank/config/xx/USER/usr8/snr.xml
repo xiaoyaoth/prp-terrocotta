@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+<snr>
+<sln>shopping</sln>
+<Type val="scenario"/>
+<Description val=""/>
+<IsTree val="true"/>
+<RoleInfos>
+<RoleInfo name="Agent"/>
+</RoleInfos>
+<Parts>
+<Part>
+<Info name="root" description=""/>
+<Roles>
+<Role index="0">
+<Instances instanceNum="10">
+<Instance id="0">
+<frus value="22"/>
+</Instance>
+<Instance id="1">
+<frus value="23"/>
+</Instance>
+<Instance id="2">
+<frus value="24"/>
+</Instance>
+<Instance id="3">
+<frus value="25"/>
+</Instance>
+<Instance id="4">
+<frus value="26"/>
+</Instance>
+<Instance id="5">
+<frus value="27"/>
+</Instance>
+<Instance id="6">
+<frus value="28"/>
+</Instance>
+<Instance id="7">
+<frus value="29"/>
+</Instance>
+<Instance id="8">
+<frus value="30"/>
+</Instance>
+<Instance id="9">
+<frus value="31"/>
+</Instance>
+</Instances>
+</Role>
+</Roles>
+<Sons>
+</Sons>
+</Part>
+</Parts>
+<Groups>
+</Groups>
+<Influences>
+</Influences>
+</snr>

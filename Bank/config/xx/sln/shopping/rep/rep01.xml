@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<rep01>
+<Type val="report"/>
+<Interval val="1"/>
+<Beliefs>
+<Belief agentName="sln.shopping.Agent" beliefName="frus"/>
+</Beliefs>
+</rep01>

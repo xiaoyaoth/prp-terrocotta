@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<shopping>
+<Type val="solution"/>
+<Agents>
+<Agent fileName="res/sln/shopping/src/Agent.java"/>
+<Agent fileName="res/sln/shopping/src/Environment.java"/>
+</Agents>
+<Structure fileName="res/sln/shopping/strc/root.xml"/>
+<Environment fileName="res/sln/shopping/envn/envn.xml"/>
+<Reports>
+<Report fileName="res/sln/shopping/rep/rep01.xml"/>
+</Reports>
+</shopping>
