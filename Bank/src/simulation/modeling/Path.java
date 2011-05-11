@@ -62,6 +62,10 @@ public class Path implements Serializable{
 		return true;
 	}
 	
+	public void clear(){
+		this.path.clear();
+	}
+	
 	/*newly added*/
 	public boolean isUpperPath(Path p){return true;}
 	public boolean isLowerPath(Path p){return true;}

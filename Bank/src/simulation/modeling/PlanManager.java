@@ -39,5 +39,13 @@ public class PlanManager implements Serializable
 			else i++;
 		}
 	}
+	
+	public void cleanPlans(){
+		for(PlanInstance pi:this.plans){
+			pi.cleanParaAndName();
+			pi = null;
+		}
+		this.plans = null;
+	}
 	/* End of Default Action */
 }

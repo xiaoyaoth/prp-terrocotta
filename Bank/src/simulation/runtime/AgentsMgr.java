@@ -19,7 +19,7 @@ import simulation.modeling.DefaultBelief;
 import simulation.modeling.MainInterface;
 import simulation.modeling.Path;
 
-public class Client implements Runnable, MainInterface, Serializable {
+public class AgentsMgr implements Runnable, MainInterface, Serializable {
 
 	/**
 	 * 
@@ -36,6 +36,7 @@ public class Client implements Runnable, MainInterface, Serializable {
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private int caseID;
+	private Parse p;
 
 	private Path tempPath = null;
 	private Server tempJVM = null;
@@ -94,12 +95,12 @@ public class Client implements Runnable, MainInterface, Serializable {
 		return this.clk;
 	}
 
-	public Client(String usr, String tick) throws IOException,
+	public AgentsMgr(String usr, String tick) throws IOException,
 			ParserConfigurationException, SAXException {
 		this.totalTicks = Integer.parseInt(tick);
 		String configPath = root + "USER\\" + usr + "\\snr.xml";
-		Parse p = new Parse(configPath);
-		caseTable = p.table;
+		p = new Parse(configPath);
+		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
 		agentList = new HashMap<Integer, DefaultBelief>();
 		finished = false;
@@ -146,11 +147,19 @@ public class Client implements Runnable, MainInterface, Serializable {
 			synchronized (this) {
 				// oneCase.caseTable.clear();
 				this.pc.clear();
+				this.pc = null;
 				this.pathList.clear();
+				this.pathList = null;
 				this.idList.clear();
-				// oneCase.agentList.clear();
-				// oneCase.clk.setMain(null);
-				// oneCase.clk = null;
+				this.idList = null;
+				this.caseTable.clear();
+				this.caseTable = null;
+				this.agentList.clear();
+				this.agentList = null;
+				this.clk.setMain(null);
+				this.clk = null;
+				this.p.getTable().clear();
+				this.p = null;
 			}
 			synchronized (Server.cases) {
 				Server.cases.remove(this);
@@ -161,8 +170,11 @@ public class Client implements Runnable, MainInterface, Serializable {
 				Server.finiCaseNumber++;
 			}
 			/* fini */
-
+			this.finalize();
 		} catch (Exception e) {
+			e.printStackTrace();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

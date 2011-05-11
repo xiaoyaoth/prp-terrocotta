@@ -108,12 +108,14 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			this.rcvMessageBox = null;
 			this.connectIDs.clear();
 			this.connectIDs = null;
+			this.path.clear();
 			this.path = null;
 			this.main = null;
+			this.cleanPlans();
 		}
 		/* added fini */
 	}
-
+	
 	public void setMain(MainInterface main) {
 		synchronized (tcLock) {
 			this.caseID = main.getCaseID();

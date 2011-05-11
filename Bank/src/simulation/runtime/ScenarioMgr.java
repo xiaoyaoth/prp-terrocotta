@@ -9,14 +9,18 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-public class ClientMgr implements Runnable {
+public class ScenarioMgr implements Runnable {
 
 	private static BlockingQueue<String[]> snrs = new LinkedBlockingQueue<String[]>();
 	private SnrMonitorThread mon = new SnrMonitorThread();
-	
-	public ClientMgr(){
-		new Thread(mon).start();
-		new Thread(this).start();
+
+	public ScenarioMgr() {
+		Thread monThread = new Thread(mon);
+		monThread.setName("MonitorThread");
+		monThread.start();
+		Thread cmThread = new Thread(this);
+		cmThread.setName("ClientMgrThread");
+		cmThread.start();
 	}
 
 	private class SnrMonitorThread implements Runnable {
@@ -31,12 +35,15 @@ public class ClientMgr implements Runnable {
 					if (!dir.isDirectory())
 						throw new Exception();
 					File[] flist = dir.listFiles();
-					for(File f: flist){
-						String filename = f.getName();
-						String[] segs = filename.split("_");
-						System.out.println(segs[0]+" "+segs[1]+" "+segs[2]);
-						this.addSnr(segs[1], segs[2]);
-						f.delete();
+					for (File f : flist) {
+						if (!f.isDirectory()) {
+							String filename = f.getName();
+							String[] segs = filename.split("_");
+							System.out.println(segs[0] + " " + segs[1] + " "
+									+ segs[2]);
+							this.addSnr(segs[1], segs[2]);
+							f.delete();
+						}
 					}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -55,12 +62,12 @@ public class ClientMgr implements Runnable {
 			String[] snr = new String[2];
 			snr[0] = usr;
 			snr[1] = tick;
-			ClientMgr.snrs.add(snr);
+			ScenarioMgr.snrs.add(snr);
 		}
 	}
 
 	public static void main(String[] args) {
-		new ClientMgr();
+		new ScenarioMgr();
 	}
 
 	@Override
@@ -68,8 +75,8 @@ public class ClientMgr implements Runnable {
 		// TODO Auto-generated method stub
 		while (true) {
 			try {
-				String[] oneSnr = ClientMgr.snrs.take();
-				Client c = new Client(oneSnr[0], oneSnr[1]);
+				String[] oneSnr = ScenarioMgr.snrs.take();
+				AgentsMgr c = new AgentsMgr(oneSnr[0], oneSnr[1]);
 				new Thread(c).start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

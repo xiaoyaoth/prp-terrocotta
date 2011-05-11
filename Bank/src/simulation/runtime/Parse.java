@@ -21,11 +21,11 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class Parse implements Serializable {
-	ArrayList<Tuple> table = new ArrayList<Tuple>();
+	private ArrayList<Tuple> table = new ArrayList<Tuple>();
 	private String slnPath;
 	private Map<Integer, String> roleTy = new HashMap<Integer, String>();
 	private int agTy = -1, roletyc = 0; //roleTypeCount
-	Tuple tp = new Tuple();
+	private Tuple tp = new Tuple();
 
 	public Parse(String path) throws ParserConfigurationException, SAXException, IOException
 	{
@@ -34,6 +34,10 @@ public class Parse implements Serializable {
 		InputStream is  = new FileInputStream(path);
 		Document doc = dombuilder.parse(is);
 		printNode(doc, 0, new Path(0));
+	}
+	
+	public ArrayList<Tuple> getTable(){
+		return this.table;
 	}
 	
 	public String getSlnPath()

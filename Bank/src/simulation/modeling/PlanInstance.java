@@ -36,8 +36,15 @@ public class PlanInstance implements Serializable
 	{
 		try {
 			Object o = InvokeMethod.invokeMethod(sub, this.planName, this.para);
-			this.para = null;
+			cleanParaAndName();
 		}
 		catch (Exception e) {}
+	}
+	
+	public void cleanParaAndName(){
+		for(int i = 0; i<this.para.length; i++)
+			this.para[i]=null;
+		this.para = null;
+		this.planName = null;
 	}
 }

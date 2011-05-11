@@ -47,8 +47,8 @@ public class Server implements Runnable, Serializable {
 	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
 
 	public static int finiCaseNumber;
-	public static Map<Integer, Client> cases = new HashMap<Integer, Client>();
-	public static LinkedList<Client> casesID = new LinkedList<Client>();
+	public static Map<Integer, AgentsMgr> cases = new HashMap<Integer, AgentsMgr>();
+	public static LinkedList<AgentsMgr> casesID = new LinkedList<AgentsMgr>();
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
 	// public static ArrayList<Server> servers = new ArrayList<Server>();
 	// private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
@@ -97,7 +97,7 @@ public class Server implements Runnable, Serializable {
 					} else
 						weakPoint = 0;
 					if (this.weakPoint == 3 && Server.cases.size() > 0) {
-						Client c = Server.casesID.getLast();
+						AgentsMgr c = Server.casesID.getLast();
 						if (c != null)
 							c.setMigrate();
 						else
@@ -174,7 +174,7 @@ public class Server implements Runnable, Serializable {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-
+		new ScenarioMgr();
 		System.out.println("JVM " + this.sInfo.JVM_id + " starts");
 	}
 
@@ -190,7 +190,9 @@ public class Server implements Runnable, Serializable {
 		Scanner in = new Scanner(System.in);
 		Server c = new Server();
 		c.setIp("localhost");
-		new Thread(c).start();
+		Thread serverThread = new Thread(c);
+		serverThread.setName("ServerThread");
+		serverThread.start();
 		GetFile getFile = null;
 		try {
 			getFile = new GetFile(10000);
@@ -199,6 +201,7 @@ public class Server implements Runnable, Serializable {
 			System.out.println("无法传送文件!");
 			System.exit(1);
 		}
+		getFile.setName("getFileThread");
 		getFile.start();
 	}
 
@@ -206,14 +209,16 @@ public class Server implements Runnable, Serializable {
 		synchronized (this.tcLock) {
 			this.pointer = Server.finiCaseNumber;
 		}
-		new Thread(this.perfthread).start();
+		Thread perfThread = new Thread(this.perfthread);
+		perfThread.setName("PerformanceThread");
+		perfThread.start();
 		while (true) {
 			this.initLoop();
 			this.mainLoop();
 		}
 	}
 
-	public void addPc(Client oneCase, DefaultBelief ag) {
+	public void addPc(AgentsMgr oneCase, DefaultBelief ag) {
 		for (int i = 0; i < oneCase.getPC().size(); i++) {
 			String cName = oneCase.getPC().get(i).cName;
 			if (ag.getClass().getName().equals(cName)) {
@@ -243,7 +248,7 @@ public class Server implements Runnable, Serializable {
 			FileInputStream fin = new FileInputStream(mig);
 			ObjectInputStream objin = new ObjectInputStream(fin);
 			DefaultBelief ag = (DefaultBelief) objin.readObject();
-			Client c = Server.cases.get(ag.getCaseID());
+			AgentsMgr c = Server.cases.get(ag.getCaseID());
 			synchronized (c.agentList) {
 				c.agentList.put(ag.getID(), ag);
 			}
@@ -305,7 +310,7 @@ public class Server implements Runnable, Serializable {
 		// System.out.println("casesID's size is " + casesID.size(
 		// + ", realPointer is " + realPointer);
 		if (Server.casesID.size() > realPointer) {
-			Client oneCase = casesID.get(realPointer);
+			AgentsMgr oneCase = casesID.get(realPointer);
 			if (oneCase.isFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
 				// System.out.println(oneCase.getCaseID() + " " + table);

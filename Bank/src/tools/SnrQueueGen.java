@@ -8,10 +8,12 @@ public class SnrQueueGen {
 	
 	public static void main(String[] args){
 		Date d = new Date();
-		for(int i = 0; i<10; i++){
-			File f = new File("snrQueue\\"+d.getTime()+i+"_"+args[0]+"_100");
+		int count = Integer.parseInt(args[0]);
+		for(int i = 0; i<count; i++){
+			File f = new File("snrQueue\\"+d.getTime()+i+"_"+args[1]+"_100");
 			try {
 				f.createNewFile();
+				System.out.println(f.getName());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

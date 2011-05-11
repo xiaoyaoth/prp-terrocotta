@@ -131,4 +131,9 @@ public class ClockTick implements Runnable, Serializable {
 	public void setMain(MainInterface main) {
 		this.main = main;
 	}
+	
+	public static void main(String[] args){
+		ClockTick clk = new ClockTick(null);
+		new Thread(clk).start();
+	}
 }
