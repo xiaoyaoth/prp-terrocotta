@@ -23,12 +23,14 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Scanner;
 
 import simulation.modeling.DefaultBelief;
 import simulation.modeling.InvokeMethod;
+import simulation.modeling.Lock;
 import simulation.modeling.PlanCondition;
 
 //import java.util.Scanner;
@@ -39,16 +41,18 @@ public class Server implements Runnable, Serializable {
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private Object tcLock;
+	private Lock tcLock;
 	private int pointer;
 
 	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
 	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn//";
 	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
 
-	public static int finiCaseNumber;
-	public static Map<Integer, AgentsMgr> cases = new HashMap<Integer, AgentsMgr>();
-	public static LinkedList<AgentsMgr> casesID = new LinkedList<AgentsMgr>();
+	//public static int finiCaseNumber;
+	// public static Map<Integer, AgentsMgr> cases = new HashMap<Integer,
+	// AgentsMgr>();
+	// public static LinkedList<AgentsMgr> casesID = new
+	// LinkedList<AgentsMgr>();
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
 	// public static ArrayList<Server> servers = new ArrayList<Server>();
 	// private List<DefaultBelief> agents = new ArrayList<DefaultBelief>();
@@ -68,23 +72,11 @@ public class Server implements Runnable, Serializable {
 			// TODO Auto-generated method stub
 			while (true) {
 				synchronized (tcLock) {
-					// int cpuTemp = CPU.INSTANCE.getCpuUsage();
-					// int cpuAve = 0;
-					// if (cpuTemp <= 100) {
-					// this.loopCount++;
-					// this.cpuUsage += cpuTemp;
-					// cpuAve = this.cpuUsage / this.loopCount;
-					// }
-					// this.memAvail = MEM.INSTANCE.getMEMUsage();
-					// this.machineAbility = this.memAvail * (100 - cpuAve);
 					if (sInfo.agentTotal > 0)
 						sInfo.ratio = sInfo.agentCount / sInfo.agentTotal;
 					else
 						sInfo.ratio = 0;
-					System.out.println(" LoopCount:"
-							+ this.loopCount
-							// + " CpuTemp:" + cpuTemp + " MEM:" + this.memAvail
-							// + " CPU:" + cpuAve + " EventCount:"
+					System.out.println(" LoopCount:" + this.loopCount
 							+ sInfo.eventCount + " AgentCount:"
 							+ sInfo.agentCount + " AgentTotal:"
 							+ sInfo.agentTotal + " ratio:" + sInfo.ratio);
@@ -96,8 +88,9 @@ public class Server implements Runnable, Serializable {
 							weakPoint = 0;
 					} else
 						weakPoint = 0;
-					if (this.weakPoint == 3 && Server.cases.size() > 0) {
-						AgentsMgr c = Server.casesID.getLast();
+					int size = ScenariosMgr.getSnrs().size();
+					if (this.weakPoint == 3 && size > 0) {
+						Scenario c = ScenariosMgr.getSnrs().get(size - 1);
 						if (c != null)
 							c.setMigrate();
 						else
@@ -130,29 +123,34 @@ public class Server implements Runnable, Serializable {
 		private int agentCount;
 		private int agentTotal;
 		private double ratio;
+		private Lock tcLock = new Lock();
 
 		public String getIp() {
 			return this.ip;
 		}
 
-		public void addEventCount() {
+		public synchronized void addEventCount() {
 			this.eventCount++;
 		}
 
-		public void addAgentCount() {
+		public synchronized void addAgentCount() {
 			this.agentCount++;
 		}
 
-		public void decAgentTotal() {
+		public synchronized void decAgentTotal() {
 			// System.out.println("decAgentTotal Called");
 			this.agentTotal--;
+		}
+
+		public synchronized void incAgentTotal() {
+			this.agentTotal++;
 		}
 
 		public int getPerf() {
 			return this.perf;
 		}
-		
-		public double getRatio(){
+
+		public double getRatio() {
 			return this.ratio;
 		}
 	}
@@ -165,7 +163,7 @@ public class Server implements Runnable, Serializable {
 		this.sInfo = new ServerInformation();
 		this.perfthread = new PerformanceThread();
 		// new GetFile(PORT).start();
-		tcLock = new Object();
+		tcLock = new Lock();
 		this.sInfo.JVM_id = this.hashCode();
 		this.perfthread.JVM_id = this.sInfo.JVM_id;
 		try {
@@ -174,7 +172,7 @@ public class Server implements Runnable, Serializable {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		new ScenarioMgr();
+		new ScenariosMgr();
 		System.out.println("JVM " + this.sInfo.JVM_id + " starts");
 	}
 
@@ -207,7 +205,7 @@ public class Server implements Runnable, Serializable {
 
 	public void run() {
 		synchronized (this.tcLock) {
-			this.pointer = Server.finiCaseNumber;
+			this.pointer = ScenariosMgr.finiCaseNum;
 		}
 		Thread perfThread = new Thread(this.perfthread);
 		perfThread.setName("PerformanceThread");
@@ -218,7 +216,7 @@ public class Server implements Runnable, Serializable {
 		}
 	}
 
-	public void addPc(AgentsMgr oneCase, DefaultBelief ag) {
+	public void addPc(Scenario oneCase, DefaultBelief ag) {
 		for (int i = 0; i < oneCase.getPC().size(); i++) {
 			String cName = oneCase.getPC().get(i).cName;
 			if (ag.getClass().getName().equals(cName)) {
@@ -248,7 +246,7 @@ public class Server implements Runnable, Serializable {
 			FileInputStream fin = new FileInputStream(mig);
 			ObjectInputStream objin = new ObjectInputStream(fin);
 			DefaultBelief ag = (DefaultBelief) objin.readObject();
-			AgentsMgr c = Server.cases.get(ag.getCaseID());
+			Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
 			synchronized (c.agentList) {
 				c.agentList.put(ag.getID(), ag);
 			}
@@ -256,10 +254,10 @@ public class Server implements Runnable, Serializable {
 			// synchronized (this.agents) {
 			// this.agents.add(ag);
 			// }
-			ag.setMain(Server.cases.get(ag.getCaseID()));
+			ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
 			ag.setMigrate(false);
 			synchronized (this.tcLock) {
-				this.sInfo.agentTotal++;
+				this.sInfo.incAgentTotal();
 			}
 			System.out.print(ag.getID() + " nextTick:" + ag.isNextTick() + " ");
 			new Thread(ag).start();
@@ -306,12 +304,17 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public void mainLoop() {
-		int realPointer = this.pointer - Server.finiCaseNumber;
-		// System.out.println("casesID's size is " + casesID.size(
-		// + ", realPointer is " + realPointer);
-		if (Server.casesID.size() > realPointer) {
-			AgentsMgr oneCase = casesID.get(realPointer);
-			if (oneCase.isFinished()) {
+		int realPointer = this.pointer - ScenariosMgr.finiCaseNum;
+		 System.out.println("casesID's size is " + ScenariosMgr.getSnrs().size()
+		 + ", realPointer is " + realPointer);
+		if (ScenariosMgr.getSnrs().size() > realPointer) {
+			Scenario oneCase = null;
+			Iterator<Scenario> iter = ScenariosMgr.getSnrs().values()
+					.iterator();
+			for (int i = 0; i < realPointer; i++)
+				oneCase = iter.next();
+			oneCase = iter.next();
+			if (oneCase.isCfgFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
 				// System.out.println(oneCase.getCaseID() + " " + table);
 				for (int i = 0; i < table.size(); i++) {
@@ -358,7 +361,7 @@ public class Server implements Runnable, Serializable {
 						/* added on May 2nd */
 						args = null;
 						synchronized (tcLock) {
-							this.sInfo.agentTotal++;
+							this.sInfo.incAgentTotal();
 						}
 						// one = null;
 						/**/

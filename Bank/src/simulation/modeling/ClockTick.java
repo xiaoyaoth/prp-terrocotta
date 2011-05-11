@@ -59,7 +59,7 @@ public class ClockTick implements Runnable, Serializable {
 			System.out.println(start);
 		}
 		while (this.tick < this.left) {
-			System.out.print("this.tick<this.left");
+			//System.out.print("this.tick<this.left");
 			while (this.goOn && this.tick < this.left) {
 				synchronized (this.tickLock) {
 					try {

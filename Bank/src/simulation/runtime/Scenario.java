@@ -16,10 +16,11 @@ import org.xml.sax.SAXException;
 
 import simulation.modeling.ClockTick;
 import simulation.modeling.DefaultBelief;
+import simulation.modeling.Lock;
 import simulation.modeling.MainInterface;
 import simulation.modeling.Path;
 
-public class AgentsMgr implements Runnable, MainInterface, Serializable {
+public class Scenario implements Runnable, MainInterface, Serializable {
 
 	/**
 	 * 
@@ -27,7 +28,8 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 	private static final long serialVersionUID = 1L;
 	/**** 构建分布式系统需要的成员 ****/
 	private static String root = "config\\xx\\";
-	private boolean finished = false;
+	private boolean cfgFini = false;
+	private boolean execFini = false;
 	private ArrayList<Tuple> caseTable;
 	private ClockTick clk;
 	private int agentNum, totalTicks;
@@ -42,13 +44,18 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 	private Server tempJVM = null;
 
 	private int removeMutex;
+	private Lock tcLock = new Lock();
 
 	public int decMutex() {
 		return this.removeMutex--;
 	}
 
-	public boolean isFinished() {
-		return this.finished;
+	public boolean isCfgFinished() {
+		return this.cfgFini;
+	}
+
+	public boolean isExecFinished() {
+		return this.execFini;
 	}
 
 	public ArrayList<Tuple> getTable() {
@@ -95,7 +102,7 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 		return this.clk;
 	}
 
-	public AgentsMgr(String usr, String tick) throws IOException,
+	public Scenario(String usr, String tick) throws IOException,
 			ParserConfigurationException, SAXException {
 		this.totalTicks = Integer.parseInt(tick);
 		String configPath = root + "USER\\" + usr + "\\snr.xml";
@@ -103,7 +110,7 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
 		agentList = new HashMap<Integer, DefaultBelief>();
-		finished = false;
+		cfgFini = false;
 		clk = new ClockTick(this);
 		System.out.println("clk in contruction " + clk);
 		agentNum = 0;
@@ -123,15 +130,12 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 				this.agentNum++;
 			}
 			System.out.println("client half fini3");
-			synchronized (Server.casesID) {
-				Server.casesID.add(this);
+
+			ScenariosMgr.add(this);
+			synchronized (this.tcLock) {
+				this.cfgFini = true;
 			}
-			System.out.println("client half fini4");
-			synchronized (Server.cases) {
-				Server.cases.put(this.caseID, this);
-				this.finished = true;
-			}
-			System.out.println("client half fini5 " + this.getCaseID());
+			System.out.println("client half fini4 " + this.getCaseID());
 			// Scanner input = new Scanner(System.in);
 			// while (true) {
 			// input.next();
@@ -146,31 +150,19 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 					+ this.totalTicks);
 			synchronized (this) {
 				// oneCase.caseTable.clear();
-				this.pc.clear();
-				this.pc = null;
-				this.pathList.clear();
-				this.pathList = null;
-				this.idList.clear();
-				this.idList = null;
-				this.caseTable.clear();
-				this.caseTable = null;
-				this.agentList.clear();
-				this.agentList = null;
+				this.clean(this.pc);
+				this.clean(this.pathList);
+				this.clean(this.idList);
+				this.clean(this.caseTable);
+				this.clean(this.agentList);
 				this.clk.setMain(null);
 				this.clk = null;
 				this.p.getTable().clear();
 				this.p = null;
-			}
-			synchronized (Server.cases) {
-				Server.cases.remove(this);
-				Server.cases.keySet().remove(this.caseID);
-			}
-			synchronized (Server.casesID) {
-				Server.casesID.remove(this);
-				Server.finiCaseNumber++;
+				this.execFini = true;
+				ScenariosMgr.finiCaseNum++;
 			}
 			/* fini */
-			this.finalize();
 		} catch (Exception e) {
 			e.printStackTrace();
 		} catch (Throwable e) {
@@ -178,21 +170,6 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 			e.printStackTrace();
 		}
 	}
-
-	/* newly added *//*
-					 * deleted on Mar 28th by xiaoyaoth public void
-					 * assignAgentsLogically() { int mode = 0; switch (mode) {
-					 * case 0: for (Tuple t : this.caseTable) { if
-					 * (this.tempPath == null) this.tempPath = t.path; if
-					 * (this.tempJVM == null) this.tempJVM = Server.assign(); if
-					 * (this.isPathOK(t)) t.JVM_id = this.tempJVM.getJVMId();
-					 * else t.JVM_id = Server.assign().getJVMId(); } } }
-					 */
-
-	// public boolean isPathOK(Tuple t) {
-	// return t.path.isLowerPath(this.tempPath)
-	// && this.tempJVM.isStillAvailable();
-	// }
 
 	public void control(int order, int totalTicks) {
 		if (order == 1) {
@@ -238,6 +215,22 @@ public class AgentsMgr implements Runnable, MainInterface, Serializable {
 					&& agentList.get(i).getClass().equals(targetClass))
 				ans.add((T) agentList.get(idList.get(i)));
 		return ans;
+	}
+
+	public <T> void clean(ArrayList<T> list) {
+		for (int i = 0; i < list.size(); i++) {
+			list.remove(i);
+		}
+		list.clear();
+		list = null;
+	}
+
+	public <T1, T2> void clean(Map<T1, T2> list) {
+		for (int i = 0; i < list.size(); i++) {
+			list.remove(i);
+		}
+		list.clear();
+		list = null;
 	}
 
 	public Map<Integer, DefaultBelief> getAgentList() {
