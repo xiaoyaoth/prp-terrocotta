@@ -93,7 +93,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				this.main.getClock().decNow();
 				
 				while (this.main.getClock().isHoldIncNow()) {
-					System.out.println("gate to inc closed? "+ this.main.getClock().isHoldIncNow());
+					//System.out.println("gate to inc closed? "+ this.main.getClock().isHoldIncNow());
 					Thread.sleep(1000);
 				}
 				this.main.getClock().incNow();
@@ -190,7 +190,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		return this.tick;
 	}
 
-	public void addMess(boolean flag, MessageInfo mi) {
+	public synchronized void addMess(boolean flag, MessageInfo mi) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.add(mi);
 		else if (this.rcvMessageBox != null)
@@ -199,7 +199,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			return;
 	}
 
-	public void removeMess(boolean flag, int index) {
+	public synchronized void removeMess(boolean flag, int index) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.remove(index);
 		else if (this.rcvMessageBox != null)

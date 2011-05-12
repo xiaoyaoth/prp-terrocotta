@@ -103,6 +103,7 @@ public class ClockTick implements Runnable, Serializable {
 		if (this.now == 0){
 			this.holdDecNow = true; /* hold agent until "now" is 0 */
 			this.holdIncNow = false;
+			System.out.println("decNow called, holdDec is"+this.holdDecNow+" holdInc is "+this.holdIncNow);
 		}
 	}
 

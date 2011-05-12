@@ -34,7 +34,7 @@ public class Bank extends DefaultBelief implements Serializable {
 		}
 	}
 
-	public void sendMoney() {
+	public synchronized void sendMoney() {
 		ArrayList<Customer> custList = this.main.getAgentList(Customer.class);
 		for (int i = 0; i < 100; i++) {
 			int temp = (int) (Math.random() * 20), index = (int) (Math.random() * custList
