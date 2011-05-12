@@ -33,22 +33,14 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private ArrayList<Tuple> caseTable;
 	private ClockTick clk;
 	private int agentNum, totalTicks;
-	public Map<Integer, DefaultBelief> agentList;
+	private Map<Integer, DefaultBelief> agentList;
 	private ArrayList<Integer> idList;
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
-	private int caseID;
+	private Integer caseID;
 	private Parse p;
 
-	private Path tempPath = null;
-	private Server tempJVM = null;
-
-	private int removeMutex;
 	private Lock tcLock = new Lock();
-
-	public int decMutex() {
-		return this.removeMutex--;
-	}
 
 	public boolean isCfgFinished() {
 		return this.cfgFini;
@@ -148,7 +140,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			System.out.println("fini");
 			this.output(this.getClock().getDuration() + " " + " "
 					+ this.totalTicks);
-			synchronized (this) {
+			synchronized (this.tcLock) {
 				// oneCase.caseTable.clear();
 				this.clean(this.pc);
 				this.clean(this.pathList);
@@ -160,7 +152,10 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				this.p.getTable().clear();
 				this.p = null;
 				this.execFini = true;
+				this.tcLock = null;
+				ScenariosMgr.remove(this);
 				ScenariosMgr.finiCaseNum++;
+				System.gc();
 			}
 			/* fini */
 		} catch (Exception e) {
@@ -219,15 +214,20 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	public <T> void clean(ArrayList<T> list) {
 		for (int i = 0; i < list.size(); i++) {
-			list.remove(i);
+			@SuppressWarnings("unused")
+			T t = list.remove(i);
+			t = null;
 		}
 		list.clear();
 		list = null;
+		System.out.println(list);
 	}
 
 	public <T1, T2> void clean(Map<T1, T2> list) {
 		for (int i = 0; i < list.size(); i++) {
-			list.remove(i);
+			@SuppressWarnings("unused")
+			T2 t = list.remove(i);
+			t = null;
 		}
 		list.clear();
 		list = null;
@@ -237,13 +237,19 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		return this.agentList;
 	}
 
+	public synchronized void putAgent(DefaultBelief ag) {
+		synchronized (this.agentList) {
+			this.agentList.put(ag.getCaseID(), ag);
+		}
+	}
+
 	@Override
 	public DefaultBelief getAgent(int id) {
 		// TODO Auto-generated method stub
 		return this.agentList.get(id);
 	}
 
-	public int getCaseID() {
+	public Integer getCaseID() {
 		return this.caseID;
 	}
 

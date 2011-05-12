@@ -48,7 +48,7 @@ public class Server implements Runnable, Serializable {
 	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn//";
 	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
 
-	//public static int finiCaseNumber;
+	// public static int finiCaseNumber;
 	// public static Map<Integer, AgentsMgr> cases = new HashMap<Integer,
 	// AgentsMgr>();
 	// public static LinkedList<AgentsMgr> casesID = new
@@ -247,9 +247,7 @@ public class Server implements Runnable, Serializable {
 			ObjectInputStream objin = new ObjectInputStream(fin);
 			DefaultBelief ag = (DefaultBelief) objin.readObject();
 			Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-			synchronized (c.agentList) {
-				c.agentList.put(ag.getID(), ag);
-			}
+			c.putAgent(ag);
 			/* newly modified */
 			// synchronized (this.agents) {
 			// this.agents.add(ag);
@@ -305,18 +303,15 @@ public class Server implements Runnable, Serializable {
 
 	public void mainLoop() {
 		int realPointer = this.pointer - ScenariosMgr.finiCaseNum;
-		 System.out.println("casesID's size is " + ScenariosMgr.getSnrs().size()
-		 + ", realPointer is " + realPointer);
-		if (ScenariosMgr.getSnrs().size() > realPointer) {
-			Scenario oneCase = null;
-			Iterator<Scenario> iter = ScenariosMgr.getSnrs().values()
-					.iterator();
-			for (int i = 0; i < realPointer; i++)
-				oneCase = iter.next();
-			oneCase = iter.next();
+		Map<Integer, Scenario> m = ScenariosMgr.getSnrs();
+		ArrayList<Integer> l = ScenariosMgr.getSnrIDs();
+		System.out.println("case: "+ l.size() +" pointer: "+this.pointer+" finiNum: "+ScenariosMgr.finiCaseNum);
+		if (m.size() == l.size()
+				&& ScenariosMgr.getSnrIDs().size() > realPointer) {
+			Scenario oneCase = m.get(l.get(realPointer));
 			if (oneCase.isCfgFinished()) {
 				ArrayList<Tuple> table = oneCase.getTable();
-				// System.out.println(oneCase.getCaseID() + " " + table);
+				System.out.println(oneCase.getCaseID() + " " + table);
 				for (int i = 0; i < table.size(); i++) {
 					// System.out.println("i<table.size()");
 					DefaultBelief ag = null;
@@ -348,9 +343,7 @@ public class Server implements Runnable, Serializable {
 							e.printStackTrace();
 						}
 
-						synchronized (oneCase.agentList) {
-							oneCase.agentList.put(ag.getID(), ag);
-						}
+						oneCase.putAgent(ag);
 						synchronized (oneCase.getPathList()) {
 							oneCase.getPathList().add(one.path);
 						}

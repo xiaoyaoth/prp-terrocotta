@@ -13,5 +13,5 @@ public interface MainInterface
 	public Integer assign();
 	
 	ClockTick getClock();
-	int getCaseID();
+	Integer getCaseID();
 }

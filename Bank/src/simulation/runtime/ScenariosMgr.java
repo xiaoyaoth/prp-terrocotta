@@ -2,8 +2,11 @@ package simulation.runtime;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,13 +14,14 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
-import simulation.modeling.Lock;
-
 public class ScenariosMgr implements Runnable {
 
 	private static BlockingQueue<String[]> snrCfgs = new LinkedBlockingQueue<String[]>();
 	private SnrMonitorThread mon = new SnrMonitorThread();
-	private static LinkedHashMap<Integer, Scenario> snrs = new LinkedHashMap<Integer, Scenario>();
+	// private static LinkedHashMap<Integer, Scenario> snrs = new
+	// LinkedHashMap<Integer, Scenario>();
+	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
+	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
 	public static int finiCaseNum;
 
 	public ScenariosMgr() {
@@ -37,7 +41,7 @@ public class ScenariosMgr implements Runnable {
 			// TODO Auto-generated method stub
 			while (true) {
 				readCfg();
-				checkFini();
+				//checkFini();
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
@@ -66,17 +70,6 @@ public class ScenariosMgr implements Runnable {
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-		}
-
-		private void checkFini() {
-			Iterator<Scenario> iter = ScenariosMgr.snrs.values().iterator();
-			while (iter.hasNext()) {
-				Scenario c = iter.next();
-				if (c.isExecFinished()) {
-					ScenariosMgr.remove(c);
-					c = null;
-				}
 			}
 		}
 
@@ -126,6 +119,9 @@ public class ScenariosMgr implements Runnable {
 		synchronized (ScenariosMgr.snrs) {
 			ScenariosMgr.snrs.put(c.getCaseID(), c);
 		}
+		synchronized (ScenariosMgr.snrIDs) {
+			ScenariosMgr.snrIDs.add(c.getCaseID());
+		}
 	}
 
 	public static synchronized void remove(Scenario c) {
@@ -133,9 +129,17 @@ public class ScenariosMgr implements Runnable {
 			ScenariosMgr.snrs.remove(c);
 			ScenariosMgr.snrs.keySet().remove(c.getCaseID());
 		}
+		synchronized (ScenariosMgr.snrIDs) {
+			ScenariosMgr.snrIDs.remove(c.getCaseID());
+		}
+		c = null;
 	}
 
-	public static LinkedHashMap<Integer, Scenario> getSnrs() {
+	public static Map<Integer, Scenario> getSnrs() {
 		return ScenariosMgr.snrs;
+	}
+
+	public static ArrayList<Integer> getSnrIDs() {
+		return ScenariosMgr.snrIDs;
 	}
 }
