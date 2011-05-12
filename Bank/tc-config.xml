@@ -11,7 +11,7 @@
         <garbage-collection>
           <enabled>true</enabled>
           <verbose>false</verbose>
-          <interval>60</interval>
+          <interval>30</interval>
         </garbage-collection>
       </dso>
     </server>
@@ -28,22 +28,22 @@
       </instrumented-classes>
       <roots>
         <root>
-          <field-name>simulation.runtime.Server.cases</field-name>
-        </root>
-        <root>
-          <field-name>simulation.runtime.Server.casesID</field-name>
-        </root>
-        <root>
-          <field-name>simulation.runtime.Server.finiCaseNumber</field-name>
-        </root>
-        <root>
           <field-name>simulation.runtime.Server.serverInfo</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.finiCaseNum</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.snrIDs</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.snrs</field-name>
         </root>
       </roots>
       <locks>
         <autolock auto-synchronized="false">
           <method-expression>void
-						simulation.runtime.Client.__INIT__(java.lang.String, int)</method-expression>
+						simulation.runtime.AgentsMgr.__INIT__(java.lang.String, int)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -72,21 +72,6 @@
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.addTick()</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void
-						simulation.modeling.DefaultBelief.setTick(int)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void
-						simulation.modeling.DefaultBelief.addMess(boolean,
-						simulation.modeling.MessageInfo)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
           <method-expression>void
 						simulation.modeling.DefaultBelief.addConn(int)</method-expression>
           <lock-level>write</lock-level>
@@ -103,21 +88,7 @@
         </autolock>
         <autolock auto-synchronized="false">
           <method-expression>void
-						simulation.modeling.DefaultBelief.setLifeCycle(int)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void
-						simulation.modeling.DefaultBelief.setID(int)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void
 						simulation.modeling.DefaultBelief.setMain(simulation.modeling.MainInterface)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void simulation.modeling.DefaultBelief.run()</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -127,11 +98,6 @@
         <autolock auto-synchronized="false">
           <method-expression>void
 						simulation.modeling.DefaultBelief.setMigrate(boolean)</method-expression>
-          <lock-level>write</lock-level>
-        </autolock>
-        <autolock auto-synchronized="false">
-          <method-expression>void
-						simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
@@ -156,7 +122,91 @@
           <lock-level>write</lock-level>
         </autolock>
         <autolock auto-synchronized="false">
-          <method-expression>void simulation.runtime.Client.run()</method-expression>
+          <method-expression>void simulation.runtime.AgentsMgr.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.PerformanceThread.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.ScenariosMgr.add(simulation.runtime.Scenario)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.ScenariosMgr.remove(simulation.runtime.Scenario)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>java.util.LinkedHashMap simulation.runtime.ScenariosMgr.getSnrs()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.PlanManager.submitPlans()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server$ServerInformation.addEventCount()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server$ServerInformation.addAgentCount()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server$ServerInformation.decAgentTotal()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Server$ServerInformation.incAgentTotal()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Scenario.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.ScenariosMgr$SnrMonitorThread.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>java.util.ArrayList simulation.runtime.ScenariosMgr.getSnrIDs()</method-expression>
+          <lock-level>read</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.runtime.Scenario.putAgent(simulation.modeling.DefaultBelief)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.ClockTick.incNow()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.addTick()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.run()</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setPath(simulation.modeling.Path)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setID(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setLifeCycle(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.setTick(int)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+        <autolock auto-synchronized="false">
+          <method-expression>void simulation.modeling.DefaultBelief.addMess(boolean, simulation.modeling.MessageInfo)</method-expression>
           <lock-level>write</lock-level>
         </autolock>
       </locks>

@@ -196,6 +196,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				if (agentList.get(idList.get(i)).getClass().equals(targetClass))
 					ans.add((T) agentList.get(idList.get(i)));
 		} catch (Exception ex) {
+			System.out.println(this.agentList);
+			System.out.println(this.idList);
 			ex.printStackTrace();
 		} finally {
 			return ans;
@@ -239,7 +241,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	public synchronized void putAgent(DefaultBelief ag) {
 		synchronized (this.agentList) {
-			this.agentList.put(ag.getCaseID(), ag);
+			this.agentList.put(ag.getID(), ag);
 		}
 	}
 

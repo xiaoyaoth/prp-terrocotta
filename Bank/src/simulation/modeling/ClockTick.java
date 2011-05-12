@@ -3,26 +3,20 @@ package simulation.modeling;
 import java.io.Serializable;
 import java.util.Date;
 
-import simulation.runtime.Server;
-
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
 	private boolean goOn;
-	private Lock tickLock = new Lock();
-	private Lock nowLock = new Lock();
+
+	// setting hold to false means to let the flow pass through it
+
+	private boolean holdDecNow;
+	private boolean holdIncNow;
+	private boolean holdAddTick;
 	private Lock tcLock = new Lock();
 	private MainInterface main;
 
 	private long duration;
 	private boolean fini;
-
-	public Object getTickLock() {
-		return this.tickLock;
-	}
-
-	public Object getNowLock() {
-		return this.nowLock;
-	}
 
 	public void setGoOn(boolean goOn) {
 		this.goOn = goOn;
@@ -35,7 +29,10 @@ public class ClockTick implements Runnable, Serializable {
 	public ClockTick(MainInterface main) {
 		tick = 0;
 		left = 0;
-		goOn = false;
+		this.goOn = false;
+		this.holdDecNow = false;
+		this.holdIncNow = true;
+		this.holdAddTick = false;
 		fini = false;
 		this.main = main;
 	}
@@ -58,35 +55,29 @@ public class ClockTick implements Runnable, Serializable {
 			start = time.getTime();
 			System.out.println(start);
 		}
-		while (this.tick < this.left) {
-			//System.out.print("this.tick<this.left");
-			while (this.goOn && this.tick < this.left) {
-				synchronized (this.tickLock) {
-					try {
-						while (this.now > 0)
-							this.tickLock.wait();
-					} catch (Exception e) {
-					}
+		while (this.goOn && this.tick < this.left) {
+			while (this.holdAddTick) {
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				synchronized (nowLock) {
-					++this.tick;
-				}
-				//System.out.println("\n Tick " + tick + " :" + this.now);
-				synchronized (nowLock) {
-					this.now = this.main.getTotal();
-					this.nowLock.notifyAll();
-				}
-				// try {
-				// Thread.sleep(500);
-				// } catch (InterruptedException e) {
-				// // TODO Auto-generated catch block
-				// e.printStackTrace();
-				// }
+			}
+			synchronized (this.tcLock) {
+				this.tick++;
 			}
 		}
-		while(this.now != 0);
+		while (this.now != this.main.getTotal()) {
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		synchronized (tcLock) {
-			goOn = false;
+			this.goOn = false;
 			Date time = new Date();
 			end = time.getTime();
 			System.out.println(start);
@@ -104,20 +95,32 @@ public class ClockTick implements Runnable, Serializable {
 	}
 
 	public int getNow() {
-		synchronized (this.nowLock) {
-			return now;
+		return now;
+	}
+
+	public synchronized void decNow() {
+		this.now--;
+		if (this.now == 0){
+			this.holdDecNow = true; /* hold agent until "now" is 0 */
+			this.holdIncNow = false;
 		}
 	}
 
-	public void decNow() {
-		synchronized (this.nowLock) {
-			//System.out.print(now + " ");
-			--now;
+	public synchronized void incNow() {
+		this.now++;
+		if (this.now == this.main.getTotal()){
+			this.holdDecNow = false; /* hold agent until "now" is total */
+			this.holdIncNow = true;
+			this.holdAddTick = false;
 		}
-		if (this.now <= 0)
-			synchronized (this.tickLock) {
-				this.tickLock.notifyAll();
-			}
+	}
+	
+	public boolean isHoldDecNow(){
+		return this.holdDecNow;
+	}
+	
+	public boolean isHoldIncNow(){
+		return this.holdIncNow;
 	}
 
 	public long getDuration() {
@@ -131,8 +134,8 @@ public class ClockTick implements Runnable, Serializable {
 	public void setMain(MainInterface main) {
 		this.main = main;
 	}
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		ClockTick clk = new ClockTick(null);
 		new Thread(clk).start();
 	}

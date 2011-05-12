@@ -73,7 +73,8 @@ public class Server implements Runnable, Serializable {
 			while (true) {
 				synchronized (tcLock) {
 					if (sInfo.agentTotal > 0)
-						sInfo.ratio = sInfo.agentCount / sInfo.agentTotal;
+						sInfo.ratio = (double) sInfo.agentCount
+								/ (double) sInfo.agentTotal;
 					else
 						sInfo.ratio = 0;
 					System.out.println(" LoopCount:" + this.loopCount
@@ -105,7 +106,7 @@ public class Server implements Runnable, Serializable {
 					serverInfo.put(sInfo.JVM_id, sInfo);
 				}
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(10000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -305,7 +306,8 @@ public class Server implements Runnable, Serializable {
 		int realPointer = this.pointer - ScenariosMgr.finiCaseNum;
 		Map<Integer, Scenario> m = ScenariosMgr.getSnrs();
 		ArrayList<Integer> l = ScenariosMgr.getSnrIDs();
-		System.out.println("case: "+ l.size() +" pointer: "+this.pointer+" finiNum: "+ScenariosMgr.finiCaseNum);
+		// System.out.print("case: "+ l.size()
+		// +" pointer: "+this.pointer+" finiNum: "+ScenariosMgr.finiCaseNum+" ");
 		if (m.size() == l.size()
 				&& ScenariosMgr.getSnrIDs().size() > realPointer) {
 			Scenario oneCase = m.get(l.get(realPointer));

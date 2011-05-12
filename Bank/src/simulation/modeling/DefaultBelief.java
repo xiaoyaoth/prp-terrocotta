@@ -76,24 +76,32 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	/* Default Action */
 	public void run() {
 		while ((this.getLifeCycle() == -1 || this.isNoLife()) && this.nextTick) {
-			synchronized (this.main.getClock().getNowLock()) {
-				try {
-					while (this.getTick() >= this.main.getClock().getTick()
-							|| this.main.getClock().getNow() == 0)
-						this.main.getClock().getNowLock().wait();
-					this.addTick();
-					this.createPlans();
-					this.submitPlans();
-					if (this.migrate) {
-						System.out.print(this.id + "migrate ");
-						this.migrate();
-					}
-					this.main.getClock().decNow();
-					Server.serverInfo.get(this.hostServerID).addAgentCount();
-				} catch (Exception e) {
-					e.printStackTrace();
+			try {
+				while (this.getTick() >= this.main.getClock().getTick() || this.main.getClock().isHoldDecNow()) {
+					boolean c1 = this.getTick() >= this.main.getClock().getTick() || this.main.getClock().isHoldDecNow();
+					System.out.println("gate to dec closed? "+ c1);
+					Thread.sleep(1000);
 				}
+				this.addTick();
+				this.createPlans();
+				this.submitPlans();
+				if (this.migrate) {
+					System.out.print(this.id + "migrate ");
+					this.migrate();
+				}
+				Server.serverInfo.get(this.hostServerID).addAgentCount();
+				this.main.getClock().decNow();
+				
+				while (this.main.getClock().isHoldIncNow()) {
+					System.out.println("gate to inc closed? "+ this.main.getClock().isHoldIncNow());
+					Thread.sleep(1000);
+				}
+				this.main.getClock().incNow();
+
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
+
 		}
 		/* added on May 2nd by xiaoyaoth */
 		synchronized (tcLock) {
@@ -115,7 +123,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 		/* added fini */
 	}
-	
+
 	public void setMain(MainInterface main) {
 		synchronized (tcLock) {
 			this.caseID = main.getCaseID();
@@ -169,7 +177,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	public void addTick() {
+	public synchronized void addTick() {
 		this.tick++;
 		this.ownTick++;
 	}
@@ -185,7 +193,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public void addMess(boolean flag, MessageInfo mi) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.add(mi);
-		else if(this.rcvMessageBox != null)
+		else if (this.rcvMessageBox != null)
 			this.rcvMessageBox.add(mi);
 		else
 			return;
@@ -194,9 +202,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public void removeMess(boolean flag, int index) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.remove(index);
-		else if(this.rcvMessageBox != null)
+		else if (this.rcvMessageBox != null)
 			this.rcvMessageBox.remove(index);
-		else 
+		else
 			return;
 	}
 
@@ -317,12 +325,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				+ System.currentTimeMillis());
 		FileOutputStream fout = new FileOutputStream(mig);
 		ObjectOutputStream objout = new ObjectOutputStream(fout);
-//		try {
-//			Thread.sleep(1000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		// try {
+		// Thread.sleep(1000);
+		// } catch (InterruptedException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		try {
 			objout.writeObject(this);
 			objout.flush();
@@ -383,8 +391,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public int getHostServerID() {
 		return this.hostServerID;
 	}
-	
-	public boolean isNextTick(){
+
+	public boolean isNextTick() {
 		return this.nextTick;
 	}
 
