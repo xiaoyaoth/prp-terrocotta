@@ -32,7 +32,7 @@ public class Customer extends DefaultBelief implements Serializable
 		catch (Exception ex){}
 	}
 
-	public void receiveMoney(Integer incr)
+	public synchronized void receiveMoney(Integer incr)
 	{
 		this.cash += incr;
 		//System.out.println("" + this + "£º$" + incr + " received");

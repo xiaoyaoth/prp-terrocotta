@@ -5,6 +5,7 @@ import java.io.Serializable;
 import java.util.*;
 import simulation.modeling.*; //仿真建模的系统类
 
+
 public class Bank extends DefaultBelief implements Serializable {
 	private int cash;
 
@@ -41,7 +42,7 @@ public class Bank extends DefaultBelief implements Serializable {
 					.size());
 			Customer cust = custList.get(index);
 			this.addMess(true, new MessageInfo(this.getID(), cust.getID(),
-					"receiveMoney(" + temp + ")", this.getIp()));
+					"receiveMoney(" + temp + ")"));
 			this.cash -= temp;
 		}
 		// System.out.println("" + this + " Sent $" + temp + " to " + cust);

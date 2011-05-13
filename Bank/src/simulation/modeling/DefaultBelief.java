@@ -23,9 +23,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private ArrayList<PlanCondition> pc;
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
 
-	private String ip;
-	private Map<String, Integer> ipCount;
-
 	private boolean migrate = false;
 	private boolean nextTick = true;
 
@@ -44,7 +41,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		this.sndMessageBox = new ArrayList<MessageInfo>();
 		this.rcvMessageBox = new ArrayList<MessageInfo>();
 		this.connectIDs = new ArrayList<Integer>();
-		this.ipCount = new HashMap<String, Integer>();
 	}
 
 	/* ×Ô´øAction */
@@ -75,12 +71,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
+		int ht = 1; //holdtime (ms)
 		while ((this.getLifeCycle() == -1 || this.isNoLife()) && this.nextTick) {
 			try {
-				while (this.getTick() >= this.main.getClock().getTick() || this.main.getClock().isHoldDecNow()) {
-					boolean c1 = this.getTick() >= this.main.getClock().getTick() || this.main.getClock().isHoldDecNow();
-					System.out.println("gate to dec closed? "+ c1);
-					Thread.sleep(1000);
+				while (this.getTick() >= this.main.getClock().getTick()
+						|| this.main.getClock().isHoldDecNow()) {
+					Thread.sleep(ht);
 				}
 				this.addTick();
 				this.createPlans();
@@ -91,10 +87,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				}
 				Server.serverInfo.get(this.hostServerID).addAgentCount();
 				this.main.getClock().decNow();
-				
 				while (this.main.getClock().isHoldIncNow()) {
-					//System.out.println("gate to inc closed? "+ this.main.getClock().isHoldIncNow());
-					Thread.sleep(1000);
+					Thread.sleep(ht);
 				}
 				this.main.getClock().incNow();
 
@@ -108,8 +102,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
 			this.pc.clear();
 			this.pc = null;
-			this.ipCount.clear();
-			this.ipCount = null;
 			this.sndMessageBox.clear();
 			this.sndMessageBox = null;
 			this.rcvMessageBox.clear();
@@ -151,13 +143,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		return this.id;
 	}
 
-	public void setIp(String ip) {
-		this.ip = ip;
-	}
-
-	public String getIp() {
-		return this.ip;
-	}
 
 	public int getOwnTick() {
 		return this.ownTick;
@@ -230,10 +215,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		// MessageInfo mi = this.rcvMessageBox.get(i);
 
 		while (this.rcvMessageBox.size() > 0) {
-			MessageInfo mi = this.rcvMessageBox.remove(0);
+			MessageInfo mi;
+			synchronized (this.rcvMessageBox) {
+				 mi = this.rcvMessageBox.remove(0);
+			}
 			if (!mi.getRFlag()) {
 				/* edited by Xiaosong */
-				this.addIpCount(mi.getIp());
 				/* edited fini */
 				mi.setRFlag();
 				String temp = mi.getContent();
@@ -274,7 +261,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	private void sendMessages() {
+	private synchronized void sendMessages() {
 		// for (int i = 0; i < this.sndMessageBox.size(); i++) {
 		// MessageInfo mi = this.sndMessageBox.get(i);
 
@@ -365,24 +352,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	/* edited by Xiaosong */
-	private void addIpCount(String ip) {
-		if (this.ipCount.containsKey(ip)) {
-			int count = this.ipCount.get(ip);
-			this.ipCount.put(ip, count + 1);
-		} else
-			this.ipCount.put(ip, 1);
-	}
-
-	private String getMaxIp() {
-		int tempCount = 0;
-		String resIp = "127.0.0.1";
-		for (String s : this.ipCount.keySet()) {
-			int count = this.ipCount.get(s);
-			if (count > tempCount)
-				resIp = s;
-		}
-		return resIp;
-	}
 
 	public void setHostServerID(int hostServerID) {
 		this.hostServerID = hostServerID;

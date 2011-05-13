@@ -49,16 +49,18 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void run() {
 		long start, end;
+		int ht = 1; //holdtime (ms);
 		synchronized (tcLock) {
 			this.goOn = true;
 			Date time = new Date();
 			start = time.getTime();
 			System.out.println(start);
+			this.now = this.main.getTotal();
 		}
 		while (this.goOn && this.tick < this.left) {
 			while (this.holdAddTick) {
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(ht);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -66,16 +68,31 @@ public class ClockTick implements Runnable, Serializable {
 			}
 			synchronized (this.tcLock) {
 				this.tick++;
+				System.out.println("Tick " + tick + " :" + this.now);
+				this.holdAddTick = true;
+				// this.now = this.main.getTotal();
 			}
 		}
-		while (this.now != this.main.getTotal()) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		try {
+			/*
+			 * when clockTick finishes, agents are still running, hold the
+			 * object for all agents.
+			 */
+			/* when "now" dec to 0, holdIncNow becomes false */
+			while (this.holdIncNow)
+				Thread.sleep(ht);
+			/*
+			 * when "now" inc to total, which means all the agents finishes the
+			 * last run turn holdDecNow to false, let the logic pass through and
+			 * clean the everything.
+			 */
+			while (this.holdDecNow)
+				Thread.sleep(ht);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
 		synchronized (tcLock) {
 			this.goOn = false;
 			Date time = new Date();
@@ -100,27 +117,28 @@ public class ClockTick implements Runnable, Serializable {
 
 	public synchronized void decNow() {
 		this.now--;
-		if (this.now == 0){
+		//System.out.print("d" + this.now + " ");
+		if (this.now == 0) {
 			this.holdDecNow = true; /* hold agent until "now" is 0 */
 			this.holdIncNow = false;
-			System.out.println("decNow called, holdDec is"+this.holdDecNow+" holdInc is "+this.holdIncNow);
 		}
 	}
 
 	public synchronized void incNow() {
 		this.now++;
-		if (this.now == this.main.getTotal()){
+		//System.out.print("i" + this.now + " ");
+		if (this.now == this.main.getTotal()) {
 			this.holdDecNow = false; /* hold agent until "now" is total */
 			this.holdIncNow = true;
 			this.holdAddTick = false;
 		}
 	}
-	
-	public boolean isHoldDecNow(){
+
+	public boolean isHoldDecNow() {
 		return this.holdDecNow;
 	}
-	
-	public boolean isHoldIncNow(){
+
+	public boolean isHoldIncNow() {
 		return this.holdIncNow;
 	}
 

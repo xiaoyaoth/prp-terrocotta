@@ -332,7 +332,6 @@ public class Server implements Runnable, Serializable {
 								ag.setMain(oneCase);
 								ag.setID(one.id);
 								ag.setPath(one.path);
-								ag.setIp(this.sInfo.ip);
 								ag.setLifeCycle(oneCase.getTicks());
 								ag.setHostServerID(this.getJVMId());
 								this.addPc(oneCase, ag);
