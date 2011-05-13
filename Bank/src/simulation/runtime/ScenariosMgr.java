@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -18,8 +16,6 @@ public class ScenariosMgr implements Runnable {
 
 	private static BlockingQueue<String[]> snrCfgs = new LinkedBlockingQueue<String[]>();
 	private SnrMonitorThread mon = new SnrMonitorThread();
-	// private static LinkedHashMap<Integer, Scenario> snrs = new
-	// LinkedHashMap<Integer, Scenario>();
 	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
 	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
 	public static int finiCaseNum;
