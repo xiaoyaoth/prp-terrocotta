@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:tc-config xmlns:con="http://www.terracotta.org/config">
+  <servers>
+    <server host="%i" name="localhost">
+      <dso-port bind="0.0.0.0">9510</dso-port>
+      <jmx-port bind="0.0.0.0">9520</jmx-port>
+      <data>terracotta/server-data</data>
+      <logs>terracotta/server-logs</logs>
+      <statistics>terracotta/cluster-statistics</statistics>
+      <dso>
+        <garbage-collection>
+          <enabled>true</enabled>
+          <verbose>false</verbose>
+          <interval>30</interval>
+        </garbage-collection>
+      </dso>
+    </server>
+  </servers>
+  <clients>
+    <logs>terracotta/client-logs</logs>
+  </clients>
+  <application>
+    <dso>
+      <instrumented-classes>
+        <include>
+          <class-expression>*</class-expression>
+        </include>
+      </instrumented-classes>
+      <roots>
+        <root>
+          <field-name>simulation.runtime.Server.serverInfo</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.finiCaseNum</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.snrIDs</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.snrs</field-name>
+        </root>
+      </roots>
+      <locks>
+        <autolock auto-synchronized="false">
+          <method-expression>* *(..)</method-expression>
+          <lock-level>write</lock-level>
+        </autolock>
+      </locks>
+    </dso>
+  </application>
+</con:tc-config>
