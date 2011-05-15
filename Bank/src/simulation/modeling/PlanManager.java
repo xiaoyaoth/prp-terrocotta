@@ -16,7 +16,7 @@ public class PlanManager implements Serializable
 	}
 
 	/* Default Action */
-	public synchronized void addPlanInstance(PlanInstance pi)
+	public void addPlanInstance(PlanInstance pi)
 	{
 		this.plans.add(pi);
 	}
@@ -32,9 +32,7 @@ public class PlanManager implements Serializable
 				pi.invoke(this.sub);
 				/* edited by xiaoyaoth*/
 				Server.serverInfo.get(this.sub.getHostServerID()).addEventCount();
-				synchronized(this.plans){
-					this.plans.remove(i);
-				}
+				this.plans.remove(i);
 				pi = null;
 				/* edited fini*/
 			}

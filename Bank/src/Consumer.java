@@ -66,7 +66,7 @@ public class Consumer extends DefaultBelief implements Serializable
     public synchronized void fetchOrderByMessage()
     {
         Restaurant rest = this.selectRestaurant();
-        this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "remove(" + this.getID() + ")"));
+        this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "remove(" + this.getID() + ")", this.getIp()));
         this.cash -= 1.0;
         System.out.println(this + " 's current cash is " + this.getCash());
     }
@@ -75,7 +75,7 @@ public class Consumer extends DefaultBelief implements Serializable
     {
         Restaurant rest = this.selectRestaurant();
         for (int i=0; i<9999; i++)
-            this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "addCash(1)"));
+            this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "addCash(1)", this.getIp()));
     }
 
     /* Plan */

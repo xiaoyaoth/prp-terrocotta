@@ -11,7 +11,7 @@ import java.util.Map;
 
 import simulation.runtime.SendFile;
 import simulation.runtime.Server;
-import simulation.runtime.Server.ServerInformation;
+import simulation.runtime.ServerInformation;
 
 public class DefaultBelief extends PlanManager implements Runnable,
 		Serializable {
@@ -22,6 +22,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc;
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
+
+	private String ip;
+	private Map<String, Integer> ipCount;
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
@@ -34,6 +37,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private Path path;
 	private Lock tcLock = new Lock();
 	private Integer hostServerID;
+	private Integer destServerID;
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -41,6 +45,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		this.sndMessageBox = new ArrayList<MessageInfo>();
 		this.rcvMessageBox = new ArrayList<MessageInfo>();
 		this.connectIDs = new ArrayList<Integer>();
+		this.ipCount = new HashMap<String, Integer>();
+		this.destServerID = -1;
 	}
 
 	/* ×Ô´øAction */
@@ -71,37 +77,35 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
-		int ht = 1; //holdtime (ms)
 		while ((this.getLifeCycle() == -1 || this.isNoLife()) && this.nextTick) {
-			try {
-				while (this.getTick() >= this.main.getClock().getTick()
-						|| this.main.getClock().isHoldDecNow()) {
-					Thread.sleep(ht);
+			synchronized (this.main.getClock().getNowLock()) {
+				try {
+					while (this.getTick() >= this.main.getClock().getTick()
+							|| this.main.getClock().getNow() == 0)
+						this.main.getClock().getNowLock().wait();
+					this.addTick();
+					this.createPlans();
+					this.submitPlans();
+					synchronized (this.tcLock) {
+						if (this.migrate) {
+							System.out.print(this.id + "migrate ");
+							this.migrate();
+						}
+					}
+					this.main.getClock().decNow();
+					Server.serverInfo.get(this.hostServerID).addAgentCount();
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				this.addTick();
-				this.createPlans();
-				this.submitPlans();
-				if (this.migrate) {
-					System.out.print(this.id + "migrate ");
-					this.migrate();
-				}
-				Server.serverInfo.get(this.hostServerID).addAgentCount();
-				this.main.getClock().decNow();
-				while (this.main.getClock().isHoldIncNow()) {
-					Thread.sleep(ht);
-				}
-				this.main.getClock().incNow();
-
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
-
 		}
 		/* added on May 2nd by xiaoyaoth */
 		synchronized (tcLock) {
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
 			this.pc.clear();
 			this.pc = null;
+			this.ipCount.clear();
+			this.ipCount = null;
 			this.sndMessageBox.clear();
 			this.sndMessageBox = null;
 			this.rcvMessageBox.clear();
@@ -143,6 +147,13 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		return this.id;
 	}
 
+	public void setIp(String ip) {
+		this.ip = ip;
+	}
+
+	public String getIp() {
+		return this.ip;
+	}
 
 	public int getOwnTick() {
 		return this.ownTick;
@@ -162,7 +173,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	public synchronized void addTick() {
+	public void addTick() {
 		this.tick++;
 		this.ownTick++;
 	}
@@ -175,7 +186,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		return this.tick;
 	}
 
-	public synchronized void addMess(boolean flag, MessageInfo mi) {
+	public void addMess(boolean flag, MessageInfo mi) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.add(mi);
 		else if (this.rcvMessageBox != null)
@@ -184,7 +195,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			return;
 	}
 
-	public synchronized void removeMess(boolean flag, int index) {
+	public void removeMess(boolean flag, int index) {
 		if (flag && this.sndMessageBox != null)
 			this.sndMessageBox.remove(index);
 		else if (this.rcvMessageBox != null)
@@ -215,12 +226,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		// MessageInfo mi = this.rcvMessageBox.get(i);
 
 		while (this.rcvMessageBox.size() > 0) {
-			MessageInfo mi;
-			synchronized (this.rcvMessageBox) {
-				 mi = this.rcvMessageBox.remove(0);
-			}
+			MessageInfo mi = this.rcvMessageBox.remove(0);
 			if (!mi.getRFlag()) {
 				/* edited by Xiaosong */
+				this.addIpCount(mi.getIp());
 				/* edited fini */
 				mi.setRFlag();
 				String temp = mi.getContent();
@@ -261,7 +270,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	private synchronized void sendMessages() {
+	private void sendMessages() {
 		// for (int i = 0; i < this.sndMessageBox.size(); i++) {
 		// MessageInfo mi = this.sndMessageBox.get(i);
 
@@ -296,12 +305,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public String toString() {
 		return "Agent" + this.id;
-		// return this.pCounter + " " + this.pc + " " + this.id + " " +
-		// this.tick
-		// + " " + this.lifeCycle + " " + this.ownTick + " " + this.migrate
-		// + " " + this.main + " " + this.caseID + " "
-		// + this.sndMessageBox + " " + this.rcvMessageBox + " "
-		// + this.connectIDs;
 	}
 
 	/* End of Default Action */
@@ -312,12 +315,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				+ System.currentTimeMillis());
 		FileOutputStream fout = new FileOutputStream(mig);
 		ObjectOutputStream objout = new ObjectOutputStream(fout);
-		// try {
-		// Thread.sleep(1000);
-		// } catch (InterruptedException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
 		try {
 			objout.writeObject(this);
 			objout.flush();
@@ -326,7 +323,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			e.printStackTrace();
 		}
 		/* edited on Mar 28th by xiaoyaoth */
-		ServerInformation si = Server.serverInfo.get(this.main.assign());
+		ServerInformation si = Server.serverInfo.get(this.destServerID);
 		if (si != null)
 			new SendFile(si.getIp(), PORT, mig).start();
 		synchronized (this.tcLock) {
@@ -337,9 +334,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		fout.close();
 	}
 
-	public void setMigrate(boolean migrate) {
+	public void setMigrate(boolean migrate, Integer dest) {
 		synchronized (tcLock) {
 			this.migrate = migrate;
+			this.destServerID = dest;
 		}
 	}
 
@@ -352,6 +350,24 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	/* edited by Xiaosong */
+	private void addIpCount(String ip) {
+		if (this.ipCount.containsKey(ip)) {
+			int count = this.ipCount.get(ip);
+			this.ipCount.put(ip, count + 1);
+		} else
+			this.ipCount.put(ip, 1);
+	}
+
+	private String getMaxIp() {
+		int tempCount = 0;
+		String resIp = "127.0.0.1";
+		for (String s : this.ipCount.keySet()) {
+			int count = this.ipCount.get(s);
+			if (count > tempCount)
+				resIp = s;
+		}
+		return resIp;
+	}
 
 	public void setHostServerID(int hostServerID) {
 		this.hostServerID = hostServerID;

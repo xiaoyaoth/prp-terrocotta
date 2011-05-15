@@ -3,20 +3,26 @@ package simulation.modeling;
 import java.io.Serializable;
 import java.util.Date;
 
+import simulation.runtime.Server;
+
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
 	private boolean goOn;
-
-	// setting hold to false means to let the flow pass through it
-
-	private boolean holdDecNow;
-	private boolean holdIncNow;
-	private boolean holdAddTick;
+	private Lock tickLock = new Lock();
+	private Lock nowLock = new Lock();
 	private Lock tcLock = new Lock();
 	private MainInterface main;
 
 	private long duration;
 	private boolean fini;
+
+	public Object getTickLock() {
+		return this.tickLock;
+	}
+
+	public Object getNowLock() {
+		return this.nowLock;
+	}
 
 	public void setGoOn(boolean goOn) {
 		this.goOn = goOn;
@@ -29,10 +35,7 @@ public class ClockTick implements Runnable, Serializable {
 	public ClockTick(MainInterface main) {
 		tick = 0;
 		left = 0;
-		this.goOn = false;
-		this.holdDecNow = false;
-		this.holdIncNow = true;
-		this.holdAddTick = false;
+		goOn = false;
 		fini = false;
 		this.main = main;
 	}
@@ -49,52 +52,41 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void run() {
 		long start, end;
-		int ht = 1; //holdtime (ms);
 		synchronized (tcLock) {
 			this.goOn = true;
 			Date time = new Date();
 			start = time.getTime();
 			System.out.println(start);
-			this.now = this.main.getTotal();
 		}
-		while (this.goOn && this.tick < this.left) {
-			while (this.holdAddTick) {
-				try {
-					Thread.sleep(ht);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+		while (this.tick < this.left) {
+			//System.out.print("this.tick<this.left");
+			while (this.goOn && this.tick < this.left) {
+				synchronized (this.tickLock) {
+					try {
+						while (this.now > 0)
+							this.tickLock.wait();
+					} catch (Exception e) {
+					}
 				}
-			}
-			synchronized (this.tcLock) {
-				this.tick++;
-				System.out.println("Tick " + tick + " :" + this.now);
-				this.holdAddTick = true;
-				// this.now = this.main.getTotal();
+				synchronized (nowLock) {
+					++this.tick;
+				}
+				//System.out.println("\n Tick " + tick + " :" + this.now);
+				synchronized (nowLock) {
+					this.now = this.main.getTotal();
+					this.nowLock.notifyAll();
+				}
+				// try {
+				// Thread.sleep(500);
+				// } catch (InterruptedException e) {
+				// // TODO Auto-generated catch block
+				// e.printStackTrace();
+				// }
 			}
 		}
-		try {
-			/*
-			 * when clockTick finishes, agents are still running, hold the
-			 * object for all agents.
-			 */
-			/* when "now" dec to 0, holdIncNow becomes false */
-			while (this.holdIncNow)
-				Thread.sleep(ht);
-			/*
-			 * when "now" inc to total, which means all the agents finishes the
-			 * last run turn holdDecNow to false, let the logic pass through and
-			 * clean the everything.
-			 */
-			while (this.holdDecNow)
-				Thread.sleep(ht);
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		while(this.now != 0);
 		synchronized (tcLock) {
-			this.goOn = false;
+			goOn = false;
 			Date time = new Date();
 			end = time.getTime();
 			System.out.println(start);
@@ -112,34 +104,20 @@ public class ClockTick implements Runnable, Serializable {
 	}
 
 	public int getNow() {
-		return now;
-	}
-
-	public synchronized void decNow() {
-		this.now--;
-		//System.out.print("d" + this.now + " ");
-		if (this.now == 0) {
-			this.holdDecNow = true; /* hold agent until "now" is 0 */
-			this.holdIncNow = false;
+		synchronized (this.nowLock) {
+			return now;
 		}
 	}
 
-	public synchronized void incNow() {
-		this.now++;
-		//System.out.print("i" + this.now + " ");
-		if (this.now == this.main.getTotal()) {
-			this.holdDecNow = false; /* hold agent until "now" is total */
-			this.holdIncNow = true;
-			this.holdAddTick = false;
+	public void decNow() {
+		synchronized (this.nowLock) {
+			//System.out.print(now + " ");
+			--now;
 		}
-	}
-
-	public boolean isHoldDecNow() {
-		return this.holdDecNow;
-	}
-
-	public boolean isHoldIncNow() {
-		return this.holdIncNow;
+		if (this.now <= 0)
+			synchronized (this.tickLock) {
+				this.tickLock.notifyAll();
+			}
 	}
 
 	public long getDuration() {
@@ -153,8 +131,8 @@ public class ClockTick implements Runnable, Serializable {
 	public void setMain(MainInterface main) {
 		this.main = main;
 	}
-
-	public static void main(String[] args) {
+	
+	public static void main(String[] args){
 		ClockTick clk = new ClockTick(null);
 		new Thread(clk).start();
 	}
