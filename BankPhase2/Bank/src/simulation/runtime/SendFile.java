@@ -52,7 +52,6 @@ public class SendFile extends Thread {
 			outFile.close();
 			os.close();
 			tempSocket.close();
-			this.file.delete();
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			e.printStackTrace();

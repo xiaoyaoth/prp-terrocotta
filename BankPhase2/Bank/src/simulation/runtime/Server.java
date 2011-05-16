@@ -123,37 +123,35 @@ public class Server implements Runnable, Serializable {
 	public void recover() throws IOException, ClassNotFoundException {
 		File[] flist = Server.dir.listFiles();
 		for (File f : flist) {
-			File mig = f;
-			FileInputStream fin = new FileInputStream(mig);
-			ObjectInputStream objin = new ObjectInputStream(fin);
-			DefaultBelief ag = (DefaultBelief) objin.readObject();
-			Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-			c.putAgent(ag);
-			/* newly modified */
-			// synchronized (this.agents) {
-			// this.agents.add(ag);
-			// }
-			ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
-			ag.setMigrate(false, -1);
-			synchronized (this.tcLock) {
-				this.sInfo.incAgentTotal();
-			}
-			System.out.print(ag.getID() + " nextTick:" + ag.isNextTick() + " ");
-			new Thread(ag).start();
+			if (!f.isDirectory()) {
+				File mig = f;
+				FileInputStream fin = new FileInputStream(mig);
+				ObjectInputStream objin = new ObjectInputStream(fin);
+				DefaultBelief ag = (DefaultBelief) objin.readObject();
+				Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
+				c.putAgent(ag);
+				/* newly modified */
+				// synchronized (this.agents) {
+				// this.agents.add(ag);
+				// }
+				ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
+				ag.setMigrate(false, -1);
+				synchronized (this.tcLock) {
+					this.sInfo.incAgentTotal();
+				}
+				System.out.print(ag.getID() + " nextTick:" + ag.isNextTick()
+						+ " ");
+				new Thread(ag).start();
 
-			try {
-				objin.close();
-				fin.close();
-				f.delete();
-			} catch (Exception e) {
-				e.printStackTrace();
+				try {
+					objin.close();
+					fin.close();
+					f.delete();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("recover " + ag.getID());
 			}
-			System.out.println("recover " + ag.getID());
-			//
-			// System.out.print("&&" + ag.getOwnTick() + " ");
-			// System.out.print(ag);
-			// System.out.println(" Clock now is "
-			// + ag.getMain().getClock().getNow());
 		}
 	}
 

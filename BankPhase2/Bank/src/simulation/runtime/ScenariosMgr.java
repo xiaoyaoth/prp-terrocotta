@@ -180,6 +180,7 @@ public class ScenariosMgr implements Runnable {
 					bestId = tempId;
 				}
 			}
+			System.out.println("assign called, bestID is "+bestId);
 			return bestId;
 		case 3:
 			// case 1:// based on agent_list size and wait_list size

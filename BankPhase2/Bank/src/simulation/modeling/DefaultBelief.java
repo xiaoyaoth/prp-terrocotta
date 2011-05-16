@@ -86,11 +86,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();
-					synchronized (this.tcLock) {
-						if (this.migrate) {
-							System.out.print(this.id + "migrate ");
-							this.migrate();
-						}
+					if (this.migrate) {
+						System.out.print(this.id + "migrate ");
+						this.migrate();
 					}
 					this.main.getClock().decNow();
 					Server.serverInfo.get(this.hostServerID).addAgentCount();
@@ -332,6 +330,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 		objout.close();
 		fout.close();
+		/*mig must be deleted here, it cannot be deleted inside SendFile*/
+		mig.delete();
 	}
 
 	public void setMigrate(boolean migrate, Integer dest) {

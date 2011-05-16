@@ -39,6 +39,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private Integer caseID;
 	private Parse p;
+	
+	private Integer hostID;
 
 	private Lock tcLock = new Lock();
 
@@ -81,6 +83,10 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public ArrayList<Func> getPC() {
 		return this.pc;
 	}
+	
+	public Integer getHostID(){
+		return this.hostID;
+	}
 
 	/****
 	 * 构建分布式系统需要的成员
@@ -109,17 +115,17 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		idList = new ArrayList<Integer>();
 		pathList = new ArrayList<Path>();
 		this.caseID = this.hashCode();
+		this.hostID = ScenariosMgr.assign();
 		this.control(1, this.getTicks());
 	}
 
 	public void run() {
 		try {
 			System.out.println("client half fini2");
-			int hostID = ScenariosMgr.assign();
-			System.out.println(hostID);
+			System.out.println(this.hostID);
 			for (int i = 0; i < this.caseTable.size(); i++) {
 				Tuple oneTuple = this.caseTable.get(i);
-				oneTuple.JVM_id = hostID;
+				oneTuple.JVM_id = this.hostID;
 				this.agentNum++;
 			}
 			System.out.println("client half fini3");
@@ -315,5 +321,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		for (DefaultBelief ag : this.agentList.values())
 			if (ag.getHostServerID() == hostID && ag.getHostServerID() != dest)
 				ag.setMigrate(true, dest);
+			else
+				System.out.println("dest == Currenthost");
 	}
 }

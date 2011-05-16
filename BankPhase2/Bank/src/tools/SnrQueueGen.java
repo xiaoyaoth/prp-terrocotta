@@ -31,6 +31,7 @@ public class SnrQueueGen{
 				System.out.println(f.getName());
 				bw.close();
 				fw.close();
+				f.delete();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

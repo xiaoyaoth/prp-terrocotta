@@ -13,7 +13,7 @@ public class ClockTick implements Runnable, Serializable {
 	private Lock tcLock = new Lock();
 	private MainInterface main;
 
-	private long duration;
+	private String duration;
 	private boolean fini;
 
 	public Object getTickLock() {
@@ -93,7 +93,7 @@ public class ClockTick implements Runnable, Serializable {
 			System.out.println(end);
 			System.out.print("time consumed ");
 			System.out.println(end - start);
-			this.duration = end - start;
+			this.duration = "start:"+start+" end:"+end+ " duration:"+(end-start);
 			/*
 			 * 这里不是fini,当clocktick把所有的agent唤醒，clocktick结束了，但是Agent还在运行。
 			 * 所以当所有Agent结束运行才是一切的终结，想办法弄一下
@@ -120,7 +120,7 @@ public class ClockTick implements Runnable, Serializable {
 			}
 	}
 
-	public long getDuration() {
+	public String getDuration() {
 		return this.duration;
 	}
 
