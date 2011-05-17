@@ -38,9 +38,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private Integer caseID;
-	private Parse p;	
+	private Parse p;
 	private Integer hostID;
-	
+
 	private int unmigRemains;
 	private Integer migHost;
 
@@ -85,8 +85,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public ArrayList<Func> getPC() {
 		return this.pc;
 	}
-	
-	public Integer getHostID(){
+
+	public Integer getHostID() {
 		return this.hostID;
 	}
 
@@ -321,22 +321,25 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		System.out.println("setMigrate in Client is called");
 		this.migHost = hostID;
 		int dest = ScenariosMgr.assign();
-		for (DefaultBelief ag : this.agentList.values())
-			if (ag.getHostServerID() == hostID && ag.getHostServerID() != dest){
-				ag.setMigrate(true, dest);
-				this.incRemainedAfterMig();
-			}
-			else
-				System.out.print("d==h ");
-	}
-	
-	public synchronized void decRemainedNumAfterMig(){
-		this.unmigRemains--;
-		if(this.unmigRemains == 0)
+		if (dest != -1) {
+			for (DefaultBelief ag : this.agentList.values())
+				if (ag.getHostServerID() == hostID
+						&& ag.getHostServerID() != dest) {
+					ag.setMigrate(true, dest);
+					this.incRemainedAfterMig();
+				} else
+					System.out.print("d==h ");
+		} else
 			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
 	}
-	
-	public synchronized void incRemainedAfterMig(){
+
+	public synchronized void decRemainedNumAfterMig() {
+		this.unmigRemains--;
+		if (this.unmigRemains == 0)
+			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
+	}
+
+	public synchronized void incRemainedAfterMig() {
 		this.unmigRemains++;
 	}
 }

@@ -12,12 +12,14 @@ public class PerformanceThread implements Runnable {
 	private int jVM_id;
 	private Lock tcLock;
 	private ServerInformation sInfo;
+	private static double threshold;
 
 	public PerformanceThread(ServerInformation sInfo) {
 		this.sInfo = sInfo;
 		this.jVM_id = sInfo.getJVM_id();
 		this.loopCount = 0;
 		this.tcLock = new Lock();
+		threshold = 5;
 	}
 
 	@Override
@@ -37,7 +39,7 @@ public class PerformanceThread implements Runnable {
 						+ " ratio:" + this.sInfo.getRatio() + " weak:"
 						+ this.weakPoint+" "+Server.serverInfo);
 				if (this.sInfo.getAgentTotal() > 0 && Server.serverInfo.size()>1) {
-					if (this.sInfo.getRatio() < 5 && this.sInfo.getRatio() != 0)
+					if (this.sInfo.getRatio() < threshold && this.sInfo.getRatio() != 0)
 						weakPoint++;
 					else
 						weakPoint = 0;
@@ -92,5 +94,9 @@ public class PerformanceThread implements Runnable {
 		synchronized (this.tcLock) {
 			this.tcLock.notify();
 		}
+	}
+	
+	public static double getThreshold(){
+		return threshold;
 	}
 }
