@@ -10,6 +10,7 @@ public interface MainInterface
 	<T> ArrayList<T> getAgentList(Class<T> targetClass, Path path);
 	DefaultBelief getAgent(int id);
 	public Map<Integer, DefaultBelief> getAgentList();
+	public void decRemainedNumAfterMig();
 	
 	ClockTick getClock();
 	Integer getCaseID();

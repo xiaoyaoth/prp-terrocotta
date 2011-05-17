@@ -52,6 +52,8 @@ public class SendFile extends Thread {
 			outFile.close();
 			os.close();
 			tempSocket.close();
+			/*when sending agents, another delete func is called in migrate method in DefaultBelief*/
+			this.file.delete();
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			e.printStackTrace();

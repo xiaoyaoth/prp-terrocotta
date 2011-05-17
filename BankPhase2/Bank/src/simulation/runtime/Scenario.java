@@ -38,9 +38,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private ArrayList<Path> pathList;
 	private ArrayList<Func> pc = new ArrayList<Func>();
 	private Integer caseID;
-	private Parse p;
-	
+	private Parse p;	
 	private Integer hostID;
+	
+	private int unmigRemains;
+	private Integer migHost;
 
 	private Lock tcLock = new Lock();
 
@@ -317,11 +319,24 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	public void setMigrate(int hostID) {
 		System.out.println("setMigrate in Client is called");
+		this.migHost = hostID;
 		int dest = ScenariosMgr.assign();
 		for (DefaultBelief ag : this.agentList.values())
-			if (ag.getHostServerID() == hostID && ag.getHostServerID() != dest)
+			if (ag.getHostServerID() == hostID && ag.getHostServerID() != dest){
 				ag.setMigrate(true, dest);
+				this.incRemainedAfterMig();
+			}
 			else
-				System.out.println("dest == Currenthost");
+				System.out.print("d==h ");
+	}
+	
+	public synchronized void decRemainedNumAfterMig(){
+		this.unmigRemains--;
+		if(this.unmigRemains == 0)
+			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
+	}
+	
+	public synchronized void incRemainedAfterMig(){
+		this.unmigRemains++;
 	}
 }

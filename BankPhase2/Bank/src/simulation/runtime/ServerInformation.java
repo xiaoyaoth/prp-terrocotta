@@ -33,12 +33,12 @@ public class ServerInformation {
 	}
 
 	public synchronized void decAgentTotal() {
-		// System.out.println("decAgentTotal Called");
+		//System.out.println("decAgentTotal Called");
 		this.agentTotal--;
 	}
 	
 	public synchronized void incAgentTotal() {
-		// System.out.println("decAgentTotal Called");
+		//System.out.println("incAgentTotal Called");
 		this.agentTotal++;
 	}
 
@@ -50,7 +50,7 @@ public class ServerInformation {
 		return this.ratio;
 	}
 
-	public void setJVM_id(int jVM_id) {
+	public synchronized void setJVM_id(int jVM_id) {
 		this.setjVM_id(jVM_id);
 	}
 
@@ -58,23 +58,19 @@ public class ServerInformation {
 		return this.getjVM_id();
 	}
 
-	public void setIp(String ip) {
+	public synchronized void setIp(String ip) {
 		this.ip = ip;
-	}
-
-	public void setAgentTotal(int agentTotal) {
-		this.agentTotal = agentTotal;
 	}
 
 	public int getAgentTotal() {
 		return agentTotal;
 	}
 
-	public void setRatio(double ratio) {
+	public synchronized void setRatio(double ratio) {
 		this.ratio = ratio;
 	}
 
-	public void setAgentCount(int agentCount) {
+	public synchronized void setAgentCount(int agentCount) {
 		this.agentCount = agentCount;
 	}
 
@@ -82,7 +78,7 @@ public class ServerInformation {
 		return agentCount;
 	}
 
-	public void setEventCount(int eventCount) {
+	public synchronized void setEventCount(int eventCount) {
 		this.eventCount = eventCount;
 	}
 
@@ -90,15 +86,19 @@ public class ServerInformation {
 		return eventCount;
 	}
 
-	public void setPerf(int perf) {
+	public synchronized void setPerf(int perf) {
 		this.perf = perf;
 	}
 
-	public void setjVM_id(int jVM_id) {
+	public synchronized void setjVM_id(int jVM_id) {
 		this.jVM_id = jVM_id;
 	}
 
 	public int getjVM_id() {
 		return jVM_id;
+	}
+	
+	public PerformanceThread getPerfThread(){
+		return this.perfThread;
 	}
 }

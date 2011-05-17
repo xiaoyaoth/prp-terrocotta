@@ -27,11 +27,10 @@ public class SnrQueueGen{
 				FileWriter fw = new FileWriter(f);
 				BufferedWriter bw = new BufferedWriter(fw);
 				bw.write(d.getTime()+i+"_"+usr+"_"+tick+"_"+dest);
-				new Thread(new SendFile(dest, 10001, f)).start();
-				System.out.println(f.getName());
 				bw.close();
 				fw.close();
-				f.delete();
+				new Thread(new SendFile(dest, 10001, f)).start();
+				System.out.println(f.getName());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

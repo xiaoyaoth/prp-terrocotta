@@ -77,43 +77,57 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
-		while ((this.getLifeCycle() == -1 || this.isNoLife()) && this.nextTick) {
-			synchronized (this.main.getClock().getNowLock()) {
-				try {
-					while (this.getTick() >= this.main.getClock().getTick()
-							|| this.main.getClock().getNow() == 0)
-						this.main.getClock().getNowLock().wait();
-					this.addTick();
-					this.createPlans();
-					this.submitPlans();
-					if (this.migrate) {
-						System.out.print(this.id + "migrate ");
-						this.migrate();
+		while (this.nextTick) {
+			if (this.getLifeCycle() == -1 || this.isNoLife()) {
+				synchronized (this.main.getClock().getNowLock()) {
+					try {
+						while (this.getTick() >= this.main.getClock().getTick()
+								|| this.main.getClock().getNow() == 0)
+							this.main.getClock().getNowLock().wait();
+						this.addTick();
+						this.createPlans();
+						this.submitPlans();
+						if (this.migrate) {
+							System.out.print(this.id + "migrate ");
+							this.migrate();
+						}
+						this.main.getClock().decNow();
+						Server.serverInfo.get(this.hostServerID)
+								.addAgentCount();
+						//System.out.print("ag"+this.id+" ");
+					} catch (Exception e) {
+						e.printStackTrace();
 					}
-					this.main.getClock().decNow();
-					Server.serverInfo.get(this.hostServerID).addAgentCount();
-				} catch (Exception e) {
-					e.printStackTrace();
 				}
 			}
 		}
 		/* added on May 2nd by xiaoyaoth */
+
 		synchronized (tcLock) {
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
-			this.pc.clear();
-			this.pc = null;
-			this.ipCount.clear();
-			this.ipCount = null;
-			this.sndMessageBox.clear();
-			this.sndMessageBox = null;
-			this.rcvMessageBox.clear();
-			this.rcvMessageBox = null;
-			this.connectIDs.clear();
-			this.connectIDs = null;
-			this.path.clear();
-			this.path = null;
-			this.main = null;
-			this.cleanPlans();
+			if (!this.migrate) {
+				System.out.print("ag:"+this.id+"fini ");
+				this.pc.clear();
+				this.pc = null;
+				this.ipCount.clear();
+				this.ipCount = null;
+				this.sndMessageBox.clear();
+				this.sndMessageBox = null;
+				this.rcvMessageBox.clear();
+				this.rcvMessageBox = null;
+				this.connectIDs.clear();
+				this.connectIDs = null;
+				this.path.clear();
+				this.path = null;
+				this.main = null;
+				this.cleanPlans();
+			}
+		}
+		try {
+			this.finalize();
+		} catch (Throwable e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		/* added fini */
 	}
@@ -316,6 +330,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		try {
 			objout.writeObject(this);
 			objout.flush();
+			objout.close();
+			fout.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -327,11 +343,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		synchronized (this.tcLock) {
 			this.nextTick = false;
 			System.out.println("migrate in DefaultBelief is called");
+			this.main.decRemainedNumAfterMig();
+			/* added on May 17th */
 		}
-		objout.close();
-		fout.close();
-		/*mig must be deleted here, it cannot be deleted inside SendFile*/
-		mig.delete();
 	}
 
 	public void setMigrate(boolean migrate, Integer dest) {
@@ -369,7 +383,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		return resIp;
 	}
 
-	public void setHostServerID(int hostServerID) {
+	public synchronized void setHostServerID(int hostServerID) {
 		this.hostServerID = hostServerID;
 	}
 

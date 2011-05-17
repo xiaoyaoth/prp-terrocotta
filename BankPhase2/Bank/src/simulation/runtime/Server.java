@@ -52,10 +52,12 @@ public class Server implements Runnable, Serializable {
 
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
 	private ServerInformation sInfo;
+	private int jVM_id;
 
 	Server() {
 		Server.deleteAllAgentsFile();
-		this.sInfo = new ServerInformation(this.hashCode());
+		this.jVM_id = this.hashCode();
+		this.sInfo = new ServerInformation(this.jVM_id);
 		tcLock = new Lock();
 		new ScenariosMgr();
 		System.out.println("JVM " + this.sInfo.getjVM_id() + " starts");
@@ -126,23 +128,13 @@ public class Server implements Runnable, Serializable {
 			if (!f.isDirectory()) {
 				File mig = f;
 				FileInputStream fin = new FileInputStream(mig);
-				ObjectInputStream objin = new ObjectInputStream(fin);
-				DefaultBelief ag = (DefaultBelief) objin.readObject();
-				Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-				c.putAgent(ag);
-				/* newly modified */
-				// synchronized (this.agents) {
-				// this.agents.add(ag);
-				// }
-				ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
-				ag.setMigrate(false, -1);
-				synchronized (this.tcLock) {
-					this.sInfo.incAgentTotal();
+				ObjectInputStream objin = null;
+				try {
+					objin = new ObjectInputStream(fin);
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
-				System.out.print(ag.getID() + " nextTick:" + ag.isNextTick()
-						+ " ");
-				new Thread(ag).start();
-
+				DefaultBelief ag = (DefaultBelief) objin.readObject();
 				try {
 					objin.close();
 					fin.close();
@@ -150,6 +142,17 @@ public class Server implements Runnable, Serializable {
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
+				Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
+				ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
+				ag.setMigrate(false, -1);
+				ag.setHostServerID(this.jVM_id);
+				c.putAgent(ag);
+				synchronized (this.tcLock) {
+					this.sInfo.incAgentTotal();
+				}
+				System.out.print(ag.getID() + " nextTick:" + ag.isNextTick()
+						+ " " + ag.getTick());
+				new Thread(ag).start();
 				System.out.println("recover " + ag.getID());
 			}
 		}
