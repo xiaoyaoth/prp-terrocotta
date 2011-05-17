@@ -2,12 +2,14 @@ package simulation.runtime;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -43,6 +45,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	private int unmigRemains;
 	private Integer migHost;
+
+	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
+	private final static int PORT = 10000;
 
 	private Lock tcLock = new Lock();
 
@@ -321,12 +326,23 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		System.out.println("setMigrate in Client is called");
 		this.migHost = hostID;
 		int dest = ScenariosMgr.assign();
-		if (Server.serverInfo.get(dest).getRatio() > PerformanceThread
+		ArrayList<DefaultBelief> migAgList = new ArrayList<DefaultBelief>();
+
+		/* pic ag to mig */
+		/* debug only */
+		if (Server.serverInfo.get(dest).getRatio() < PerformanceThread
 				.getThreshold()) {
+			/* ~debug only */
+			// if (Server.serverInfo.get(dest).getRatio() < PerformanceThread
+			// .getThreshold()) {
 			for (DefaultBelief ag : this.agentList.values()) {
-				if (ag.getHostServerID() == hostID
-						&& ag.getHostServerID() != dest) {
-					ag.setMigrate(true, dest);
+				/* debug only */
+				if (ag.getHostServerID() == hostID) {
+					/* ~debug only */
+					// if (ag.getHostServerID() == hostID
+					// && ag.getHostServerID() != dest) {
+					ag.setMigrate(true);
+					migAgList.add(ag);
 					this.incRemainedAfterMig();
 				} else {
 					System.out.print("d==h ");
@@ -334,6 +350,41 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			}
 		} else
 			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
+
+		/* mig ag */
+		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.caseID + "rr"
+				+ System.currentTimeMillis());
+		FileOutputStream fos;
+		ObjectOutputStream oos;
+		try {
+			fos = new FileOutputStream(mig);
+			oos = new ObjectOutputStream(fos);
+			for (DefaultBelief ag : migAgList) {
+				while(!ag.isNextTick())
+					Thread.sleep(1000);
+				oos.writeObject(ag);
+				ag.notifyTcLock();
+			}
+			oos.writeObject(null);
+			oos.close();
+			fos.close();
+			System.out.println("mig in file now, Scenario.java");
+			/* debug only */
+			Thread.sleep(10000);
+			/* ~debug only */
+			ServerInformation si = Server.serverInfo.get(dest);
+			if (si != null)
+				new SendFile(si.getIp(), PORT, mig).start();
+			else
+				System.out
+						.println("si is null, I am in setMigrate in Scenario.java");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public synchronized void decRemainedNumAfterMig() {

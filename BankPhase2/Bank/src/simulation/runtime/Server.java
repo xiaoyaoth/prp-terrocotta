@@ -52,7 +52,8 @@ public class Server implements Runnable, Serializable {
 
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
 	private ServerInformation sInfo;
-	//private int jVM_id;
+
+	// private int jVM_id;
 
 	Server() {
 		Server.deleteAllAgentsFile();
@@ -125,34 +126,33 @@ public class Server implements Runnable, Serializable {
 		File[] flist = Server.dir.listFiles();
 		for (File f : flist) {
 			if (!f.isDirectory()) {
-				File mig = f;
-				FileInputStream fin = new FileInputStream(mig);
-				ObjectInputStream objin = null;
-				try {
-					objin = new ObjectInputStream(fin);
-				} catch (Exception e) {
-					e.printStackTrace();
+				FileInputStream fin = new FileInputStream(f);
+				ObjectInputStream objin = new ObjectInputStream(fin);
+
+				Object obj = null;
+				while ((obj = objin.readObject()) != null) {
+					if (obj instanceof DefaultBelief) {
+						DefaultBelief ag = (DefaultBelief) obj;
+						ag.makeNewTcLock();
+						Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
+						ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
+						ag.setMigrate(false);
+						ag.setHostServerID(this.sInfo.getJVM_id());
+						ag.setNextTick();
+						c.putAgent(ag);
+						synchronized (this.tcLock) {
+							this.sInfo.incAgentTotal();
+						}
+						System.out.print(ag.getID() + " nextTick:"
+								+ ag.isNextTick() + " " + ag.getTick());
+						new Thread(ag).start();
+						System.out.println("recover " + ag.getID());
+					}
 				}
-				DefaultBelief ag = (DefaultBelief) objin.readObject();
-				try {
-					objin.close();
-					fin.close();
-					f.delete();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-				Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-				ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
-				ag.setMigrate(false, -1);
-				ag.setHostServerID(this.sInfo.getJVM_id());
-				c.putAgent(ag);
-				synchronized (this.tcLock) {
-					this.sInfo.incAgentTotal();
-				}
-				System.out.print(ag.getID() + " nextTick:" + ag.isNextTick()
-						+ " " + ag.getTick());
-				new Thread(ag).start();
-				System.out.println("recover " + ag.getID());
+
+				objin.close();
+				fin.close();
+				f.delete();
 			}
 		}
 	}

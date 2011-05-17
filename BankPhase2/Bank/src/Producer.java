@@ -68,7 +68,7 @@ public class Producer extends DefaultBelief implements Serializable
     public synchronized void sendOrderByMessage()
     {
         Restaurant rest = this.selectRestaurant();
-        this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "add(" + this.getID() + ", 1)", this.getIp()));
+        this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "add(" + this.getID() + ", 1)"));
         this.cash += (int)1.0;
         System.out.println(this + " 's current cash is " + this.getCash());
     }
@@ -77,7 +77,7 @@ public class Producer extends DefaultBelief implements Serializable
     {
         Restaurant rest = this.selectRestaurant();
         for (int i=0; i<9999; i++)
-            this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "addCash(-1)", this.getIp()));
+            this.addMess(true, new MessageInfo(this.getID(), rest.getID(), "addCash(-1)"));
     }
 
     /* Plan */

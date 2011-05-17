@@ -41,7 +41,7 @@ public class Bank extends DefaultBelief implements Serializable {
 					.size());
 			Customer cust = custList.get(index);
 			this.addMess(true, new MessageInfo(this.getID(), cust.getID(),
-					"receiveMoney(" + temp + ")", this.getIp()));
+					"receiveMoney(" + temp + ")"));
 			this.cash -= temp;
 		}
 		// System.out.println("" + this + " Sent $" + temp + " to " + cust);

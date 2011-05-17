@@ -1,30 +1,20 @@
 package simulation.modeling;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
-import simulation.runtime.SendFile;
 import simulation.runtime.Server;
-import simulation.runtime.ServerInformation;
 
 public class DefaultBelief extends PlanManager implements Runnable,
 		Serializable {
 	/* Global Const */
-	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
-	private final static int PORT = 10000;
+	// private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
+	// private final static int PORT = 10000;
 
 	private int pCounter = 0;
 	private ArrayList<PlanCondition> pc;
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
-
-	private String ip;
-	private Map<String, Integer> ipCount;
 
 	private boolean migrate = false;
 	private boolean nextTick = true;
@@ -35,9 +25,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private ArrayList<MessageInfo> rcvMessageBox;
 	private ArrayList<Integer> connectIDs;
 	private Path path;
-	private Lock tcLock = new Lock();
+	transient private Lock tcLock = new Lock();
 	private Integer hostServerID;
-	private Integer destServerID;
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -45,8 +34,16 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		this.sndMessageBox = new ArrayList<MessageInfo>();
 		this.rcvMessageBox = new ArrayList<MessageInfo>();
 		this.connectIDs = new ArrayList<Integer>();
-		this.ipCount = new HashMap<String, Integer>();
-		this.destServerID = -1;
+	}
+
+	public void notifyTcLock() {
+		synchronized (this.tcLock) {
+			this.tcLock.notify();
+		}
+	}
+
+	public synchronized void makeNewTcLock() {
+		this.tcLock = new Lock();
 	}
 
 	/* ×Ô´øAction */
@@ -100,22 +97,14 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			}
 		}
 		/* added on May 2nd by xiaoyaoth */
-
 		synchronized (tcLock) {
-			System.out.println(this.hostServerID);
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
 			if (!this.migrate) {
-				System.out.print("ag:" + this.id + "fini ");
-				this.pc.clear();
-				this.pc = null;
-				this.ipCount.clear();
-				this.ipCount = null;
-				this.sndMessageBox.clear();
-				this.sndMessageBox = null;
-				this.rcvMessageBox.clear();
-				this.rcvMessageBox = null;
-				this.connectIDs.clear();
-				this.connectIDs = null;
+				//System.out.print("ag:" + this.id + "fini in DefaultBelief.java");
+				this.clean(this.pc);
+				this.clean(this.sndMessageBox);
+				this.clean(this.rcvMessageBox);
+				this.clean(this.connectIDs);
 				this.path.clear();
 				this.path = null;
 				this.main = null;
@@ -123,12 +112,26 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			}
 		}
 		try {
+			this.setNextTick();
+			synchronized (this.tcLock) {
+				this.tcLock.wait();
+			}
 			this.finalize();
+			System.out.println("ag:" + this.id
+					+ "finalize in DefaultBelief.java");
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		/* added fini */
+	}
+
+	public void migrate() throws IOException {
+		synchronized (this.tcLock) {
+			this.nextTick = false;
+			System.out.println("migrate in DefaultBelief is called");
+			this.main.decRemainedNumAfterMig();
+		}
 	}
 
 	public void setMain(MainInterface main) {
@@ -156,14 +159,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public int getID() {
 		return this.id;
-	}
-
-	public void setIp(String ip) {
-		this.ip = ip;
-	}
-
-	public String getIp() {
-		return this.ip;
 	}
 
 	public int getOwnTick() {
@@ -238,7 +233,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			MessageInfo mi = this.rcvMessageBox.remove(0);
 			if (!mi.getRFlag()) {
 				/* edited by Xiaosong */
-				this.addIpCount(mi.getIp());
 				/* edited fini */
 				mi.setRFlag();
 				String temp = mi.getContent();
@@ -318,37 +312,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* End of Default Action */
 
-	// This function violate everything I learn from the principle of SW design.
-	public void migrate() throws IOException {
-		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.id + "rr"
-				+ System.currentTimeMillis());
-		FileOutputStream fout = new FileOutputStream(mig);
-		ObjectOutputStream objout = new ObjectOutputStream(fout);
-		try {
-			objout.writeObject(this);
-			objout.flush();
-			objout.close();
-			fout.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		/* edited on Mar 28th by xiaoyaoth */
-		ServerInformation si = Server.serverInfo.get(this.destServerID);
-		if (si != null)
-			new SendFile(si.getIp(), PORT, mig).start();
-		synchronized (this.tcLock) {
-			this.nextTick = false;
-			System.out.println("migrate in DefaultBelief is called");
-			this.main.decRemainedNumAfterMig();
-			/* added on May 17th */
-		}
-	}
-
-	public void setMigrate(boolean migrate, Integer dest) {
+	public void setMigrate(boolean migrate) {
 		synchronized (tcLock) {
 			this.migrate = migrate;
-			this.destServerID = dest;
 		}
 	}
 
@@ -361,24 +327,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	/* edited by Xiaosong */
-	private void addIpCount(String ip) {
-		if (this.ipCount.containsKey(ip)) {
-			int count = this.ipCount.get(ip);
-			this.ipCount.put(ip, count + 1);
-		} else
-			this.ipCount.put(ip, 1);
-	}
-
-	private String getMaxIp() {
-		int tempCount = 0;
-		String resIp = "127.0.0.1";
-		for (String s : this.ipCount.keySet()) {
-			int count = this.ipCount.get(s);
-			if (count > tempCount)
-				resIp = s;
-		}
-		return resIp;
-	}
 
 	public synchronized void setHostServerID(int hostServerID) {
 		this.hostServerID = hostServerID;
@@ -390,6 +338,20 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public boolean isNextTick() {
 		return this.nextTick;
+	}
+
+	public synchronized void setNextTick() {
+		this.nextTick = true;
+	}
+
+	public <T> void clean(ArrayList<T> list) {
+		for (int i = 0; i < list.size(); i++) {
+			@SuppressWarnings("unused")
+			T t = list.remove(i);
+			t = null;
+		}
+		list.clear();
+		list = null;
 	}
 
 	/* edit fini */
