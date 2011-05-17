@@ -25,7 +25,6 @@ public class PerformanceThread implements Runnable {
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
-		boolean mig = true;
 		while (true) {
 			synchronized (this.tcLock) {
 				if (this.sInfo.getAgentTotal() > 0)
@@ -38,21 +37,16 @@ public class PerformanceThread implements Runnable {
 						+ " AgentCount:" + this.sInfo.getAgentCount()
 						+ " AgentTotal:" + this.sInfo.getAgentTotal()
 						+ " ratio:" + this.sInfo.getRatio() + " weak:"
-						+ this.weakPoint+" "+Server.serverInfo);
-				/*debug only*/
-				if (this.sInfo.getAgentTotal() > 0 && mig) {
-				/*debug ~only*/
-				//if (this.sInfo.getAgentTotal() > 0 && Server.serverInfo.size()>1) {
-					if (this.sInfo.getRatio() < threshold && this.sInfo.getRatio() != 0)
+						+ this.weakPoint + " " + Server.serverInfo);
+				if (this.sInfo.getAgentTotal() > 0
+						&& Server.serverInfo.size() > 1) {
+					if (this.sInfo.getRatio() < threshold
+							&& this.sInfo.getRatio() != 0)
 						weakPoint++;
 					else
 						weakPoint = 0;
 				} else
 					weakPoint = 0;
-				/*debug only*/
-				if(this.weakPoint == 3)
-					mig = false;
-				/*~debug only*/
 				this.pickOneSnrToBeMigrated();
 				this.sInfo.setEventCount(0);
 				this.sInfo.setAgentCount(0);
@@ -62,10 +56,7 @@ public class PerformanceThread implements Runnable {
 				Server.serverInfo.put(this.sInfo.getJVM_id(), sInfo);
 			}
 			try {
-				/*debug only*/
-				Thread.sleep(3000);
-				//Thread.sleep(10000);
-				/*~debug only*/
+				Thread.sleep(10000);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -106,8 +97,8 @@ public class PerformanceThread implements Runnable {
 			this.tcLock.notify();
 		}
 	}
-	
-	public static double getThreshold(){
+
+	public static double getThreshold() {
 		return threshold;
 	}
 }

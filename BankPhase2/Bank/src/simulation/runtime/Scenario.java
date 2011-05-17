@@ -42,8 +42,6 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private Integer caseID;
 	private Parse p;
 	private Integer hostID;
-
-	private int unmigRemains;
 	private Integer migHost;
 
 	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
@@ -329,21 +327,13 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		ArrayList<DefaultBelief> migAgList = new ArrayList<DefaultBelief>();
 
 		/* pic ag to mig */
-		/* debug only */
 		if (Server.serverInfo.get(dest).getRatio() < PerformanceThread
 				.getThreshold()) {
-			/* ~debug only */
-			// if (Server.serverInfo.get(dest).getRatio() < PerformanceThread
-			// .getThreshold()) {
 			for (DefaultBelief ag : this.agentList.values()) {
-				/* debug only */
-				if (ag.getHostServerID() == hostID) {
-					/* ~debug only */
-					// if (ag.getHostServerID() == hostID
-					// && ag.getHostServerID() != dest) {
+				if (ag.getHostServerID() == hostID
+						&& ag.getHostServerID() != dest) {
 					ag.setMigrate(true);
 					migAgList.add(ag);
-					this.incRemainedAfterMig();
 				} else {
 					System.out.print("d==h ");
 				}
@@ -360,7 +350,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			fos = new FileOutputStream(mig);
 			oos = new ObjectOutputStream(fos);
 			for (DefaultBelief ag : migAgList) {
-				while(!ag.isNextTick())
+				while (!ag.isNextTick())
 					Thread.sleep(1000);
 				oos.writeObject(ag);
 				ag.notifyTcLock();
@@ -369,15 +359,12 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			oos.close();
 			fos.close();
 			System.out.println("mig in file now, Scenario.java");
-			/* debug only */
-			Thread.sleep(10000);
-			/* ~debug only */
 			ServerInformation si = Server.serverInfo.get(dest);
 			if (si != null)
 				new SendFile(si.getIp(), PORT, mig).start();
 			else
-				System.out
-						.println("si is null, I am in setMigrate in Scenario.java");
+				System.out.println("si is null, I am in setMigrate in Scenario.java");
+			Server.serverInfo.get(migHost).getPerfThread().notifyTcLock();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -385,15 +372,5 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	public synchronized void decRemainedNumAfterMig() {
-		this.unmigRemains--;
-		if (this.unmigRemains == 0)
-			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
-	}
-
-	public synchronized void incRemainedAfterMig() {
-		this.unmigRemains++;
 	}
 }

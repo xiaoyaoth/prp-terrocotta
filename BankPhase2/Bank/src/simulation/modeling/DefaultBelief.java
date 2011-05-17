@@ -130,7 +130,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		synchronized (this.tcLock) {
 			this.nextTick = false;
 			System.out.println("migrate in DefaultBelief is called");
-			this.main.decRemainedNumAfterMig();
 		}
 	}
 
