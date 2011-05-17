@@ -175,7 +175,7 @@ public class ScenariosMgr implements Runnable {
 			while (iter.hasNext()) {
 				tempId = iter.next();
 				double tempRatio = Server.serverInfo.get(tempId).getRatio();
-				if (tempRatio >= bestRatio && tempRatio> PerformanceThread.getThreshold()) {
+				if (tempRatio >= bestRatio) {
 					bestRatio = tempRatio;
 					bestId = tempId;
 				}

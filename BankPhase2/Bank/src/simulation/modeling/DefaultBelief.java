@@ -77,36 +77,35 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
-		while (this.nextTick) {
-			if (this.getLifeCycle() == -1 || this.isNoLife()) {
-				synchronized (this.main.getClock().getNowLock()) {
-					try {
-						while (this.getTick() >= this.main.getClock().getTick()
-								|| this.main.getClock().getNow() == 0)
-							this.main.getClock().getNowLock().wait();
-						this.addTick();
-						this.createPlans();
-						this.submitPlans();
-						if (this.migrate) {
-							System.out.print(this.id + "migrate ");
-							this.migrate();
-						}
-						this.main.getClock().decNow();
-						Server.serverInfo.get(this.hostServerID)
-								.addAgentCount();
-						//System.out.print("ag"+this.id+" ");
-					} catch (Exception e) {
-						e.printStackTrace();
+		while (this.nextTick && (this.getLifeCycle() == -1 || this.isNoLife())) {
+			synchronized (this.main.getClock().getNowLock()) {
+				try {
+					this.lifeCycle--;
+					while (this.getTick() >= this.main.getClock().getTick()
+							|| this.main.getClock().getNow() == 0)
+						this.main.getClock().getNowLock().wait();
+					this.addTick();
+					this.createPlans();
+					this.submitPlans();
+					if (this.migrate) {
+						System.out.print(this.id + "migrate ");
+						this.migrate();
 					}
+					this.main.getClock().decNow();
+					Server.serverInfo.get(this.hostServerID).addAgentCount();
+					// System.out.print("ag"+this.id+" ");
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
 			}
 		}
 		/* added on May 2nd by xiaoyaoth */
 
 		synchronized (tcLock) {
+			System.out.println(this.hostServerID);
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
 			if (!this.migrate) {
-				System.out.print("ag:"+this.id+"fini ");
+				System.out.print("ag:" + this.id + "fini ");
 				this.pc.clear();
 				this.pc = null;
 				this.ipCount.clear();
@@ -180,9 +179,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	public boolean isNoLife() {
-		synchronized (this.tcLock) {
-			return this.lifeCycle-- > 0;
-		}
+		return this.lifeCycle > 0;
 	}
 
 	public void addTick() {

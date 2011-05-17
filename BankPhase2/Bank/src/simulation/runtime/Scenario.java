@@ -321,14 +321,17 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		System.out.println("setMigrate in Client is called");
 		this.migHost = hostID;
 		int dest = ScenariosMgr.assign();
-		if (dest != -1) {
-			for (DefaultBelief ag : this.agentList.values())
+		if (Server.serverInfo.get(dest).getRatio() > PerformanceThread
+				.getThreshold()) {
+			for (DefaultBelief ag : this.agentList.values()) {
 				if (ag.getHostServerID() == hostID
 						&& ag.getHostServerID() != dest) {
 					ag.setMigrate(true, dest);
 					this.incRemainedAfterMig();
-				} else
+				} else {
 					System.out.print("d==h ");
+				}
+			}
 		} else
 			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
 	}

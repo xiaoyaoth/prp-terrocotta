@@ -52,19 +52,18 @@ public class Server implements Runnable, Serializable {
 
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
 	private ServerInformation sInfo;
-	private int jVM_id;
+	//private int jVM_id;
 
 	Server() {
 		Server.deleteAllAgentsFile();
-		this.jVM_id = this.hashCode();
-		this.sInfo = new ServerInformation(this.jVM_id);
+		this.sInfo = new ServerInformation(this.hashCode());
 		tcLock = new Lock();
 		new ScenariosMgr();
-		System.out.println("JVM " + this.sInfo.getjVM_id() + " starts");
+		System.out.println("JVM " + this.sInfo.getJVM_id() + " starts");
 	}
 
 	public int getJVMId() {
-		return this.sInfo.getjVM_id();
+		return this.sInfo.getJVM_id();
 	}
 
 	public String getIp() {
@@ -145,7 +144,7 @@ public class Server implements Runnable, Serializable {
 				Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
 				ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
 				ag.setMigrate(false, -1);
-				ag.setHostServerID(this.jVM_id);
+				ag.setHostServerID(this.sInfo.getJVM_id());
 				c.putAgent(ag);
 				synchronized (this.tcLock) {
 					this.sInfo.incAgentTotal();
@@ -199,7 +198,7 @@ public class Server implements Runnable, Serializable {
 					// System.out.println("i<table.size()");
 					DefaultBelief ag = null;
 					Tuple one = table.get(i);
-					if (one.JVM_id == this.sInfo.getjVM_id()) {
+					if (one.JVM_id == this.sInfo.getJVM_id()) {
 						Object[] args = new Object[one.args.size()];
 						for (int j = 0; j < one.args.size(); j++)
 							args[j] = Integer.parseInt(one.args.get(j));

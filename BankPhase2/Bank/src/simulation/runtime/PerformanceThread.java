@@ -51,7 +51,7 @@ public class PerformanceThread implements Runnable {
 			}
 			synchronized (Server.serverInfo) {
 				this.sInfo.setPerf(this.machineAbility);
-				Server.serverInfo.put(this.sInfo.getjVM_id(), sInfo);
+				Server.serverInfo.put(this.sInfo.getJVM_id(), sInfo);
 			}
 			try {
 				Thread.sleep(10000);

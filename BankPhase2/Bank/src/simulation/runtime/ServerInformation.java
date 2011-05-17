@@ -50,14 +50,6 @@ public class ServerInformation {
 		return this.ratio;
 	}
 
-	public synchronized void setJVM_id(int jVM_id) {
-		this.setjVM_id(jVM_id);
-	}
-
-	public int getJVM_id() {
-		return this.getjVM_id();
-	}
-
 	public synchronized void setIp(String ip) {
 		this.ip = ip;
 	}
@@ -90,11 +82,11 @@ public class ServerInformation {
 		this.perf = perf;
 	}
 
-	public synchronized void setjVM_id(int jVM_id) {
+	public synchronized void setJVM_id(int jVM_id) {
 		this.jVM_id = jVM_id;
 	}
 
-	public int getjVM_id() {
+	public int getJVM_id() {
 		return jVM_id;
 	}
 	
