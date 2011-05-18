@@ -42,7 +42,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private Integer caseID;
 	private Parse p;
 	private Integer hostID;
-	private Integer migHost;
+	private boolean hasMiged;
+	// private Integer migHost;
 
 	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
 	private final static int PORT = 10000;
@@ -121,6 +122,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		pathList = new ArrayList<Path>();
 		this.caseID = this.hashCode();
 		this.hostID = ScenariosMgr.assign();
+		this.hasMiged = false;
 		this.control(1, this.getTicks());
 	}
 
@@ -164,7 +166,6 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				this.p.getTable().clear();
 				this.p = null;
 				this.execFini = true;
-				this.tcLock = null;
 				ScenariosMgr.remove(this);
 				ScenariosMgr.finiCaseNum++;
 				System.gc();
@@ -320,14 +321,21 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		fw.close();
 	}
 
+	public Lock getTcLock() {
+		return this.tcLock;
+	}
+	
+	public boolean isHasMiged(){
+		return this.hasMiged;
+	}
+
 	public void setMigrate(int hostID) {
 		System.out.println("setMigrate in Client is called");
-		this.migHost = hostID;
 		int dest = ScenariosMgr.assign();
 		ArrayList<DefaultBelief> migAgList = new ArrayList<DefaultBelief>();
 
 		/* pic ag to mig */
-		if (Server.serverInfo.get(dest).getRatio() < PerformanceThread
+		if (Server.serverInfo.get(dest).getRatio() > PerformanceThread
 				.getThreshold()) {
 			for (DefaultBelief ag : this.agentList.values()) {
 				if (ag.getHostServerID() == hostID
@@ -338,8 +346,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 					System.out.print("d==h ");
 				}
 			}
-		} else
-			Server.serverInfo.get(this.migHost).getPerfThread().notifyTcLock();
+		}
 
 		/* mig ag */
 		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.caseID + "rr"
@@ -363,8 +370,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			if (si != null)
 				new SendFile(si.getIp(), PORT, mig).start();
 			else
-				System.out.println("si is null, I am in setMigrate in Scenario.java");
-			Server.serverInfo.get(migHost).getPerfThread().notifyTcLock();
+				System.out
+						.println("si is null, I am in setMigrate in Scenario.java");
+			this.hasMiged = true;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

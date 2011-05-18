@@ -1,8 +1,6 @@
 package simulation.runtime;
 
-import java.io.File;
 import java.util.Iterator;
-
 import simulation.modeling.Lock;
 
 public class PerformanceThread implements Runnable {
@@ -19,20 +17,22 @@ public class PerformanceThread implements Runnable {
 		this.jVM_id = sInfo.getJVM_id();
 		this.loopCount = 0;
 		this.tcLock = new Lock();
-		threshold = 100;
+		threshold = 0.01;
 	}
 
 	@Override
 	public void run() {
 		// TODO Auto-generated method stub
 		while (true) {
+			if (this.sInfo.getAgentTotal() > 0)
+				this.sInfo.setRatio((double) this.sInfo.getAgentCount()
+						/ (double) this.sInfo.getAgentTotal());
+			else
+				this.sInfo.setRatio(Integer.MAX_VALUE);
 			synchronized (this.tcLock) {
-				if (this.sInfo.getAgentTotal() > 0)
-					this.sInfo.setRatio((double) this.sInfo.getAgentCount()
-							/ (double) this.sInfo.getAgentTotal());
-				else
-					this.sInfo.setRatio(Integer.MAX_VALUE);
-				System.out.println(" LoopCount:" + this.loopCount++
+				this.loopCount++;
+
+				System.out.println(" LoopCount:" + this.loopCount
 						+ " EventCount:" + this.sInfo.getEventCount()
 						+ " AgentCount:" + this.sInfo.getAgentCount()
 						+ " AgentTotal:" + this.sInfo.getAgentTotal()
@@ -47,10 +47,11 @@ public class PerformanceThread implements Runnable {
 						weakPoint = 0;
 				} else
 					weakPoint = 0;
-				this.pickOneSnrToBeMigrated();
-				this.sInfo.setEventCount(0);
-				this.sInfo.setAgentCount(0);
 			}
+			this.pickOneSnrToBeMigrated();
+			this.sInfo.setEventCount(0);
+			this.sInfo.setAgentCount(0);
+
 			synchronized (Server.serverInfo) {
 				this.sInfo.setPerf(this.machineAbility);
 				Server.serverInfo.put(this.sInfo.getJVM_id(), sInfo);
@@ -72,29 +73,19 @@ public class PerformanceThread implements Runnable {
 			while (iter.hasNext()) {
 				Scenario snr = iter.next();
 				int tickRemained = snr.getTicks() - snr.getClock().getTick();
-				if (tickRemained > tickTemp && this.jVM_id == snr.getHostID()) {
+				if (tickRemained > tickTemp && this.jVM_id == snr.getHostID() && !snr.isHasMiged()) {
 					tickTemp = tickRemained;
 					c = snr;
 				}
 			}
 			if (c != null) {
 				c.setMigrate(this.jVM_id);
-				try {
-					this.tcLock.wait();
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 			} else {
 				System.out.println("Client is null");
 			}
-			this.weakPoint = 0;
-		}
-	}
-
-	public void notifyTcLock() {
-		synchronized (this.tcLock) {
-			this.tcLock.notify();
+			synchronized (this.tcLock) {
+				this.weakPoint = 0;
+			}
 		}
 	}
 
