@@ -17,7 +17,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
 
 	private boolean migrate = false;
-	private boolean nextTick = true;
+	transient private boolean nextTick = true;
 
 	protected transient MainInterface main;
 	private int caseID;
@@ -27,6 +27,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private Path path;
 	transient private Lock tcLock = new Lock();
 	private Integer hostServerID;
+	
+	private String debugMessage;
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -36,6 +38,13 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		this.connectIDs = new ArrayList<Integer>();
 	}
 
+	public void printDebugMessage(){
+		System.out.println(this.id);
+		System.out.println("nextTick:"+this.nextTick);
+		System.out.println("migrate:"+this.migrate);
+		System.out.println("debugMessage:"+this.debugMessage);
+	}
+	
 	public void notifyTcLock() {
 		synchronized (this.tcLock) {
 			this.tcLock.notify();
@@ -75,32 +84,40 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	/* Default Action */
 	public void run() {
 		while (this.nextTick && (this.getLifeCycle() == -1 || this.isNoLife())) {
-			synchronized (this.main.getClock().getNowLock()) {
-				try {
+			try {
+				synchronized (this.main.getClock().getNowLock()) {
+					this.debugMessage = "1";
 					this.lifeCycle--;
 					while (this.getTick() >= this.main.getClock().getTick()
 							|| this.main.getClock().getNow() == 0)
 						this.main.getClock().getNowLock().wait();
+					this.debugMessage = "2";
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();
 					if (this.migrate) {
-						System.out.print(this.id + "migrate ");
+						//System.out.print(this.id + "migrate ");
 						this.migrate();
 					}
 					this.main.getClock().decNow();
 					Server.serverInfo.get(this.hostServerID).addAgentCount();
-					// System.out.print("ag"+this.id+" ");
-				} catch (Exception e) {
-					e.printStackTrace();
+					this.debugMessage = "3";
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("in DefaultBelief.java:\n main:"+this.main);
+				System.out.println(" clk:"+this.main.getClock());
+				System.out.println(" nowLock:"+this.main.getClock().getNowLock());
+				System.out.println(" tick:"+this.tick+" left:"+this.getMain().getClock().getTick());
 			}
 		}
 		/* added on May 2nd by xiaoyaoth */
-		synchronized (tcLock) {
+		synchronized (this.tcLock) {
 			Server.serverInfo.get(this.hostServerID).decAgentTotal();
 			if (!this.migrate) {
-				//System.out.print("ag:" + this.id + "fini in DefaultBelief.java");
+				// System.out.print("ag:" + this.id +
+				// "fini in DefaultBelief.java");
+				this.debugMessage = "4";
 				this.clean(this.pc);
 				this.clean(this.sndMessageBox);
 				this.clean(this.rcvMessageBox);
@@ -109,27 +126,34 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				this.path = null;
 				this.main = null;
 				this.cleanPlans();
-			}
+				this.debugMessage = "5";
+			} else
+				try {
+					this.debugMessage = "6";
+					this.setNextTick();
+					this.debugMessage = "NTtrue,waiting";
+					this.tcLock.wait();
+					this.debugMessage = "NTfalse, running";
+				} catch (Throwable e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
-		try {
-			this.setNextTick();
-			synchronized (this.tcLock) {
-				this.tcLock.wait();
-			}
-			this.finalize();
-			System.out.println("ag:" + this.id
-					+ "finalize in DefaultBelief.java");
-		} catch (Throwable e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		// this.finalize();
+		//System.out.println("ag:" + this.id + "finalize in DefaultBelief.java");
 		/* added fini */
+	}
+	
+
+	public void setMigrate(boolean migrate) {
+		synchronized (tcLock) {
+			this.migrate = migrate;
+		}
 	}
 
 	public void migrate() throws IOException {
 		synchronized (this.tcLock) {
 			this.nextTick = false;
-			System.out.println("migrate in DefaultBelief is called");
 		}
 	}
 
@@ -311,12 +335,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* End of Default Action */
 
-	public void setMigrate(boolean migrate) {
-		synchronized (tcLock) {
-			this.migrate = migrate;
-		}
-	}
-
 	public void setCaseID(int caseID) {
 		this.caseID = caseID;
 	}
@@ -338,9 +356,14 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public boolean isNextTick() {
 		return this.nextTick;
 	}
+	
+	public boolean isMigrate() {
+		return this.migrate;
+	}
 
 	public synchronized void setNextTick() {
 		this.nextTick = true;
+		this.migrate = false;
 	}
 
 	public <T> void clean(ArrayList<T> list) {

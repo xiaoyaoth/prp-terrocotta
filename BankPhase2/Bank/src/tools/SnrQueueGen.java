@@ -6,8 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 
-import simulation.runtime.SendFile;
-
 public class SnrQueueGen{
 	
 	public static void main(String[] args){
@@ -21,7 +19,7 @@ public class SnrQueueGen{
 	public SnrQueueGen(int snrAmt, String usr, int tick, String dest){
 		Date d = new Date();
 		for(int i = 0; i<snrAmt; i++){
-			File f = new File("snrQueue\\temp\\"+d.getTime()+i+"_"+usr+"_"+tick+"_"+dest);
+			File f = new File("snrQueue\\"+d.getTime()+i+"_"+usr+"_"+tick+"_"+dest);
 			try {
 				f.createNewFile();
 				FileWriter fw = new FileWriter(f);
@@ -29,7 +27,6 @@ public class SnrQueueGen{
 				bw.write(d.getTime()+i+"_"+usr+"_"+tick+"_"+dest);
 				bw.close();
 				fw.close();
-				new Thread(new SendFile(dest, 10001, f)).start();
 				System.out.println(f.getName());
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

@@ -1,9 +1,8 @@
 package simulation.runtime;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -128,30 +127,23 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	public void run() {
 		try {
-			System.out.println("client half fini2");
 			System.out.println(this.hostID);
 			for (int i = 0; i < this.caseTable.size(); i++) {
 				Tuple oneTuple = this.caseTable.get(i);
 				oneTuple.JVM_id = this.hostID;
 				this.agentNum++;
 			}
-			System.out.println("client half fini3");
-
 			ScenariosMgr.add(this);
 			synchronized (this.tcLock) {
 				this.cfgFini = true;
+				this.tcLock.wait();
 			}
-			System.out.println("client half fini4 " + this.getCaseID());
-			// Scanner input = new Scanner(System.in);
-			// while (true) {
-			// input.next();
-			// Server.servers.get(0).migrate();
-			// }
-			while (!this.getClock().isFini()) {
-				Thread.sleep(1000);
+			this.startClock();
+			synchronized (this.clk.getTcLock()) {
+				this.clk.getTcLock().wait();
 			}
 			/* added on March 21 */
-			System.out.println("fini");
+			System.out.println("Scenario fini in Scenario.java");
 			this.output(this.getClock().getDuration() + " " + " "
 					+ this.totalTicks);
 			synchronized (this.tcLock) {
@@ -324,8 +316,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public Lock getTcLock() {
 		return this.tcLock;
 	}
-	
-	public boolean isHasMiged(){
+
+	public boolean isHasMiged() {
 		return this.hasMiged;
 	}
 
@@ -346,39 +338,47 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 					System.out.print("d==h ");
 				}
 			}
-		}
 
-		/* mig ag */
-		File mig = new File(AGENTS_OUT_FILE_FOLDER + this.caseID + "rr"
-				+ System.currentTimeMillis());
-		FileOutputStream fos;
-		ObjectOutputStream oos;
-		try {
-			fos = new FileOutputStream(mig);
-			oos = new ObjectOutputStream(fos);
-			for (DefaultBelief ag : migAgList) {
-				while (!ag.isNextTick())
-					Thread.sleep(1000);
-				oos.writeObject(ag);
-				ag.notifyTcLock();
+			// FileOutputStream fos;
+			ObjectOutputStream oos;
+			ByteArrayOutputStream baos;
+			try {
+				baos = new ByteArrayOutputStream();
+				oos = new ObjectOutputStream(baos);
+
+				for (DefaultBelief ag : migAgList) {
+					while (!ag.isNextTick() || ag.isMigrate())
+						;
+					try {
+						oos.writeObject(ag);
+						ag.notifyTcLock();
+						System.out.print(ag.getID() + " ");
+					} catch (Exception e) {
+						e.printStackTrace();
+						System.out.println("****************");
+						ag.printDebugMessage();
+						System.out.println("****************");
+					}
+				}
+
+				oos.writeObject(null);
+				oos.close();
+				baos.close();
+				System.out.println("mig in file now, Scenario.java");
+				ServerInformation si = Server.serverInfo.get(dest);
+				if (si != null)
+					si.addMigingAgentsInList(baos.toByteArray());
+				else
+					System.out.println("si is null, "
+							+ "I am in setMigrate in Scenario.java");
+				synchronized (this.tcLock) {
+					this.hasMiged = true;
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			oos.writeObject(null);
-			oos.close();
-			fos.close();
-			System.out.println("mig in file now, Scenario.java");
-			ServerInformation si = Server.serverInfo.get(dest);
-			if (si != null)
-				new SendFile(si.getIp(), PORT, mig).start();
-			else
-				System.out
-						.println("si is null, I am in setMigrate in Scenario.java");
-			this.hasMiged = true;
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		}else
+			System.out.println("in Scenario.java, no Proper Server found");
 	}
 }

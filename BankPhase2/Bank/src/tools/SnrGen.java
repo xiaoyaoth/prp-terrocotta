@@ -5,7 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class ScenarioGen {
+public class SnrGen {
 	public static void main(String[] args) {
 		String filename = "snr.txt";
 		int num = 1000;

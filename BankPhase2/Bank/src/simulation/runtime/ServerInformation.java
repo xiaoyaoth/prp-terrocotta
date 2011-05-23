@@ -1,5 +1,7 @@
 package simulation.runtime;
 
+import java.io.IOException;
+import java.util.ArrayList;
 
 public class ServerInformation {
 	private final static int PORT = 10000;
@@ -11,10 +13,12 @@ public class ServerInformation {
 	private int agentTotal;
 	private double ratio;
 	private PerformanceThread perfThread;
-	
-	public ServerInformation(Integer jVM_id){
+	private ArrayList<byte[]> serializedAgents;
+
+	public ServerInformation(Integer jVM_id) {
 		this.jVM_id = jVM_id;
 		this.perfThread = new PerformanceThread(this);
+		this.serializedAgents = new ArrayList<byte[]>();
 		Thread perfT = new Thread(this.perfThread);
 		perfT.setName("PerformanceThreaddd");
 		perfT.start();
@@ -22,6 +26,16 @@ public class ServerInformation {
 
 	public String getIp() {
 		return this.ip;
+	}
+
+	public synchronized void addMigingAgentsInList(byte[] bs) {
+		this.serializedAgents.add(bs);
+	}
+
+	public synchronized byte[] getMigAgents() {
+		if (this.serializedAgents.size() > 0)
+			return this.serializedAgents.remove(0);
+		return null;
 	}
 
 	public synchronized void addEventCount() {
@@ -33,12 +47,32 @@ public class ServerInformation {
 	}
 
 	public synchronized void decAgentTotal() {
-		//System.out.println("decAgentTotal Called");
+		try {
+			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+					"statistics\\sinfo"+this.jVM_id+".txt"),true);
+			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+			bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
+			bw.close();
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.agentTotal--;
 	}
-	
+
 	public synchronized void incAgentTotal() {
-		//System.out.println("incAgentTotal Called");
+		try {
+			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+					"statistics\\sinfo"+this.jVM_id+".txt"), true);
+			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+			bw.append("incAgentTotal Called\t" + (this.agentTotal + 1)+"\tp\n\r");
+			bw.close();
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		this.agentTotal++;
 	}
 
@@ -47,6 +81,10 @@ public class ServerInformation {
 	}
 
 	public synchronized double getRatio() {
+		if (this.agentTotal > 0)
+			this.ratio = (double)this.agentCount / this.agentTotal;
+		else
+			this.ratio = Integer.MAX_VALUE;
 		return this.ratio;
 	}
 
@@ -89,8 +127,8 @@ public class ServerInformation {
 	public int getJVM_id() {
 		return jVM_id;
 	}
-	
-	public PerformanceThread getPerfThread(){
+
+	public PerformanceThread getPerfThread() {
 		return this.perfThread;
 	}
 }

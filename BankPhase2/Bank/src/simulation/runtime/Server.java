@@ -14,20 +14,15 @@
  */
 package simulation.runtime;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map;
-import java.util.Scanner;
 
 import simulation.modeling.DefaultBelief;
 import simulation.modeling.InvokeMethod;
@@ -80,20 +75,6 @@ public class Server implements Runnable, Serializable {
 		Thread serverThread = new Thread(c);
 		serverThread.setName("ServerThread");
 		serverThread.start();
-		GetFile getAgentFileThread = null;
-		GetFile getSnrFileThread = null;
-		try {
-			getAgentFileThread = new GetFile(10000, AGENTS_IN_FILE_FOLDER);
-			getSnrFileThread = new GetFile(10001, SNR_FOLDER);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.out.println("无法传送文件!");
-			System.exit(1);
-		}
-		getAgentFileThread.setName("getFileThread");
-		getAgentFileThread.start();
-		getSnrFileThread.setName("getSnrThread");
-		getSnrFileThread.start();
 	}
 
 	public void run() {
@@ -123,37 +104,38 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public void recover() throws IOException, ClassNotFoundException {
-		File[] flist = Server.dir.listFiles();
-		for (File f : flist) {
-			if (!f.isDirectory()) {
-				FileInputStream fin = new FileInputStream(f);
-				ObjectInputStream objin = new ObjectInputStream(fin);
-
-				Object obj = null;
-				while ((obj = objin.readObject()) != null) {
-					if (obj instanceof DefaultBelief) {
-						DefaultBelief ag = (DefaultBelief) obj;
-						ag.makeNewTcLock();
-						Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-						ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
-						ag.setMigrate(false);
-						ag.setHostServerID(this.sInfo.getJVM_id());
-						ag.setNextTick();
-						c.putAgent(ag);
-						synchronized (this.tcLock) {
-							this.sInfo.incAgentTotal();
-						}
-						System.out.print(ag.getID() + " nextTick:"
-								+ ag.isNextTick() + " " + ag.getTick());
-						new Thread(ag).start();
-						System.out.println("recover " + ag.getID());
+		// File[] flist = Server.dir.listFiles();
+		// for (File f : flist) {
+		// if (!f.isDirectory()) {
+		byte[] migbytes = this.sInfo.getMigAgents();
+		if (migbytes != null) {
+			ByteArrayInputStream bais = new ByteArrayInputStream(migbytes);
+			ObjectInputStream objin = new ObjectInputStream(bais);
+			Object obj = null;
+			while ((obj = objin.readObject()) != null) {
+				if (obj instanceof DefaultBelief) {
+					DefaultBelief ag = (DefaultBelief) obj;
+					ag.makeNewTcLock();
+					Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
+					ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
+					ag.setMigrate(false);
+					ag.setHostServerID(this.sInfo.getJVM_id());
+					ag.setNextTick();
+					c.putAgent(ag);
+					synchronized (this.tcLock) {
+						this.sInfo.incAgentTotal();
 					}
+					System.out.print(ag.getID() + " nextTick:"
+							+ ag.isNextTick() + " " + ag.getTick());
+					new Thread(ag).start();
+					System.out.println("recover " + ag.getID());
 				}
-
-				objin.close();
-				fin.close();
-				f.delete();
 			}
+
+			objin.close();
+			bais.close();
+			// }
+			// }
 		}
 	}
 
@@ -249,8 +231,11 @@ public class Server implements Runnable, Serializable {
 				System.out.println();
 
 				// oneCase.control(1, oneCase.getTicks());
-				if (!oneCase.getClock().isGoOn())
-					oneCase.startClock();
+//				if (!oneCase.getClock().isGoOn())
+//					oneCase.startClock();
+				synchronized (oneCase.getTcLock()){
+					oneCase.getTcLock().notify();
+				}
 				synchronized (this.tcLock) {
 					this.pointer++;
 				}

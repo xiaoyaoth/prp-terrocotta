@@ -17,7 +17,7 @@ public class PerformanceThread implements Runnable {
 		this.jVM_id = sInfo.getJVM_id();
 		this.loopCount = 0;
 		this.tcLock = new Lock();
-		threshold = 0.01;
+		threshold = 1;
 	}
 
 	@Override
@@ -69,11 +69,12 @@ public class PerformanceThread implements Runnable {
 		Iterator<Scenario> iter = ScenariosMgr.getSnrs().values().iterator();
 		Scenario c = null;
 		int tickTemp = 0;
-		if (this.weakPoint == 3) {
+		if (this.weakPoint == 1) {
 			while (iter.hasNext()) {
 				Scenario snr = iter.next();
 				int tickRemained = snr.getTicks() - snr.getClock().getTick();
-				if (tickRemained > tickTemp && this.jVM_id == snr.getHostID() && !snr.isHasMiged()) {
+				if (tickRemained > tickTemp && this.jVM_id == snr.getHostID()
+						&& !snr.isHasMiged()) {
 					tickTemp = tickRemained;
 					c = snr;
 				}

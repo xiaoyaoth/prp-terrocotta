@@ -94,6 +94,7 @@ public class ScenariosMgr implements Runnable {
 		while (true) {
 			try {
 				String[] oneSnr = ScenariosMgr.snrCfgs.take();
+				System.out.println("in ScenariosMgr.java, I take it");
 				Scenario c = new Scenario(oneSnr[0], oneSnr[1]);
 				new Thread(c).start();
 			} catch (IOException e) {
