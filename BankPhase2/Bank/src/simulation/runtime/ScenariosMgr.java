@@ -22,6 +22,7 @@ public class ScenariosMgr implements Runnable {
 	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
 	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
 	public static int finiCaseNum;
+	private static int snrID;
 
 	public ScenariosMgr() {
 		Thread monThread = new Thread(mon);
@@ -145,6 +146,10 @@ public class ScenariosMgr implements Runnable {
 
 	public static ArrayList<Integer> getSnrIDs() {
 		return ScenariosMgr.snrIDs;
+	}
+	
+	public synchronized static Integer newSnrID(){
+		return ScenariosMgr.snrID++;
 	}
 	
 	public static Integer assign() {

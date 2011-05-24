@@ -39,6 +39,12 @@
         <root>
           <field-name>simulation.runtime.ScenariosMgr.snrs</field-name>
         </root>
+        <root>
+          <field-name>simulation.runtime.ScenariosMgr.snrID</field-name>
+        </root>
+        <root>
+          <field-name>simulation.runtime.Server.serverID</field-name>
+        </root>
       </roots>
       <locks>
         <autolock auto-synchronized="false">

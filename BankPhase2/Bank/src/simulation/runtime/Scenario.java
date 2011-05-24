@@ -42,10 +42,6 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private Parse p;
 	private Integer hostID;
 	private boolean hasMiged;
-	// private Integer migHost;
-
-	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut//";
-	private final static int PORT = 10000;
 
 	private Lock tcLock = new Lock();
 
@@ -119,8 +115,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		agentNum = 0;
 		idList = new ArrayList<Integer>();
 		pathList = new ArrayList<Path>();
-		this.caseID = this.hashCode();
-		this.hostID = ScenariosMgr.assign();
+		this.caseID = new Integer(ScenariosMgr.newSnrID());
+		this.hostID = new Integer(ScenariosMgr.assign());
 		this.hasMiged = false;
 		this.control(1, this.getTicks());
 	}

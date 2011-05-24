@@ -16,7 +16,6 @@ package simulation.runtime;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -42,18 +41,18 @@ public class Server implements Runnable, Serializable {
 
 	private final static String AGENTS_OUT_FILE_FOLDER = "agentsOut\\";
 	private final static String AGENTS_IN_FILE_FOLDER = "agentsIn\\";
-	private final static String SNR_FOLDER = "snrQueue\\";
-	private final static File dir = new File(AGENTS_IN_FILE_FOLDER);
-
 	public static Map<Integer, ServerInformation> serverInfo = new HashMap<Integer, ServerInformation>();
+	private static int serverID;
 	private ServerInformation sInfo;
 
 	// private int jVM_id;
 
 	Server() {
 		Server.deleteAllAgentsFile();
-		this.sInfo = new ServerInformation(this.hashCode());
 		tcLock = new Lock();
+		synchronized (this.tcLock) {
+			this.sInfo = new ServerInformation(Server.serverID++);
+		}		
 		new ScenariosMgr();
 		System.out.println("JVM " + this.sInfo.getJVM_id() + " starts");
 	}
@@ -62,16 +61,8 @@ public class Server implements Runnable, Serializable {
 		return this.sInfo.getJVM_id();
 	}
 
-	public String getIp() {
-		return this.sInfo.getIp();
-	}
-
 	public static void main(String[] args) throws IOException {
-		File f = new File("config\\ip.txt");
-		java.io.FileReader fr = new java.io.FileReader(f);
-		java.io.BufferedReader br = new java.io.BufferedReader(fr);
 		Server c = new Server();
-		c.setIp(br.readLine());
 		Thread serverThread = new Thread(c);
 		serverThread.setName("ServerThread");
 		serverThread.start();
@@ -231,9 +222,9 @@ public class Server implements Runnable, Serializable {
 				System.out.println();
 
 				// oneCase.control(1, oneCase.getTicks());
-//				if (!oneCase.getClock().isGoOn())
-//					oneCase.startClock();
-				synchronized (oneCase.getTcLock()){
+				// if (!oneCase.getClock().isGoOn())
+				// oneCase.startClock();
+				synchronized (oneCase.getTcLock()) {
 					oneCase.getTcLock().notify();
 				}
 				synchronized (this.tcLock) {
@@ -248,9 +239,5 @@ public class Server implements Runnable, Serializable {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	public void setIp(String ip) {
-		this.sInfo.setIp(ip);
 	}
 }

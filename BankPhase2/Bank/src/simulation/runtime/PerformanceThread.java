@@ -22,6 +22,7 @@ public class PerformanceThread implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println("in PerformanceThread.java, threshold:" + threshold);
 		// TODO Auto-generated method stub
 		while (true) {
 			if (this.sInfo.getAgentTotal() > 0)
@@ -66,23 +67,30 @@ public class PerformanceThread implements Runnable {
 	}
 
 	private void pickOneSnrToBeMigrated() {
-		Iterator<Scenario> iter = ScenariosMgr.getSnrs().values().iterator();
-		Scenario c = null;
-		int tickTemp = 0;
-		if (this.weakPoint == 1) {
-			while (iter.hasNext()) {
-				Scenario snr = iter.next();
-				int tickRemained = snr.getTicks() - snr.getClock().getTick();
-				if (tickRemained > tickTemp && this.jVM_id == snr.getHostID()
-						&& !snr.isHasMiged()) {
-					tickTemp = tickRemained;
-					c = snr;
+		if (this.weakPoint == 2) {
+			Scenario c = null;
+			int tickTemp = 0;
+			synchronized (ScenariosMgr.getSnrs()) {
+				Iterator<Scenario> iter = ScenariosMgr.getSnrs().values()
+						.iterator();
+				while (iter.hasNext()) {
+					Scenario snr = iter.next();
+					int tickRemained = snr.getTicks()
+							- snr.getClock().getTick();
+					if (tickRemained > tickTemp
+							&& this.jVM_id == snr.getHostID()
+							&& !snr.isHasMiged()) {
+						tickTemp = tickRemained;
+						c = snr;
+					}
 				}
 			}
 			if (c != null) {
 				c.setMigrate(this.jVM_id);
+				System.out
+						.println("in PerformanceThread.java, setMigrate fini");
 			} else {
-				System.out.println("Client is null");
+				System.out.println("in PerformanceThread.java, Client is null");
 			}
 			synchronized (this.tcLock) {
 				this.weakPoint = 0;

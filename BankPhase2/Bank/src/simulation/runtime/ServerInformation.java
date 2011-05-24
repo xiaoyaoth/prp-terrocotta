@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class ServerInformation {
 	private final static int PORT = 10000;
-	private String ip = "192.168.131.1";
+	//private String ip = "192.168.131.1";
 	private int jVM_id;
 	private int perf;
 	private int eventCount;
@@ -22,10 +22,6 @@ public class ServerInformation {
 		Thread perfT = new Thread(this.perfThread);
 		perfT.setName("PerformanceThreaddd");
 		perfT.start();
-	}
-
-	public String getIp() {
-		return this.ip;
 	}
 
 	public synchronized void addMigingAgentsInList(byte[] bs) {
@@ -86,10 +82,6 @@ public class ServerInformation {
 		else
 			this.ratio = Integer.MAX_VALUE;
 		return this.ratio;
-	}
-
-	public synchronized void setIp(String ip) {
-		this.ip = ip;
 	}
 
 	public int getAgentTotal() {
