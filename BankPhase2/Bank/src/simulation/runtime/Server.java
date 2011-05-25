@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import simulation.modeling.ClockTick;
 import simulation.modeling.DefaultBelief;
 import simulation.modeling.InvokeMethod;
 import simulation.modeling.Lock;
@@ -103,15 +104,25 @@ public class Server implements Runnable, Serializable {
 			ByteArrayInputStream bais = new ByteArrayInputStream(migbytes);
 			ObjectInputStream objin = new ObjectInputStream(bais);
 			Object obj = null;
+			Scenario c = null;
+			ClockTick clk = null;
 			while ((obj = objin.readObject()) != null) {
-				if (obj instanceof DefaultBelief) {
+				if (obj instanceof Scenario){
+					c = (Scenario) obj;
+					c.recover(this.getJVMId());
+					ScenariosMgr.put(c);
+					c.print();
+				}else if(obj instanceof ClockTick){
+					clk = (ClockTick) obj;
+					clk.recover(c);
+					c.makeNewClock(clk);
+					new Thread(c).start();
+					while(!c.isCfgFinished());
+					clk.print();
+				}else if (obj instanceof DefaultBelief) {
 					DefaultBelief ag = (DefaultBelief) obj;
-					ag.makeNewTcLock();
-					Scenario c = ScenariosMgr.getSnrs().get(ag.getCaseID());
-					ag.setMain(ScenariosMgr.getSnrs().get(ag.getCaseID()));
-					ag.setMigrate(false);
-					ag.setHostServerID(this.sInfo.getJVM_id());
-					ag.setNextTick();
+					ag.recover(c);
+					ag.setHostServerID(this.getJVMId());
 					c.putAgent(ag);
 					synchronized (this.tcLock) {
 						this.sInfo.incAgentTotal();
@@ -120,13 +131,12 @@ public class Server implements Runnable, Serializable {
 							+ ag.isNextTick() + " " + ag.getTick());
 					new Thread(ag).start();
 					System.out.println("recover " + ag.getID());
-				}
+				}else
+					System.out.println("in Server.java.recover(), obj is "+obj);
 			}
 
 			objin.close();
 			bais.close();
-			// }
-			// }
 		}
 	}
 

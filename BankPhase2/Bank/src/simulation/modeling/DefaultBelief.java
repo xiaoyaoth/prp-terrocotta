@@ -17,18 +17,17 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private int id, tick = 0, lifeCycle = -1, ownTick = 0;
 
 	private boolean migrate = false;
-	transient private boolean nextTick = true;
-
-	protected transient MainInterface main;
 	private int caseID;
 	private ArrayList<MessageInfo> sndMessageBox;
 	private ArrayList<MessageInfo> rcvMessageBox;
 	private ArrayList<Integer> connectIDs;
 	private Path path;
-	transient private Lock tcLock = new Lock();
-	private Integer hostServerID;
-	
+	private Integer hostServerID;	
 	private String debugMessage;
+	
+	transient private boolean nextTick = true;
+	transient protected MainInterface main;
+	transient private Lock tcLock = new Lock();
 
 	public DefaultBelief() {
 		this.setSub(this);
@@ -43,6 +42,12 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		System.out.println("nextTick:"+this.nextTick);
 		System.out.println("migrate:"+this.migrate);
 		System.out.println("debugMessage:"+this.debugMessage);
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public void notifyTcLock() {
@@ -51,8 +56,10 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	public synchronized void makeNewTcLock() {
+	public synchronized void recover(MainInterface main) {
 		this.tcLock = new Lock();
+		this.main = main;
+		this.setNextTick();
 	}
 
 	/* ×Ô´øAction */

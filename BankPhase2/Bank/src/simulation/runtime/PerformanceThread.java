@@ -17,7 +17,7 @@ public class PerformanceThread implements Runnable {
 		this.jVM_id = sInfo.getJVM_id();
 		this.loopCount = 0;
 		this.tcLock = new Lock();
-		threshold = 1;
+		threshold = 1000;
 	}
 
 	@Override

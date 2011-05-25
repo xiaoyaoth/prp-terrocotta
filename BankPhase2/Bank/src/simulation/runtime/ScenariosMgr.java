@@ -119,6 +119,13 @@ public class ScenariosMgr implements Runnable {
 			}
 		}
 	}
+	
+	
+	public static synchronized void put(Scenario c) {
+		synchronized (ScenariosMgr.snrs) {
+			ScenariosMgr.snrs.put(c.getCaseID(), c);
+		}
+	}
 
 	public static synchronized void add(Scenario c) {
 		synchronized (ScenariosMgr.snrs) {

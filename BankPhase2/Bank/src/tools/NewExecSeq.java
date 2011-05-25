@@ -17,7 +17,7 @@ public class NewExecSeq {
 		bw.close();
 		fw.close();
 		for(int i = 0; i<1; i++){
-			new SnrQueueGen(10, "usr1", 100);
+			new SnrQueueGen(1, "usr9", 500);
 		}
 	}
 }
