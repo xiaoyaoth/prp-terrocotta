@@ -18,6 +18,7 @@ import org.xml.sax.SAXException;
 public class ScenariosMgr implements Runnable {
 
 	private static BlockingQueue<String[]> snrCfgs = new LinkedBlockingQueue<String[]>();
+	private static BlockingQueue<String[]>[] priorityQueue;
 	private SnrMonitorThread mon = new SnrMonitorThread();
 	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
 	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
@@ -25,6 +26,10 @@ public class ScenariosMgr implements Runnable {
 	private static int snrID;
 
 	public ScenariosMgr() {
+		priorityQueue = new LinkedBlockingQueue[3];
+		priorityQueue[0] = new LinkedBlockingQueue<String[]>();
+		priorityQueue[1] = new LinkedBlockingQueue<String[]>();
+		priorityQueue[2] = new LinkedBlockingQueue<String[]>();
 		Thread monThread = new Thread(mon);
 		monThread.setName("MonitorThread");
 		monThread.start();
@@ -96,7 +101,7 @@ public class ScenariosMgr implements Runnable {
 			try {
 				String[] oneSnr = ScenariosMgr.snrCfgs.take();
 				System.out.println("in ScenariosMgr.java, I take it");
-				Scenario c = new Scenario(oneSnr[0], oneSnr[1]);
+				Scenario c = new Scenario(oneSnr[0], oneSnr[1], ScenariosMgr.assign());
 				new Thread(c).start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -169,7 +174,8 @@ public class ScenariosMgr implements Runnable {
 		default:
 		case 0:
 			int res = 0;
-			for (int i = 0; i < Server.serverInfo.size() * Math.random(); i++)
+			int count = (int) (Server.serverInfo.size() * Math.random());
+			for (int i = 0; i < count; i++)
 				res = iter.next();
 			return res;
 		case 1:// based on machine performance

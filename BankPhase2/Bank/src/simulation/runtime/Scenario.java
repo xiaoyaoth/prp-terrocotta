@@ -49,7 +49,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	transient private Lock tcLock = new Lock();
 	transient private ClockTick clk;
 
-	public Scenario(String usr, String tick) throws IOException,
+	public Scenario(String usr, String tick, Integer hostID) throws IOException,
 			ParserConfigurationException, SAXException {
 		this.totalTicks = Integer.parseInt(tick);
 		String configPath = root + "USER\\" + usr + "\\snr.xml";
@@ -64,7 +64,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		idList = new ArrayList<Integer>();
 		pathList = new ArrayList<Path>();
 		this.caseID = new Integer(ScenariosMgr.newSnrID());
-		this.hostID = new Integer(ScenariosMgr.assign());
+		this.hostID = new Integer(hostID);
 		this.hasMiged = false;
 		this.control(1, this.getTicks());
 	}
@@ -371,7 +371,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			for (DefaultBelief ag : migAgList)
 				while (!ag.isNextTick() || ag.isMigrate())
 					ag.printDebugMessage();
-			this.clk.setMigrate(true);
+			this.clk.setMigrate(true);/*这个东西是不是导致Agent死锁的原因，因为这个地方即使设成true也没用了，因为ClockTick在一些Agent跳出循环后早就卡死了，进入wait态了*/
 
 			// FileOutputStream fos;
 			byte[] snrInBytes = this.writeSenarioIntoByteArray(migAgList);
