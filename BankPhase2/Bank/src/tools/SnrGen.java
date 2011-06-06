@@ -6,9 +6,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class SnrGen {
-	public static void main(String[] args) {
-		String filename = "snr.txt";
-		int num = 1000;
+	public static void main(String[] args) {		
+		new SnrGen(50);
+		new SnrGen(100);
+		new SnrGen(200);
+		new SnrGen(500);
+		new SnrGen(1000);
+		new SnrGen(2000);
+	}
+	
+	private SnrGen(int num){
+		String dir = "config\\xx\\USER\\test1-"+num;
+		new File(dir).mkdir();
+		String filename = dir+"\\snr.xml";
+		num = num/2;
 		try {
 			File file = new File(filename);
 			FileWriter fw = new FileWriter(file);
@@ -21,7 +32,7 @@ public class SnrGen {
 					+ "<Parts>\n" + "<Part>\n"
 					+ "<Info name=\"Pt\" description=\"\"/>\n" + "<Roles>\n"
 					+ "<Role index=\"0\">\n"
-					+ "<Instances instanceNum=\"2\">\n";
+					+ "<Instances instanceNum=\""+num+"\">\n";
 			bw.write(temp);
 			bw.flush();
 			for (int i = 0; i < num; i++) {
@@ -31,7 +42,7 @@ public class SnrGen {
 				bw.flush();
 			}
 			temp = "</Instances>\n" + "</Role>\n" + "<Role index=\"1\">\n"
-					+ "<Instances instanceNum=\"4\">\n";
+					+ "<Instances instanceNum=\""+num+"\">\n";
 			bw.write(temp);
 			bw.flush();
 			for (int i = 0; i < num; i++) {

@@ -49,11 +49,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	transient private Lock tcLock = new Lock();
 	transient private ClockTick clk;
 
-	public Scenario(String usr, String tick, Integer hostID) throws IOException,
+	public Scenario(Integer hostID, Parse p) throws IOException,
 			ParserConfigurationException, SAXException {
-		this.totalTicks = Integer.parseInt(tick);
-		String configPath = root + "USER\\" + usr + "\\snr.xml";
-		p = new Parse(configPath);
+		this.p = p;
+		this.totalTicks = p.getTick();
+		
 		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
 		agentList = new HashMap<Integer, DefaultBelief>();
@@ -159,7 +159,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			/* added on March 21 */
 			System.out.println("Scenario fini in Scenario.java");
 			this.output(this.getClock().getDuration() + " " + " "
-					+ this.totalTicks);
+					+ this.totalTicks + this.p.getUsr());
 			synchronized (this.tcLock) {
 				// oneCase.caseTable.clear();
 				this.clean(this.pc);

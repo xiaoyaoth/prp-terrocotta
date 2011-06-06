@@ -90,7 +90,7 @@ public class PerformanceThread implements Runnable {
 				System.out
 						.println("in PerformanceThread.java, setMigrate fini");
 			} else {
-				System.out.println("in PerformanceThread.java, Client is null");
+				System.out.println("in PerformanceThread.java, Scenario is null");
 			}
 			synchronized (this.tcLock) {
 				this.weakPoint = 0;

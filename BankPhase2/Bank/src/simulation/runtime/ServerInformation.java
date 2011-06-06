@@ -43,32 +43,32 @@ public class ServerInformation {
 	}
 
 	public synchronized void decAgentTotal() {
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-					"statistics\\sinfo"+this.jVM_id+".txt"),true);
-			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-			bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
-			bw.close();
-			fw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+//					"statistics\\sinfo"+this.jVM_id+".txt"),true);
+//			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+//			bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
+//			bw.close();
+//			fw.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		this.agentTotal--;
 	}
 
 	public synchronized void incAgentTotal() {
-		try {
-			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-					"statistics\\sinfo"+this.jVM_id+".txt"), true);
-			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-			bw.append("incAgentTotal Called\t" + (this.agentTotal + 1)+"\tp\n\r");
-			bw.close();
-			fw.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+//					"statistics\\sinfo"+this.jVM_id+".txt"), true);
+//			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+//			bw.append("incAgentTotal Called\t" + (this.agentTotal + 1)+"\tp\n\r");
+//			bw.close();
+//			fw.close();
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 		this.agentTotal++;
 	}
 

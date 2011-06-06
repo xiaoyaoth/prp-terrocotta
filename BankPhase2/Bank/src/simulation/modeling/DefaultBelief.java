@@ -99,6 +99,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 							|| this.main.getClock().getNow() == 0)
 						this.main.getClock().getNowLock().wait();
 					this.debugMessage = "2";
+				}
+				synchronized(this.tcLock){
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();

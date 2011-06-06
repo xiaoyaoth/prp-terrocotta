@@ -3,6 +3,7 @@ package simulation.runtime;
 import simulation.modeling.Path;
 import java.io.FileInputStream;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -21,84 +22,37 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class Parse implements Serializable {
-	private ArrayList<Tuple> table = new ArrayList<Tuple>();
-	private String slnPath;
-	private Map<Integer, String> roleTy = new HashMap<Integer, String>();
-	private int agTy = -1, roletyc = 0; //roleTypeCount
-	private Tuple tp = new Tuple();
+	transient private static String root = "config\\xx\\";
 
-	public Parse(String path) throws ParserConfigurationException, SAXException, IOException
-	{
-		DocumentBuilderFactory domfac = DocumentBuilderFactory.newInstance();
-		DocumentBuilder dombuilder = domfac.newDocumentBuilder();
-		InputStream is  = new FileInputStream(path);
-		Document doc = dombuilder.parse(is);
-		printNode(doc, 0, new Path(0));
-	}
-	
-	public ArrayList<Tuple> getTable(){
-		return this.table;
-	}
-	
-	public String getSlnPath()
-	{
-		return this.slnPath;
+	transient private ArrayList<Tuple> table = new ArrayList<Tuple>();
+	transient private String slnPath;
+	transient private Map<Integer, String> roleTy = new HashMap<Integer, String>();
+	transient private int agTy = -1, roletyc = 0; // roleTypeCount
+	transient private Tuple tp = new Tuple();
+
+	transient private int totalAgentNum;
+	transient private String usr;
+	transient private int tick;
+
+	public Parse(String usr, String tick) {
+		this(usr, Integer.parseInt(tick));
 	}
 
-	public void printNode(Node node, int count, Path p) 
-	{
-		Path tempP = new Path(p);
-		String tmp = "" + count;
-		for (int i = 0; i < count; i++) tmp += "  ";
-
-		if (node != null) {
-			NodeList childNodes = node.getChildNodes();
-			for (int i = 0; i < childNodes.getLength(); i++) {
-				Node n = childNodes.item(i);
-				NamedNodeMap attrs = n.getAttributes();
-				if (n.getNodeName().equals("sln")){
-					this.slnPath = "sln\\" + n.getFirstChild().getNodeValue();
-				}
-				if (n.getNodeName().equals("RoleInfo")) {
-					roleTy.put(roletyc, n.getAttributes().item(0).getNodeValue());
-					roletyc ++;
-				}
-				if (n.getNodeName().equals("Role")){
-					agTy = Integer.parseInt(attrs.item(0).getNodeValue());
-				}
-				if (n.getNodeName().equals("Instance")){
-					tp.id = Integer.parseInt(attrs.item(0).getNodeValue());
-				}
-				if (n.getParentNode().getNodeName().equals("Instance")&& attrs != null)
-				{
-					for(int j = 0; j< attrs.getLength(); j++)
-					{
-						tp.args.add(attrs.item(j).getNodeValue());
-					}
-					tp.path = tempP;
-					tp.agTy = roleTy.get(agTy);
-					table.add(tp);
-					tp = new Tuple();
-				}
-				if (n.getNodeName().equals("Sons")){
-					tempP = new Path(tempP,0);
-				}
-				if (n.getNodeName().equals("Part")){
-					int index = tempP.getSize()-1;
-					tempP.set(index, tempP.get(index)+1);
-				}
-				printNode(n, count + 1, tempP);
-			}
-		}
-	}
-
-	/*public static void main(String[] args) {
+	public Parse(String usr, int tick) {
+		this.usr = usr;
+		this.tick = tick;
 		try {
-			Parse p = new Parse("C:\\Users\\xiaoyaoth\\Desktop\\新建文件夹 (2)\\USER\\usr1\\snr.xml");
-			System.out.println(p.table);
-			System.out.println(p.sln_path);
-//			new Parse();
+			String configPath = root + "USER\\" + usr + "\\snr.xml";
+			System.out.println(configPath);
+			DocumentBuilderFactory domfac = DocumentBuilderFactory.newInstance();
+			DocumentBuilder dombuilder = domfac.newDocumentBuilder();
+			InputStream is = new FileInputStream(configPath);
+			Document doc = dombuilder.parse(is);
+			printNode(doc, 0, new Path(0));
 		} catch (ParserConfigurationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SAXException e) {
@@ -108,7 +62,86 @@ public class Parse implements Serializable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}*/
+	}
+
+	public ArrayList<Tuple> getTable() {
+		return this.table;
+	}
+
+	public String getSlnPath() {
+		return this.slnPath;
+	}
+
+	public String getUsr() {
+		return this.usr;
+	}
+
+	public int getTick() {
+		return this.tick;
+	}
+	
+	public int getAgentTotalNum(){
+		return this.totalAgentNum;
+	}
+
+	public void printNode(Node node, int count, Path p) {
+		Path tempP = new Path(p);
+		String tmp = "" + count;
+		for (int i = 0; i < count; i++)
+			tmp += "  ";
+
+		if (node != null) {
+			NodeList childNodes = node.getChildNodes();
+			for (int i = 0; i < childNodes.getLength(); i++) {
+				Node n = childNodes.item(i);
+				NamedNodeMap attrs = n.getAttributes();
+				if (n.getNodeName().equals("sln")) {
+					this.slnPath = "sln\\" + n.getFirstChild().getNodeValue();
+				}
+				if (n.getNodeName().equals("RoleInfo")) {
+					roleTy.put(roletyc, n.getAttributes().item(0)
+							.getNodeValue());
+					roletyc++;
+				}
+				if (n.getNodeName().equals("Role")) {
+					agTy = Integer.parseInt(attrs.item(0).getNodeValue());
+				}
+				if (n.getNodeName().equals("Instance")) {
+					tp.id = Integer.parseInt(attrs.item(0).getNodeValue());
+				}
+				if (n.getParentNode().getNodeName().equals("Instance")
+						&& attrs != null) {
+					for (int j = 0; j < attrs.getLength(); j++) {
+						tp.args.add(attrs.item(j).getNodeValue());
+					}
+					tp.path = tempP;
+					tp.agTy = roleTy.get(agTy);
+					table.add(tp);
+					tp = new Tuple();
+				}
+				if (n.getNodeName().equals("Sons")) {
+					tempP = new Path(tempP, 0);
+				}
+				if (n.getNodeName().equals("Part")) {
+					int index = tempP.getSize() - 1;
+					tempP.set(index, tempP.get(index) + 1);
+				}
+				if (n.getNodeName().equals("Instances")) {
+					this.totalAgentNum += Integer.parseInt(attrs.item(0)
+							.getNodeValue());
+				}
+				printNode(n, count + 1, tempP);
+			}
+		}
+	}
+
+	public static void main(String[] args) {
+
+		Parse p = new Parse("test1_50", "100");
+		System.out.println(p.totalAgentNum);
+		System.out.println(p.table);
+		System.out.println(p.slnPath);
+	}
 }
 
 class Tuple implements Serializable {
@@ -118,8 +151,7 @@ class Tuple implements Serializable {
 	ArrayList<String> args = new ArrayList<String>();
 	Integer nopt;
 
-	Tuple()
-	{
+	Tuple() {
 		agTy = "~";
 		path = new Path(0);
 		JVM_id = -1;
@@ -127,11 +159,11 @@ class Tuple implements Serializable {
 		args = new ArrayList<String>();
 		nopt = -1;
 	}
-	
-	public String toString() 
-	{
+
+	public String toString() {
 		String s = path + " " + id + " " + nopt + " " + agTy + " [";
-		for (Object o : args) s += o.toString() + " ";
+		for (Object o : args)
+			s += o.toString() + " ";
 		s += "]\n";
 		return s;
 	}
