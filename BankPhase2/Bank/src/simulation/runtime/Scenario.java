@@ -143,6 +143,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				for (int i = 0; i < this.caseTable.size(); i++) {
 					Tuple oneTuple = this.caseTable.get(i);
 					oneTuple.JVM_id = this.hostID;
+					oneTuple.JVM_id = ScenariosMgr.assign();
 					this.agentNum++;
 				}
 				ScenariosMgr.add(this);

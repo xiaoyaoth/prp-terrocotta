@@ -8,9 +8,7 @@ import java.util.ArrayList;
 
 public class StatReader {
 	public static void main(String[] args) throws IOException{
-		ArrayList<Integer> alist = new ArrayList<Integer>();
-		System.out.println(alist.hashCode());
-		File dir = new File("statistics\\tempcheck");
+		File dir = new File("statistics\\¶à»útest1");
 		if(!dir.isDirectory()){
 			System.out.println("end");
 			return;

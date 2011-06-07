@@ -18,8 +18,6 @@ import org.xml.sax.SAXException;
 
 public class ScenariosMgr implements Runnable {
 
-	// private static BlockingQueue<String[]> snrCfgs = new
-	// LinkedBlockingQueue<String[]>();
 	private static Queue<Parse>[] priorityQueue;
 	private SnrMonitorThread mon = new SnrMonitorThread();
 	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
@@ -92,18 +90,25 @@ public class ScenariosMgr implements Runnable {
 				File[] flist = dir.listFiles();
 				for (File f : flist) {
 					if (!f.isDirectory()) {
+						System.out.println("************readCfg************");
+						System.out.println(flist);
+						System.out.println(f);
+						System.out.println("~~~~~~~~~~~~readCfg~~~~~~~~~~~~");
 						FileReader fr = new FileReader(f);
 						BufferedReader br = new BufferedReader(fr);
 						String cfg = br.readLine();
 						String[] segs = cfg.split("_");
 						System.out.println(segs[0] + " " + segs[1] + " "
 								+ segs[2] + " " + segs[3]);
-						this.addSnr(segs[1], segs[2], segs[3]);
 						br.close();
 						fr.close();
 						f.delete();
+						f = null;
+						this.addSnr(segs[1], segs[2], segs[3]);
 					}
 				}
+				flist = null;
+				dir = null;
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -119,7 +124,17 @@ public class ScenariosMgr implements Runnable {
 				}
 			else
 				System.err.println("In ScenariosMgr.java, addSnr error");
-			System.out.println(priorityQueue);
+			printQueue();
+		}
+
+		private void printQueue() {
+			System.out.println("*************printQueue*****************");
+			for (int i = 0; i < 3; i++) {
+				for (Parse p : priorityQueue[i])
+					System.out.print(p + " ");
+				System.out.println();
+			}
+			System.out.println("~~~~~~~~~~~~~printQueue~~~~~~~~~~~~~~~~~");
 		}
 	}
 
@@ -128,7 +143,7 @@ public class ScenariosMgr implements Runnable {
 	}
 
 	private static Parse pollSnr() {
-		Parse snr = null;
+		Parse p = null;
 		int debug = 0;
 		try {
 			if (debug == 1) {
@@ -143,25 +158,23 @@ public class ScenariosMgr implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		while (snr == null) {
-			synchronized (priorityQueue) {
-				if (priorityQueue[2].size() != 0)
-					snr = priorityQueue[2].poll();
-				else if (priorityQueue[1].size() != 0)
-					snr = priorityQueue[1].poll();
-				else if (priorityQueue[0].size() != 0)
-					snr = priorityQueue[0].poll();
-				else
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-			}
-		}
 
-		return snr;
+		synchronized (priorityQueue) {
+			if (priorityQueue[2].size() != 0)
+				p = priorityQueue[2].poll();
+			else if (priorityQueue[1].size() != 0)
+				p = priorityQueue[1].poll();
+			else if (priorityQueue[0].size() != 0)
+				p = priorityQueue[0].poll();
+			else
+				try {
+					priorityQueue.wait(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		return p;
 	}
 
 	@Override
@@ -170,6 +183,8 @@ public class ScenariosMgr implements Runnable {
 		while (true) {
 			try {
 				Parse oneSnr = ScenariosMgr.pollSnr();
+				while(oneSnr == null)
+					oneSnr = ScenariosMgr.pollSnr();
 				System.out.println("in ScenariosMgr.java, I take it");
 				int debugMode = 0;
 
@@ -254,7 +269,7 @@ public class ScenariosMgr implements Runnable {
 	}
 
 	public static Integer assign() {
-		int mode = 2;
+		int mode = 0;
 		int bestId = -1;
 		int tempId = -1;
 		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();
@@ -264,8 +279,9 @@ public class ScenariosMgr implements Runnable {
 		case 0:
 			int res = 0;
 			int count = (int) (Server.serverInfo.size() * Math.random());
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i <= count; i++)
 				res = iter.next();
+			System.out.print(count+" ");
 			return res;
 		case 1:// based on machine performance
 			int bestPerf = 0;
