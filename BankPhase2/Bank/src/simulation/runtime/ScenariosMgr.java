@@ -269,7 +269,7 @@ public class ScenariosMgr implements Runnable {
 	}
 
 	public static Integer assign() {
-		int mode = 0;
+		int mode = 2;
 		int bestId = -1;
 		int tempId = -1;
 		Iterator<Integer> iter = Server.serverInfo.keySet().iterator();

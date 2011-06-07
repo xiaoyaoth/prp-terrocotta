@@ -53,7 +53,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			ParserConfigurationException, SAXException {
 		this.p = p;
 		this.totalTicks = p.getTick();
-		
+
 		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
 		agentList = new HashMap<Integer, DefaultBelief>();
@@ -143,14 +143,13 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				for (int i = 0; i < this.caseTable.size(); i++) {
 					Tuple oneTuple = this.caseTable.get(i);
 					oneTuple.JVM_id = this.hostID;
-					oneTuple.JVM_id = ScenariosMgr.assign();
 					this.agentNum++;
 				}
 				ScenariosMgr.add(this);
 				synchronized (this.tcLock) {
 					this.cfgFini = true;
 					this.tcLock.wait();
-				}			
+				}
 			}
 			this.startClock();
 			synchronized (this.clk.getTcLock()) {
@@ -337,18 +336,18 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public boolean isHasMiged() {
 		return this.hasMiged;
 	}
-	
-	public void print(){
+
+	public void print() {
 		System.out.println("***************");
 		System.out.println(this);
-		System.out.println("cfgFini "+this.cfgFini);
-		System.out.println("agentNum "+this.agentNum);
-		System.out.println("hasMig "+this.hasMiged);
-		System.out.println("totalTick "+this.totalTicks);
-		System.out.println("caseId "+this.caseID);
-		System.out.println("agentMap "+this.agentList);
-		System.out.println("idList "+this.idList);
-		System.out.println("pathList "+this.pathList);
+		System.out.println("cfgFini " + this.cfgFini);
+		System.out.println("agentNum " + this.agentNum);
+		System.out.println("hasMig " + this.hasMiged);
+		System.out.println("totalTick " + this.totalTicks);
+		System.out.println("caseId " + this.caseID);
+		System.out.println("agentMap " + this.agentList);
+		System.out.println("idList " + this.idList);
+		System.out.println("pathList " + this.pathList);
 		System.out.println("***************");
 	}
 
@@ -360,19 +359,24 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		/* pic ag to mig */
 		if (Server.serverInfo.get(dest).getRatio() > PerformanceThread
 				.getThreshold()) {
-			for (DefaultBelief ag : this.agentList.values()) {
-				if (ag.getHostServerID() == hostID
-						&& ag.getHostServerID() != dest) {
-					ag.setMigrate(true);
-					migAgList.add(ag);
-				} else {
-					System.out.print("d==h ");
+			synchronized (this.agentList) {
+				for (DefaultBelief ag : this.agentList.values()) {
+					if (ag.getHostServerID() == hostID
+							&& ag.getHostServerID() != dest) {
+						ag.setMigrate(true);
+						migAgList.add(ag);
+					} else {
+						System.out.print("d==h ");
+					}
 				}
 			}
 			for (DefaultBelief ag : migAgList)
 				while (!ag.isNextTick() || ag.isMigrate())
 					ag.printDebugMessage();
-			this.clk.setMigrate(true);/*这个东西是不是导致Agent死锁的原因，因为这个地方即使设成true也没用了，因为ClockTick在一些Agent跳出循环后早就卡死了，进入wait态了*/
+			this.clk.setMigrate(true);/*
+									 * 这个东西是不是导致Agent死锁的原因，因为这个地方即使设成true也没用了，
+									 * 因为ClockTick在一些Agent跳出循环后早就卡死了，进入wait态了
+									 */
 
 			// FileOutputStream fos;
 			byte[] snrInBytes = this.writeSenarioIntoByteArray(migAgList);
@@ -387,7 +391,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	}
 
 	private byte[] writeSenarioIntoByteArray(ArrayList<DefaultBelief> migAgList) {
-		synchronized(this.tcLock){
+		synchronized (this.tcLock) {
 			this.hasMiged = true;
 		}
 		ObjectOutputStream oos;
@@ -397,7 +401,6 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			oos = new ObjectOutputStream(baos);
 			oos.writeObject(this);
 			System.out.println("write scenario in byte, phase 1 fini");
-			this.clk.notifyTcLock();/* wake up Scenario, let it die */
 			oos.writeObject(this.clk);
 			System.out.println("write scenario in byte, phase 2 fini");
 			for (DefaultBelief ag : migAgList) {
@@ -415,7 +418,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			System.out.println("write scenario in byte, phase 3 fini");
 			this.clk.notifyNowLock();/* wake up all the agents, let them die */
 			this.clk.notifyTickLock();/* wake up clk, let it die */
-
+			this.clk.notifyTcLock();/* wake up Scenario, let it die */
+			
 			oos.writeObject(null);
 			oos.close();
 			baos.close();
@@ -423,6 +427,10 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			return baos.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println("****************in Scenario.java*******************");
+			System.out.println(this.clk);
+			System.out.println(this.clk.getNowLock());
+			System.out.println("****************in Scenario.java*******************");
 		}
 		return null;
 	}

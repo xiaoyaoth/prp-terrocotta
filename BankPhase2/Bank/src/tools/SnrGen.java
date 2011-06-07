@@ -6,17 +6,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 public class SnrGen {
-	public static void main(String[] args) {		
-		new SnrGen(50);
-		new SnrGen(100);
-		new SnrGen(200);
-		new SnrGen(500);
-		new SnrGen(1000);
-		new SnrGen(2000);
+	public static void main(String[] args) {	
+		new SnrGen(10);
+//		new SnrGen(50);
+//		new SnrGen(100);
+//		new SnrGen(200);
+//		new SnrGen(500);
+//		new SnrGen(1000);
+//		new SnrGen(2000);
 	}
 	
 	private SnrGen(int num){
-		String dir = "config\\xx\\USER\\test1-"+num;
+		String dir = "config\\xx\\USER\\test"+num;
 		new File(dir).mkdir();
 		String filename = dir+"\\snr.xml";
 		num = num/2;

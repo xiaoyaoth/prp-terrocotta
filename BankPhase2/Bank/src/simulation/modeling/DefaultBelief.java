@@ -22,9 +22,9 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	private ArrayList<MessageInfo> rcvMessageBox;
 	private ArrayList<Integer> connectIDs;
 	private Path path;
-	private Integer hostServerID;	
+	private Integer hostServerID;
 	private String debugMessage;
-	
+
 	transient private boolean nextTick = true;
 	transient protected MainInterface main;
 	transient private Lock tcLock = new Lock();
@@ -37,11 +37,11 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		this.connectIDs = new ArrayList<Integer>();
 	}
 
-	public void printDebugMessage(){
+	public void printDebugMessage() {
 		System.out.println(this.id);
-		System.out.println("nextTick:"+this.nextTick);
-		System.out.println("migrate:"+this.migrate);
-		System.out.println("debugMessage:"+this.debugMessage);
+		System.out.println("nextTick:" + this.nextTick);
+		System.out.println("migrate:" + this.migrate);
+		System.out.println("debugMessage:" + this.debugMessage);
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -49,7 +49,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void notifyTcLock() {
 		synchronized (this.tcLock) {
 			this.tcLock.notify();
@@ -100,13 +100,13 @@ public class DefaultBelief extends PlanManager implements Runnable,
 						this.main.getClock().getNowLock().wait();
 					this.debugMessage = "2";
 				}
-				synchronized(this.tcLock){
+				synchronized (this.tcLock) {
 					this.addTick();
 					this.createPlans();
 					this.submitPlans();
 					if (this.migrate) {
-						//System.out.print(this.id + "migrate ");
-						this.migrate();
+						// System.out.print(this.id + "migrate ");
+						this.nextTick = false;
 					}
 					this.main.getClock().decNow();
 					Server.serverInfo.get(this.hostServerID).addAgentCount();
@@ -114,10 +114,18 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("in DefaultBelief.java:\n main:"+this.main);
-				System.out.println(" clk:"+this.main.getClock());
-				System.out.println(" nowLock:"+this.main.getClock().getNowLock());
-				System.out.println(" tick:"+this.tick+" left:"+this.getMain().getClock().getTick());
+				System.out
+						.println("*************DefaultBelief.java****************");
+				System.out
+						.println("in DefaultBelief.java:\n main:" + this.main);
+				System.out.println(" clk:" + this.main.getClock());
+				System.out.println(" nowLock:"
+						+ this.main.getClock().getNowLock());
+				System.out.println(" tick:" + this.tick + " left:"
+						+ this.getMain().getClock().getTick());
+				System.out.println(this.rcvMessageBox);
+				System.out
+						.println("*************DefaultBelief.java****************");
 			}
 		}
 		/* added on May 2nd by xiaoyaoth */
@@ -143,16 +151,17 @@ public class DefaultBelief extends PlanManager implements Runnable,
 					this.debugMessage = "NTtrue,waiting";
 					this.tcLock.wait();
 					this.debugMessage = "NTfalse, running";
+					this.printDebugMessage();
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 		}
 		// this.finalize();
-		//System.out.println("ag:" + this.id + "finalize in DefaultBelief.java");
+		// System.out.println("ag:" + this.id +
+		// "finalize in DefaultBelief.java");
 		/* added fini */
 	}
-	
 
 	public void setMigrate(boolean migrate) {
 		synchronized (tcLock) {
@@ -160,11 +169,11 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-	public void migrate() throws IOException {
-		synchronized (this.tcLock) {
-			this.nextTick = false;
-		}
-	}
+//	public void migrate() throws IOException {
+//		synchronized (this.tcLock) {
+//			this.nextTick = false;
+//		}
+//	}
 
 	public void setMain(MainInterface main) {
 		synchronized (tcLock) {
@@ -224,21 +233,25 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	public void addMess(boolean flag, MessageInfo mi) {
 		if (flag && this.sndMessageBox != null)
-			this.sndMessageBox.add(mi);
+			synchronized (this.sndMessageBox) {
+				this.sndMessageBox.add(mi);
+			}
 		else if (this.rcvMessageBox != null)
-			this.rcvMessageBox.add(mi);
+			synchronized (this.rcvMessageBox) {
+				this.rcvMessageBox.add(mi);
+			}
 		else
 			return;
 	}
 
-	public void removeMess(boolean flag, int index) {
-		if (flag && this.sndMessageBox != null)
-			this.sndMessageBox.remove(index);
-		else if (this.rcvMessageBox != null)
-			this.rcvMessageBox.remove(index);
-		else
-			return;
-	}
+	// public void removeMess(boolean flag, int index) {
+	// if (flag && this.sndMessageBox != null)
+	// this.sndMessageBox.remove(index);
+	// else if (this.rcvMessageBox != null)
+	// this.rcvMessageBox.remove(index);
+	// else
+	// return;
+	// }
 
 	protected void createPlans() {
 		this.receiveMessages();
@@ -256,49 +269,48 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	private void receiveMessages() {
-
-		// edited by xiaoyaoth
-		// for (int i = 0; i < this.rcvMessageBox.size(); i++) {
-		// MessageInfo mi = this.rcvMessageBox.get(i);
-
-		while (this.rcvMessageBox.size() > 0) {
-			MessageInfo mi = this.rcvMessageBox.remove(0);
-			if (!mi.getRFlag()) {
-				/* edited by Xiaosong */
-				/* edited fini */
-				mi.setRFlag();
-				String temp = mi.getContent();
-				/* edited on May 2nd */
-				mi = null;
-				/* edited fini */
-				/*
-				 * edited by Xiaosong if(temp.endsWith("aaaaaaaaaaaaaaaa"))
-				 * System.out.print("1"); edited fini
-				 */
-				int kh = temp.indexOf("(");
-				if (kh > -1) {
-					String pn = temp.substring(0, kh);
-					int pIndex = getPCIndex(pn);
-					if (pIndex > -1) {
-						PlanCondition tpc = pc.get(pIndex);
-						PlanInstance pi = new PlanInstance(this.getID(),
-								tpc.getID(), tpc.getNeedTicks(), pn);
-						temp = temp.substring(1 + kh);
-						int dh = temp.indexOf(", "), yh = temp.indexOf(")");
-						if (yh != kh + 1) {
-							ArrayList<String> al = new ArrayList<String>();
-							while (dh > -1) {
-								al.add(temp.substring(0, dh));
-								temp = temp.substring(dh + 2);
-								dh = temp.indexOf(", ");
-							}
-							al.add(temp.substring(0, temp.indexOf(")")));
-							pi.setSize(al.size());
-							for (int j = 0; j < al.size(); j++)
-								pi.setPara(j, Integer.parseInt(al.get(j)));
-						} else
-							pi.setSize(0);
-						this.addPlanInstance(pi);
+		synchronized (this.rcvMessageBox) {
+			while (this.rcvMessageBox.size() > 0) {
+				MessageInfo mi = this.rcvMessageBox.remove(0);
+				if (mi == null)
+					System.out.println("in DefaultBelief.java, mi is null");
+				if (!mi.getRFlag()) {
+					/* edited by Xiaosong */
+					/* edited fini */
+					mi.setRFlag();
+					String temp = mi.getContent();
+					/* edited on May 2nd */
+					mi = null;
+					/* edited fini */
+					/*
+					 * edited by Xiaosong if(temp.endsWith("aaaaaaaaaaaaaaaa"))
+					 * System.out.print("1"); edited fini
+					 */
+					int kh = temp.indexOf("(");
+					if (kh > -1) {
+						String pn = temp.substring(0, kh);
+						int pIndex = getPCIndex(pn);
+						if (pIndex > -1) {
+							PlanCondition tpc = pc.get(pIndex);
+							PlanInstance pi = new PlanInstance(this.getID(),
+									tpc.getID(), tpc.getNeedTicks(), pn);
+							temp = temp.substring(1 + kh);
+							int dh = temp.indexOf(", "), yh = temp.indexOf(")");
+							if (yh != kh + 1) {
+								ArrayList<String> al = new ArrayList<String>();
+								while (dh > -1) {
+									al.add(temp.substring(0, dh));
+									temp = temp.substring(dh + 2);
+									dh = temp.indexOf(", ");
+								}
+								al.add(temp.substring(0, temp.indexOf(")")));
+								pi.setSize(al.size());
+								for (int j = 0; j < al.size(); j++)
+									pi.setPara(j, Integer.parseInt(al.get(j)));
+							} else
+								pi.setSize(0);
+							this.addPlanInstance(pi);
+						}
 					}
 				}
 			}
@@ -310,11 +322,13 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		// MessageInfo mi = this.sndMessageBox.get(i);
 
 		// edited by xiaoyaoth
-		while (this.sndMessageBox.size() > 0) {
-			MessageInfo mi = this.sndMessageBox.remove(0);
-			if (!mi.getSFlag()) {
-				mi.setSFlag();
-				this.main.getAgent(mi.getRcv()).addMess(false, mi);
+		synchronized (this.sndMessageBox) {
+			while (this.sndMessageBox.size() > 0) {
+				MessageInfo mi = this.sndMessageBox.remove(0);
+				if (!mi.getSFlag()) {
+					mi.setSFlag();
+					this.main.getAgent(mi.getRcv()).addMess(false, mi);
+				}
 			}
 		}
 	}
@@ -365,7 +379,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public boolean isNextTick() {
 		return this.nextTick;
 	}
-	
+
 	public boolean isMigrate() {
 		return this.migrate;
 	}

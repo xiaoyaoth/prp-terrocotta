@@ -157,13 +157,13 @@ public class ClockTick implements Runnable, Serializable {
 
 	public void notifyTickLock(){
 		synchronized(this.tickLock){
-			this.tickLock.notify();
+			this.tickLock.notifyAll();
 		}
 	}
 	
 	public void notifyTcLock(){
 		synchronized(this.tcLock){
-			this.tcLock.notify();
+			this.tcLock.notifyAll();
 		}
 	}
 	
