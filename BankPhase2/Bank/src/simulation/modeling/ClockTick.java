@@ -5,6 +5,7 @@ import java.util.Date;
 
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
+	private long start, end;
 	private boolean goOn;
 	transient private Lock tickLock;
 	transient private Lock nowLock;
@@ -18,16 +19,17 @@ public class ClockTick implements Runnable, Serializable {
 		this.tcLock = new Lock();
 		this.nowLock = new Lock();
 		this.tickLock = new Lock();
-		tick = 0;
-		left = 0;
-		goOn = false;
+		this.tick = 0;
+		this.left = 0;
+		this.goOn = false;
 		this.migrate = false;
 		this.main = main;
+		this.duration = "empty";
 	}
 	
 	public void recover(MainInterface main){
 		this.main = main;
-		this.migrate = false;
+		this.migrate = true;
 		this.tickLock = new Lock();
 		this.nowLock = new Lock();
 		this.tcLock = new Lock();
@@ -64,23 +66,26 @@ public class ClockTick implements Runnable, Serializable {
 	}
 
 	public void run() {
-		long start, end;
-		synchronized (tcLock) {
-			this.goOn = true;
-			Date time = new Date();
-			start = time.getTime();
-			System.out.println(start);
-			System.out.println("in ClockTick.java now is " + this.now);
-		}
+	
+		System.out.println("in ClockTick.java now is " + this.now);
 		
 		if(this.migrate){
 			synchronized(this.tickLock){
 				try {
 					this.tickLock.wait();
+					this.migrate = false;
+					System.out.println();
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
+		}else{
+			synchronized (tcLock) {
+				this.goOn = true;
+				Date time = new Date();
+				this.start = time.getTime();
+				System.out.println(this.start);
 			}
 		}
 		
@@ -99,7 +104,6 @@ public class ClockTick implements Runnable, Serializable {
 					}
 
 					try {
-						System.out.print("A ");
 						while (this.now > 0) {
 							// System.out.println("tickLock locked");
 							this.tickLock.wait();
@@ -122,9 +126,9 @@ public class ClockTick implements Runnable, Serializable {
 					}
 				goOn = false;
 				Date time = new Date();
-				end = time.getTime();
-				this.duration = "start:" + start + " end:" + end + " duration:"
-						+ (end - start);
+				this.end = time.getTime();
+				this.duration = "start:" + this.start + " end:" + this.end + " duration:"
+						+ (this.end - this.start);
 				/*
 				 * 这里不是fini,当clocktick把所有的agent唤醒，clocktick结束了，但是Agent还在运行。
 				 * 所以当所有Agent结束运行才是一切的终结，想办法弄一下
@@ -148,7 +152,7 @@ public class ClockTick implements Runnable, Serializable {
 		synchronized (this.tickLock) {
 			// System.out.print(now + " ");
 			--now;
-			if (this.now <= 0) {
+			if (this.now == 0 || this.now == -this.main.getTotal()) {
 				this.tickLock.notifyAll();
 				// System.out.println("B ");
 			}
@@ -195,13 +199,16 @@ public class ClockTick implements Runnable, Serializable {
 	public void print(){
 		System.out.println("***************");
 		System.out.println(this);
-		System.out.println("goOn: "+this.goOn);
-		System.out.println("left: "+this.left);
-		System.out.println("migrate: "+this.migrate);
-		System.out.println("now: "+this.now);
-		System.out.println("tick: "+this.tick);
-		System.out.println("main: "+this.main);
-		System.out.println("tcLock: "+this.tcLock);
+		System.out.println("goOn:\t "+this.goOn);
+		System.out.println("left:\t "+this.left);
+		System.out.println("migrate:\t "+this.migrate);
+		System.out.println("now:\t "+this.now);
+		System.out.println("tick:\t "+this.tick);
+		System.out.println("main:\t "+this.main);
+		System.out.println("tcLock:\t "+this.tcLock);
+		System.out.println("start:\t "+this.start);
+		System.out.println("end:\t "+this.end);
+		System.out.println("duration:\t "+this.duration);
 		System.out.println("***************");
 	}
 

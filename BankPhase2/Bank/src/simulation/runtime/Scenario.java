@@ -36,6 +36,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	private ArrayList<Path> pathList;
 	private Integer caseID;
 	private boolean hasMiged;
+	private String usr;
 
 	/* temporary members used by server to run the simulation */
 	transient private Parse p;
@@ -53,6 +54,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			ParserConfigurationException, SAXException {
 		this.p = p;
 		this.totalTicks = p.getTick();
+		this.usr = p.getUsr();
 
 		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
@@ -158,8 +160,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			}
 			/* added on March 21 */
 			System.out.println("Scenario fini in Scenario.java");
-			this.output(this.getClock().getDuration() + " " + " "
-					+ this.totalTicks + this.p.getUsr());
+			this.output(this.getClock().getDuration() + " " + this.totalTicks
+					+ " " + this.usr);
 			synchronized (this.tcLock) {
 				// oneCase.caseTable.clear();
 				this.clean(this.pc);
@@ -169,7 +171,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				this.clean(this.agentList);
 				this.clk.setMain(null);
 				this.clk = null;
-				this.p.getTable().clear();
+				if(p != null)
+					this.clean(p.getTable());
 				this.p = null;
 				this.execFini = true;
 				ScenariosMgr.remove(this);
@@ -320,6 +323,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	}
 
 	public void output(String s) throws IOException {
+		System.out.println(s);
 		File fo = new File("statistics\\" + this.hashCode() + ".txt");
 		FileWriter fw = new FileWriter(fo);
 		BufferedWriter bw = new BufferedWriter(fw);
@@ -340,14 +344,15 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public void print() {
 		System.out.println("***************");
 		System.out.println(this);
-		System.out.println("cfgFini " + this.cfgFini);
-		System.out.println("agentNum " + this.agentNum);
-		System.out.println("hasMig " + this.hasMiged);
-		System.out.println("totalTick " + this.totalTicks);
-		System.out.println("caseId " + this.caseID);
-		System.out.println("agentMap " + this.agentList);
-		System.out.println("idList " + this.idList);
-		System.out.println("pathList " + this.pathList);
+		System.out.println("cfgFini:\t " + this.cfgFini);
+		System.out.println("agentNum:\t " + this.agentNum);
+		System.out.println("hasMig:\t " + this.hasMiged);
+		System.out.println("totalTick:\t " + this.totalTicks);
+		System.out.println("caseId:\t " + this.caseID);
+		System.out.println("agentMap:\t " + this.agentList);
+		System.out.println("idList:\t " + this.idList);
+		System.out.println("pathList:\t " + this.pathList);
+		System.out.println("parse:\t " + this.p);
 		System.out.println("***************");
 	}
 
@@ -419,7 +424,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			this.clk.notifyNowLock();/* wake up all the agents, let them die */
 			this.clk.notifyTickLock();/* wake up clk, let it die */
 			this.clk.notifyTcLock();/* wake up Scenario, let it die */
-			
+
 			oos.writeObject(null);
 			oos.close();
 			baos.close();
@@ -427,10 +432,12 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			return baos.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println("****************in Scenario.java*******************");
+			System.out
+					.println("****************in Scenario.java*******************");
 			System.out.println(this.clk);
 			System.out.println(this.clk.getNowLock());
-			System.out.println("****************in Scenario.java*******************");
+			System.out
+					.println("****************in Scenario.java*******************");
 		}
 		return null;
 	}

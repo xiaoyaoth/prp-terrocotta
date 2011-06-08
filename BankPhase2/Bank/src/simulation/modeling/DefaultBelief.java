@@ -95,6 +95,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				synchronized (this.main.getClock().getNowLock()) {
 					this.debugMessage = "1";
 					this.lifeCycle--;
+					this.main.getClock().decNow();
 					while (this.getTick() >= this.main.getClock().getTick()
 							|| this.main.getClock().getNow() == 0)
 						this.main.getClock().getNowLock().wait();
@@ -108,7 +109,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 						// System.out.print(this.id + "migrate ");
 						this.nextTick = false;
 					}
-					this.main.getClock().decNow();
+					//this.main.getClock().decNow();
 					Server.serverInfo.get(this.hostServerID).addAgentCount();
 					this.debugMessage = "3";
 				}
