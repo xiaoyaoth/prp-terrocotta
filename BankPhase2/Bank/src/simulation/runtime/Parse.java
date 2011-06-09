@@ -29,18 +29,22 @@ public class Parse implements Serializable {
 	transient private Map<Integer, String> roleTy = new HashMap<Integer, String>();
 	transient private int agTy = -1, roletyc = 0; // roleTypeCount
 	transient private Tuple tp = new Tuple();
-
+	transient private Integer hostId;
+	
 	transient private int totalAgentNum;
 	transient private String usr;
 	transient private int tick;
+	transient private int prior;
 
-	public Parse(String usr, String tick) {
-		this(usr, Integer.parseInt(tick));
+	public Parse(String usr, String tick, String prior) {
+		this(usr, Integer.parseInt(tick), Integer.parseInt(prior));
 	}
 
-	public Parse(String usr, int tick) {
+	public Parse(String usr, int tick, int prior) {
+		this.hostId = -1;
 		this.usr = usr;
 		this.tick = tick;
+		this.prior = prior;
 		try {
 			String configPath = root + "USER\\" + usr + "\\snr.xml";
 			System.out.println(configPath);
@@ -62,6 +66,22 @@ public class Parse implements Serializable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void seHostId(int hostId){
+		this.hostId = hostId;
+	}
+	
+	public int getHostId(){
+		return this.hostId;
+	}
+	
+	public int getPrior(){
+		return this.prior;
+	}
+	
+	public void decPrior(){
+		this.prior--;
 	}
 
 	public ArrayList<Tuple> getTable() {
@@ -118,6 +138,7 @@ public class Parse implements Serializable {
 					tp.agTy = roleTy.get(agTy);
 					table.add(tp);
 					tp = new Tuple();
+					this.totalAgentNum++;
 				}
 				if (n.getNodeName().equals("Sons")) {
 					tempP = new Path(tempP, 0);
@@ -127,8 +148,8 @@ public class Parse implements Serializable {
 					tempP.set(index, tempP.get(index) + 1);
 				}
 				if (n.getNodeName().equals("Instances")) {
-					this.totalAgentNum += Integer.parseInt(attrs.item(0)
-							.getNodeValue());
+//					this.totalAgentNum += Integer.parseInt(attrs.item(0)
+//							.getNodeValue());
 				}
 				printNode(n, count + 1, tempP);
 			}
@@ -137,7 +158,7 @@ public class Parse implements Serializable {
 
 	public static void main(String[] args) {
 
-		Parse p = new Parse("test1_50", "100");
+		Parse p = new Parse("test1_50", 100, 0);
 		System.out.println(p.totalAgentNum);
 		System.out.println(p.table);
 		System.out.println(p.slnPath);

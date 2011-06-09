@@ -53,7 +53,7 @@ public class Server implements Runnable, Serializable {
 		tcLock = new Lock();
 		synchronized (this.tcLock) {
 			this.sInfo = new ServerInformation(Server.serverID++);
-		}		
+		}
 		new ScenariosMgr();
 		System.out.println("JVM " + this.sInfo.getJVM_id() + " starts");
 	}
@@ -71,7 +71,7 @@ public class Server implements Runnable, Serializable {
 
 	public void run() {
 		synchronized (this.tcLock) {
-			this.pointer = ScenariosMgr.finiCaseNum;
+			this.pointer = ScenariosMgr.getFiniCaseNum();
 		}
 		// Thread perfThread = new Thread(this.perfthread);
 		// perfThread.setName("PerformanceThread");
@@ -107,19 +107,20 @@ public class Server implements Runnable, Serializable {
 			Scenario c = null;
 			ClockTick clk = null;
 			while ((obj = objin.readObject()) != null) {
-				if (obj instanceof Scenario){
+				if (obj instanceof Scenario) {
 					c = (Scenario) obj;
 					c.recover(this.getJVMId());
 					ScenariosMgr.put(c);
 					c.print();
-				}else if(obj instanceof ClockTick){
+				} else if (obj instanceof ClockTick) {
 					clk = (ClockTick) obj;
 					clk.recover(c);
 					c.makeNewClock(clk);
 					new Thread(c).start();
-					while(!c.isCfgFinished());
+					while (!c.isCfgFinished())
+						;
 					clk.print();
-				}else if (obj instanceof DefaultBelief) {
+				} else if (obj instanceof DefaultBelief) {
 					DefaultBelief ag = (DefaultBelief) obj;
 					ag.recover(c);
 					ag.setHostServerID(this.getJVMId());
@@ -131,8 +132,14 @@ public class Server implements Runnable, Serializable {
 							+ ag.isNextTick() + " " + ag.getTick());
 					new Thread(ag).start();
 					System.out.println("recover " + ag.getID());
-				}else
-					System.out.println("in Server.java.recover(), obj is "+obj);
+				} else
+					System.out.println("in Server.java.recover(), obj is "
+							+ obj);
+			}
+			synchronized (migbytes) {
+				for (int i = 0; i < migbytes.length; i++)
+					migbytes[i] = 0;
+				migbytes = null;
 			}
 
 			objin.close();
@@ -166,7 +173,7 @@ public class Server implements Runnable, Serializable {
 	}
 
 	public void mainLoop() {
-		int realPointer = this.pointer - ScenariosMgr.finiCaseNum;
+		int realPointer = this.pointer - ScenariosMgr.getFiniCaseNum();
 		Map<Integer, Scenario> m = ScenariosMgr.getSnrs();
 		ArrayList<Integer> l = ScenariosMgr.getSnrIDs();
 		// System.out.print("case: "+ l.size()

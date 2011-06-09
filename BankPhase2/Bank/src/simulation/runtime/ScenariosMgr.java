@@ -16,14 +16,17 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.xml.sax.SAXException;
 
+import simulation.modeling.Lock;
+
 public class ScenariosMgr implements Runnable {
 
 	private static Queue<Parse>[] priorityQueue;
 	private SnrMonitorThread mon = new SnrMonitorThread();
 	private static Map<Integer, Scenario> snrs = new HashMap<Integer, Scenario>();
 	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
-	public static int finiCaseNum;
+	private static int finiCaseNum;
 	private static int snrID;
+	private static Lock tcLock;
 
 	public ScenariosMgr() {
 		Comparator<Parse> compTick = new Comparator<Parse>() {
@@ -52,10 +55,15 @@ public class ScenariosMgr implements Runnable {
 			}
 		};
 
-		priorityQueue = new PriorityQueue[3];
-		priorityQueue[0] = new PriorityQueue<Parse>(5, compTick);
+		priorityQueue = new PriorityQueue[4];
 		priorityQueue[1] = new PriorityQueue<Parse>(5, compTick);
 		priorityQueue[2] = new PriorityQueue<Parse>(5, compTick);
+		priorityQueue[3] = new PriorityQueue<Parse>(5, compTick);
+		/* [0] is the lowest priority queue, without sort */
+		priorityQueue[0] = new PriorityQueue<Parse>();
+
+		tcLock = new Lock();
+
 		Thread monThread = new Thread(mon);
 		monThread.setName("MonitorThread");
 		monThread.start();
@@ -90,10 +98,6 @@ public class ScenariosMgr implements Runnable {
 				File[] flist = dir.listFiles();
 				for (File f : flist) {
 					if (!f.isDirectory()) {
-						System.out.println("************readCfg************");
-						System.out.println(flist);
-						System.out.println(f);
-						System.out.println("~~~~~~~~~~~~readCfg~~~~~~~~~~~~");
 						FileReader fr = new FileReader(f);
 						BufferedReader br = new BufferedReader(fr);
 						String cfg = br.readLine();
@@ -110,31 +114,30 @@ public class ScenariosMgr implements Runnable {
 				flist = null;
 				dir = null;
 			} catch (Exception e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 
 		private void addSnr(String usr, String tick, String prior) {
 			int pr = Integer.parseInt(prior);
-			System.out.println("I am here");
-			if (pr == 0 || pr == 1 || pr == 2)
+			if (pr == 1 || pr == 2 || pr == 3) {
 				synchronized (priorityQueue) {
-					priorityQueue[pr].add(new Parse(usr, tick));
+					priorityQueue[pr].add(new Parse(usr, tick, prior));
 				}
-			else
+				synchronized (tcLock) {
+					tcLock.notifyAll();
+				}
+			} else
 				System.err.println("In ScenariosMgr.java, addSnr error");
 			printQueue();
 		}
 
 		private void printQueue() {
-			System.out.println("*************printQueue*****************");
 			for (int i = 0; i < 3; i++) {
 				for (Parse p : priorityQueue[i])
 					System.out.print(p + " ");
 				System.out.println();
 			}
-			System.out.println("~~~~~~~~~~~~~printQueue~~~~~~~~~~~~~~~~~");
 		}
 	}
 
@@ -142,59 +145,78 @@ public class ScenariosMgr implements Runnable {
 		new ScenariosMgr();
 	}
 
+	private static boolean adjustQueue(Parse p) {
+		int bestId = ScenariosMgr.assign();
+		p.seHostId(bestId);
+		double ratio = ratioCal(bestId, p.getAgentTotalNum());
+		if (ratio < PerformanceThread.getThreshold()) {
+			if (p.getPrior() > 0)
+				p.decPrior();
+			ScenariosMgr.priorityQueue[p.getPrior()].add(p);
+			try {
+				Thread.sleep(2000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private static double ratioCal(int hostId, int newAgNum) {
+		int AgCount = Server.serverInfo.get(hostId).getAgentCount();
+		int AgTotal = Server.serverInfo.get(hostId).getAgentTotal();
+		if (AgTotal != 0)
+			return (double) (AgCount / (AgTotal + newAgNum));
+		else
+			return Integer.MAX_VALUE;
+	}
+
 	private static Parse pollSnr() {
 		Parse p = null;
-		int debug = 0;
-		try {
-			if (debug == 1) {
-				int bestId = assign();
-				while (Server.serverInfo.get(bestId).getRatio() < PerformanceThread
-						.getThreshold())
-					Thread.sleep(1000);
-			} else if (debug == 2) {
-				Thread.sleep(10000);
-			}
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 		synchronized (priorityQueue) {
-			if (priorityQueue[2].size() != 0)
+			if (priorityQueue[2].size() != 0) {
 				p = priorityQueue[2].poll();
-			else if (priorityQueue[1].size() != 0)
+
+			} else if (priorityQueue[1].size() != 0) {
 				p = priorityQueue[1].poll();
-			else if (priorityQueue[0].size() != 0)
+			} else if (priorityQueue[0].size() != 0) {
 				p = priorityQueue[0].poll();
-			else
+			}
+		}
+		if (p == null) {
+			synchronized (tcLock) {
 				try {
-					priorityQueue.wait(1000);
+					System.out.println("in ScenariosMgr, !!!queue empty, waiting!!!");
+					tcLock.wait();
+					System.out.println("in ScenariosMgr, !!!queue is notified!!!");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+			}
 		}
 		return p;
 	}
 
 	@Override
+	/*
+	 * the policy now is to find a minimal time snr, at the same time the server
+	 * should have enough place to run the scenario As shown, pollSnr() selects
+	 * the minimal time snr adjustQueue guarantee that the best server is
+	 * available for the scenario
+	 */
 	public void run() {
 		// TODO Auto-generated method stub
 		while (true) {
 			try {
 				Parse oneSnr = ScenariosMgr.pollSnr();
-				while(oneSnr == null)
+				while (oneSnr == null)
+					oneSnr = ScenariosMgr.pollSnr();
+				while (ScenariosMgr.adjustQueue(oneSnr))
 					oneSnr = ScenariosMgr.pollSnr();
 				System.out.println("in ScenariosMgr.java, I take it");
-				int debugMode = 0;
-
-				Integer hostId;
-				if (debugMode == 0)
-					hostId = ScenariosMgr.assign();
-				else
-					hostId = ScenariosMgr.assignWithPriority();
-
-				Scenario c = new Scenario(hostId, oneSnr);
+				Scenario c = new Scenario(oneSnr);
 				new Thread(c).start();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -281,7 +303,7 @@ public class ScenariosMgr implements Runnable {
 			int count = (int) (Server.serverInfo.size() * Math.random());
 			for (int i = 0; i <= count; i++)
 				res = iter.next();
-			System.out.print(count+" ");
+			System.out.print(count + " ");
 			return res;
 		case 1:// based on machine performance
 			int bestPerf = 0;
@@ -309,5 +331,13 @@ public class ScenariosMgr implements Runnable {
 							+ bestId);
 			return bestId;
 		}
+	}
+
+	public synchronized static void incFiniCaseNum() {
+		ScenariosMgr.finiCaseNum++;
+	}
+
+	public synchronized static int getFiniCaseNum() {
+		return finiCaseNum;
 	}
 }

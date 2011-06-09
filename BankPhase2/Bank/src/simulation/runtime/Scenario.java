@@ -30,16 +30,19 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 
 	/* members need be maintained when the Scenario is given birth */
 	private static String root = "config\\xx\\";
-	private int agentNum, totalTicks;
+
 	private Map<Integer, DefaultBelief> agentList;
 	private ArrayList<Integer> idList;
 	private ArrayList<Path> pathList;
 	private Integer caseID;
 	private boolean hasMiged;
+	private long migStart, migEnd;
+
+	private int agentNum, totalTicks, prior;
 	private String usr;
+	private Parse p;
 
 	/* temporary members used by server to run the simulation */
-	transient private Parse p;
 	transient private ArrayList<Func> pc = new ArrayList<Func>();
 	transient private ArrayList<Tuple> caseTable;
 
@@ -50,11 +53,12 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	transient private Lock tcLock = new Lock();
 	transient private ClockTick clk;
 
-	public Scenario(Integer hostID, Parse p) throws IOException,
+	public Scenario(Parse p) throws IOException,
 			ParserConfigurationException, SAXException {
 		this.p = p;
 		this.totalTicks = p.getTick();
 		this.usr = p.getUsr();
+		this.prior = p.getPrior();
 
 		caseTable = p.getTable();
 		getFileList(root + p.getSlnPath());
@@ -66,7 +70,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		idList = new ArrayList<Integer>();
 		pathList = new ArrayList<Path>();
 		this.caseID = new Integer(ScenariosMgr.newSnrID());
-		this.hostID = new Integer(hostID);
+		this.hostID = new Integer(p.getHostId());
 		this.hasMiged = false;
 		this.control(1, this.getTicks());
 	}
@@ -76,6 +80,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		this.execFini = false;
 		this.tcLock = new Lock();
 		this.hostID = hostId;
+		this.migEnd = new java.util.Date().getTime();
 	}
 
 	public synchronized void makeNewClock(ClockTick clk) {
@@ -159,9 +164,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				this.clk.getTcLock().wait();
 			}
 			/* added on March 21 */
-			System.out.println("Scenario fini in Scenario.java");
+			System.out.println("1. Scenario fini in Scenario.java");
 			this.output(this.getClock().getDuration() + " " + this.totalTicks
-					+ " " + this.usr);
+					+ " " + this.usr + " " + this.prior + " migDuration: "
+					+ this.migStart + " " + this.migEnd + " "
+					+ (this.migEnd - this.migStart));
 			synchronized (this.tcLock) {
 				// oneCase.caseTable.clear();
 				this.clean(this.pc);
@@ -171,12 +178,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				this.clean(this.agentList);
 				this.clk.setMain(null);
 				this.clk = null;
-				if(p != null)
+				if (p != null)
 					this.clean(p.getTable());
 				this.p = null;
 				this.execFini = true;
 				ScenariosMgr.remove(this);
-				ScenariosMgr.finiCaseNum++;
 				System.gc();
 			}
 			/* fini */
@@ -245,8 +251,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			}
 			list.clear();
 		}
+		System.out.println("list" + list);
 		list = null;
-		System.out.println(list);
 	}
 
 	public <T1, T2> void clean(Map<T1, T2> list) {
@@ -256,6 +262,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			t = null;
 		}
 		list.clear();
+		System.out.println("list" + list);
 		list = null;
 	}
 
@@ -285,7 +292,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			String[] strList = file.list();
 			for (int i = 0; i < strList.length; i++) {
 				String temp = strList[i];
-				System.out.println(temp);
+				// System.out.println(temp);
 				if (!temp.equals(".svn")) {
 					int pos = temp.indexOf("_");
 					String cName = temp.substring(0, pos);
@@ -293,7 +300,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 					pos = temp.indexOf("(");
 					String fName = temp.substring(0, pos);
 					temp = temp.substring(temp.indexOf("^") + 1);
-					System.out.println(temp);
+					// System.out.println(temp);
 					int interval = Integer.parseInt(temp.substring(0,
 							temp.indexOf("^")));
 					temp = temp.substring(temp.indexOf("^") + 1);
@@ -349,15 +356,22 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		System.out.println("hasMig:\t " + this.hasMiged);
 		System.out.println("totalTick:\t " + this.totalTicks);
 		System.out.println("caseId:\t " + this.caseID);
-		System.out.println("agentMap:\t " + this.agentList);
-		System.out.println("idList:\t " + this.idList);
-		System.out.println("pathList:\t " + this.pathList);
+		// System.out.println("agentMap:\t " + this.agentList);
+		// System.out.println("idList:\t " + this.idList);
+		// System.out.println("pathList:\t " + this.pathList);
 		System.out.println("parse:\t " + this.p);
 		System.out.println("***************");
+	}
+	
+	private String timeInfo(){
+		return null;
 	}
 
 	public void setMigrate(int hostID) {
 		System.out.println("setMigrate in Client is called");
+		synchronized (this.tcLock) {
+			this.migStart = new java.util.Date().getTime();
+		}
 		int dest = ScenariosMgr.assign();
 		ArrayList<DefaultBelief> migAgList = new ArrayList<DefaultBelief>();
 
@@ -376,8 +390,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				}
 			}
 			for (DefaultBelief ag : migAgList)
-				while (!ag.isNextTick() || ag.isMigrate())
+				while (!ag.isNextTick() || ag.isMigrate()) {
 					ag.printDebugMessage();
+					this.clk.notifyNowLock();
+					// this.clk.print();
+				}
 			this.clk.setMigrate(true);/*
 									 * 这个东西是不是导致Agent死锁的原因，因为这个地方即使设成true也没用了，
 									 * 因为ClockTick在一些Agent跳出循环后早就卡死了，进入wait态了
@@ -386,9 +403,10 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			// FileOutputStream fos;
 			byte[] snrInBytes = this.writeSenarioIntoByteArray(migAgList);
 			ServerInformation si = Server.serverInfo.get(dest);
-			if (si != null)
+			if (si != null) {
 				si.addMigingAgentsInList(snrInBytes);
-			else
+				System.out.println("in Scenario.java, bytes in MigAgentList");
+			} else
 				System.out.println("si is null, "
 						+ "I am in setMigrate in Scenario.java");
 		} else
@@ -408,6 +426,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			System.out.println("write scenario in byte, phase 1 fini");
 			oos.writeObject(this.clk);
 			System.out.println("write scenario in byte, phase 2 fini");
+
+			// this.clk.notifyNowLock();/* wake up all the agents, let them die
+			// */
 			for (DefaultBelief ag : migAgList) {
 				try {
 					oos.writeObject(ag);
@@ -421,14 +442,18 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				}
 			}
 			System.out.println("write scenario in byte, phase 3 fini");
-			this.clk.notifyNowLock();/* wake up all the agents, let them die */
-			this.clk.notifyTickLock();/* wake up clk, let it die */
-			this.clk.notifyTcLock();/* wake up Scenario, let it die */
+			this.clk.print();
+			this.clk.notifyTickLock();/* wake up clk, let it die, clk fini */
+			this.clk.notifyTcLock();/*
+									 * wake up Scenario, let it die, scenario
+									 * fini
+									 */
+			this.clk.print();
 
 			oos.writeObject(null);
 			oos.close();
 			baos.close();
-			System.out.println("mig in file now, Scenario.java");
+			System.out.println("3. mig in file now, Scenario.java");
 			return baos.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
