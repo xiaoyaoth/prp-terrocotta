@@ -176,8 +176,6 @@ public class Server implements Runnable, Serializable {
 		int realPointer = this.pointer - ScenariosMgr.getFiniCaseNum();
 		Map<Integer, Scenario> m = ScenariosMgr.getSnrs();
 		ArrayList<Integer> l = ScenariosMgr.getSnrIDs();
-		// System.out.print("case: "+ l.size()
-		// +" pointer: "+this.pointer+" finiNum: "+ScenariosMgr.finiCaseNum+" ");
 		if (m.size() == l.size()
 				&& ScenariosMgr.getSnrIDs().size() > realPointer) {
 			Scenario oneCase = m.get(l.get(realPointer));

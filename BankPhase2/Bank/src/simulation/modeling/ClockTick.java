@@ -1,7 +1,6 @@
 package simulation.modeling;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import simulation.runtime.ScenariosMgr;
 
@@ -88,20 +87,20 @@ public class ClockTick implements Runnable, Serializable {
 		} else {
 			synchronized (tcLock) {
 				this.goOn = true;
-				Date time = new Date();
-				this.start = time.getTime();
+				this.start = new java.util.Date().getTime();
 				System.out.println(this.start);
 			}
 		}
+		this.print();
 
 		while (!this.migrate && this.tick < this.left) {
 			// System.out.print("this.tick<this.left");
 			while (!this.migrate && this.goOn && this.tick < this.left) {
+				System.out.println(this.main.getCaseID() + " Tick " + tick
+						+ " :" + this.now);
 				synchronized (nowLock) {
 					++this.tick;
 				}
-				System.out.println(this.main.getCaseID() + " Tick " + tick
-						+ " :" + this.now);
 				synchronized (this.tickLock) {
 					synchronized (nowLock) {
 						this.now = this.main.getTotal();
@@ -123,25 +122,30 @@ public class ClockTick implements Runnable, Serializable {
 				}
 			}
 		}
+		this.print();
 		if (!this.migrate) {
-			synchronized (tcLock) {
+			synchronized (this.tickLock) {
 				while (this.now > 0)
 					try {
-						this.tcLock.wait();
+						System.out
+								.println("outloop waiting, in ClockTick.java");
+						this.tickLock.wait();
+						System.out.println("outloop waiting end");
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				goOn = false;
-				Date time = new Date();
-				this.end = time.getTime();
+				this.end = new java.util.Date().getTime();
 				this.duration = "start:" + this.start + " end:" + this.end
 						+ " duration:" + (this.end - this.start);
 				/*
 				 * 这里不是fini,当clocktick把所有的agent唤醒，clocktick结束了，但是Agent还在运行。
 				 * 所以当所有Agent结束运行才是一切的终结，想办法弄一下
 				 */
-				this.tcLock.notify();
+				synchronized (this.tcLock) {
+					this.tcLock.notify();
+				}
 				System.out.println("ClockTickFini in ClockTick.java");
 				ScenariosMgr.incFiniCaseNum();
 				this.main = null;
@@ -206,20 +210,31 @@ public class ClockTick implements Runnable, Serializable {
 	}
 
 	public void print() {
-		System.out.println("***************");
-		System.out.println(this);
-		System.out.println("goOn:\t " + this.goOn);
-		System.out.println("left:\t " + this.left);
-		System.out.println("migrate:\t " + this.migrate);
-		System.out.println("now:\t " + this.now);
-		System.out.println("tick:\t " + this.tick);
-		System.out.println("main:\t " + this.main);
-		System.out.println("tcLock:\t " + this.tcLock);
-		System.out.println("start:\t " + this.start);
-		System.out.println("end:\t " + this.end);
-		System.out.println("duration:\t " + this.duration);
-		System.out.println("waiting:\t " + this.waiting);
-		System.out.println("***************");
+		// System.out.println("*****ClockTick Info**********");
+		// System.out.println(this);
+		// System.out.println("goOn:\t " + this.goOn);
+		// System.out.println("left:\t " + this.left);
+		// System.out.println("migrate:\t " + this.migrate);
+		// System.out.println("now:\t " + this.now);
+		// System.out.println("tick:\t " + this.tick);
+		// System.out.println("main:\t " + this.main);
+		// System.out.println("tcLock:\t " + this.tcLock);
+		// System.out.println("start:\t " + this.start);
+		// System.out.println("end:\t " + this.end);
+		// System.out.println("duration:\t " + this.duration);
+		// System.out.println("waiting:\t " + this.waiting);
+		// System.out.println("*****ClockTick Info end*******");
+		System.out.println(this.debugMessage());
+	}
+
+	public String debugMessage() {
+		return "*****ClockTick Info**********\n" + this + "\ngoOn:\t "
+				+ this.goOn + "\nleft:\t " + this.left + "\nmigrate:\t "
+				+ this.migrate + "\nnow:\t " + this.now + "\ntick:\t "
+				+ this.tick + "\nmain:\t " + this.main + "\ntcLock:\t "
+				+ this.tcLock + "\nstart:\t " + this.start + "\nend:\t "
+				+ this.end + "\nduration:\t " + this.duration + "\nwaiting:\t "
+				+ this.waiting + "\n*****ClockTick Info end*******";
 	}
 
 	public static void main(String[] args) {

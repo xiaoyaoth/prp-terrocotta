@@ -26,35 +26,9 @@ public class ScenariosMgr implements Runnable {
 	private static ArrayList<Integer> snrIDs = new ArrayList<Integer>();
 	private static int finiCaseNum;
 	private static int snrID;
-	private static Lock tcLock;
+	private static Lock snrPollLock;
 
 	public ScenariosMgr() {
-		Comparator<Parse> compTick = new Comparator<Parse>() {
-			@Override
-			public int compare(Parse arg0, Parse arg1) {
-				// TODO Auto-generated method stub
-				if (arg0.getTick() > arg1.getTick())
-					return 1;
-				else if (arg0.getTick() < arg1.getTick())
-					return -1;
-				else
-					return 0;
-			}
-		};
-		@SuppressWarnings("unused")
-		Comparator<Parse> compAgentNum = new Comparator<Parse>() {
-			@Override
-			public int compare(Parse arg0, Parse arg1) {
-				// TODO Auto-generated method stub
-				if (arg0.getAgentTotalNum() > arg1.getAgentTotalNum())
-					return 1;
-				else if (arg0.getAgentTotalNum() < arg1.getAgentTotalNum())
-					return -1;
-				else
-					return 0;
-			}
-		};
-
 		priorityQueue = new PriorityQueue[4];
 		priorityQueue[1] = new PriorityQueue<Parse>(5, compTick);
 		priorityQueue[2] = new PriorityQueue<Parse>(5, compTick);
@@ -62,7 +36,7 @@ public class ScenariosMgr implements Runnable {
 		/* [0] is the lowest priority queue, without sort */
 		priorityQueue[0] = new PriorityQueue<Parse>();
 
-		tcLock = new Lock();
+		snrPollLock = new Lock();
 
 		Thread monThread = new Thread(mon);
 		monThread.setName("MonitorThread");
@@ -124,8 +98,8 @@ public class ScenariosMgr implements Runnable {
 				synchronized (priorityQueue) {
 					priorityQueue[pr].add(new Parse(usr, tick, prior));
 				}
-				synchronized (tcLock) {
-					tcLock.notifyAll();
+				synchronized (snrPollLock) {
+					snrPollLock.notifyAll();
 				}
 			} else
 				System.err.println("In ScenariosMgr.java, addSnr error");
@@ -133,11 +107,13 @@ public class ScenariosMgr implements Runnable {
 		}
 
 		private void printQueue() {
-			for (int i = 0; i < 3; i++) {
+			System.out.println("***********in ScenariosMgr.java, priorityQueue*******");
+			for (int i = 0; i < 4; i++) {
 				for (Parse p : priorityQueue[i])
 					System.out.print(p + " ");
 				System.out.println();
 			}
+			System.out.println("~~~~~~~~~~~in ScenariosMgr.java, priorityQueue~~~~~~~~");
 		}
 	}
 
@@ -147,16 +123,21 @@ public class ScenariosMgr implements Runnable {
 
 	private static boolean adjustQueue(Parse p) {
 		int bestId = ScenariosMgr.assign();
-		p.seHostId(bestId);
+		p.setHostId(bestId);
 		double ratio = ratioCal(bestId, p.getAgentTotalNum());
 		if (ratio < PerformanceThread.getThreshold()) {
-			if (p.getPrior() > 0)
-				p.decPrior();
-			ScenariosMgr.priorityQueue[p.getPrior()].add(p);
-			try {
-				Thread.sleep(2000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+			int prior = p.getPrior();
+			if (prior > 0)
+				prior--;
+			ScenariosMgr.priorityQueue[prior].add(p);
+			synchronized(ScenariosMgr.snrs){
+				try {
+					System.out.println("adjustLock waiting, in ScenariosMgr");
+					ScenariosMgr.snrs.wait();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			return true;
 		}
@@ -185,10 +166,10 @@ public class ScenariosMgr implements Runnable {
 			}
 		}
 		if (p == null) {
-			synchronized (tcLock) {
+			synchronized (snrPollLock) {
 				try {
 					System.out.println("in ScenariosMgr, !!!queue empty, waiting!!!");
-					tcLock.wait();
+					snrPollLock.wait();
 					System.out.println("in ScenariosMgr, !!!queue is notified!!!");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
@@ -213,8 +194,9 @@ public class ScenariosMgr implements Runnable {
 				Parse oneSnr = ScenariosMgr.pollSnr();
 				while (oneSnr == null)
 					oneSnr = ScenariosMgr.pollSnr();
-				while (ScenariosMgr.adjustQueue(oneSnr))
-					oneSnr = ScenariosMgr.pollSnr();
+				oneSnr.setHostId(ScenariosMgr.assign());
+//				while (ScenariosMgr.adjustQueue(oneSnr))
+//					oneSnr = ScenariosMgr.pollSnr();
 				System.out.println("in ScenariosMgr.java, I take it");
 				Scenario c = new Scenario(oneSnr);
 				new Thread(c).start();
@@ -274,22 +256,7 @@ public class ScenariosMgr implements Runnable {
 	public synchronized static Integer newSnrID() {
 		return ScenariosMgr.snrID++;
 	}
-
-	public static Integer assignWithPriority() {
-		Integer hostID = ScenariosMgr.assign();
-		while (Server.serverInfo.get(hostID).getRatio() < PerformanceThread
-				.getThreshold()) {
-			try {
-				Thread.sleep(1000);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			hostID = ScenariosMgr.assign();
-		}
-		return hostID;
-	}
-
+	
 	public static Integer assign() {
 		int mode = 2;
 		int bestId = -1;
@@ -340,4 +307,48 @@ public class ScenariosMgr implements Runnable {
 	public synchronized static int getFiniCaseNum() {
 		return finiCaseNum;
 	}
+	
+	
+	private Comparator<Parse> compTick = new Comparator<Parse>() {
+		@Override
+		public int compare(Parse arg0, Parse arg1) {
+			// TODO Auto-generated method stub
+			if (arg0.getTick() > arg1.getTick())
+				return 1;
+			else if (arg0.getTick() < arg1.getTick())
+				return -1;
+			else
+				return 0;
+		}
+	};
+	
+	@SuppressWarnings("unused")
+	private Comparator<Parse> compAgentNum = new Comparator<Parse>() {
+		@Override
+		public int compare(Parse arg0, Parse arg1) {
+			// TODO Auto-generated method stub
+			if (arg0.getAgentTotalNum() > arg1.getAgentTotalNum())
+				return 1;
+			else if (arg0.getAgentTotalNum() < arg1.getAgentTotalNum())
+				return -1;
+			else
+				return 0;
+		}
+	};
+	
+	@SuppressWarnings("unused")
+	private Comparator<Parse> compNumAndTick = new Comparator<Parse>() {
+		@Override
+		public int compare(Parse arg0, Parse arg1) {
+			// TODO Auto-generated method stub
+			int e1 = arg0.getAgentTotalNum() * arg0.getTick();
+			int e2 = arg1.getAgentTotalNum() * arg1.getTick();
+			if (e1 > e2)
+				return 1;
+			else if (e1 < e2)
+				return -1;
+			else
+				return 0;
+		}
+	};
 }

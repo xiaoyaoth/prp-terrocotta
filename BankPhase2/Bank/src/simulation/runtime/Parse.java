@@ -31,16 +31,18 @@ public class Parse implements Serializable {
 	transient private Tuple tp = new Tuple();
 	transient private Integer hostId;
 	
-	transient private int totalAgentNum;
-	transient private String usr;
-	transient private int tick;
-	transient private int prior;
+	private int totalAgentNum;
+	private String usr;
+	private int tick;
+	private int prior;
+	private long parseStart;
 
 	public Parse(String usr, String tick, String prior) {
 		this(usr, Integer.parseInt(tick), Integer.parseInt(prior));
 	}
 
 	public Parse(String usr, int tick, int prior) {
+		this.parseStart = new java.util.Date().getTime();
 		this.hostId = -1;
 		this.usr = usr;
 		this.tick = tick;
@@ -68,7 +70,7 @@ public class Parse implements Serializable {
 		}
 	}
 	
-	public void seHostId(int hostId){
+	public void setHostId(int hostId){
 		this.hostId = hostId;
 	}
 	
@@ -78,10 +80,6 @@ public class Parse implements Serializable {
 	
 	public int getPrior(){
 		return this.prior;
-	}
-	
-	public void decPrior(){
-		this.prior--;
 	}
 
 	public ArrayList<Tuple> getTable() {

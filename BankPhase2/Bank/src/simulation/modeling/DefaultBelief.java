@@ -38,16 +38,27 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	}
 
 	public void printDebugMessage() {
-		System.out.println(this.id);
-		System.out.println("nextTick:" + this.nextTick);
-		System.out.println("migrate:" + this.migrate);
-		System.out.println("debugMessage:" + this.debugMessage);
+//		System.out.println("*****DefaultBelief Info**********");
+//		System.out.println(this.id);
+//		System.out.println("tick: " + this.tick);
+//		System.out.println("nextTick:" + this.nextTick);
+//		System.out.println("migrate:" + this.migrate);
+//		System.out.println("debugMessage:" + this.debugMessage);
+//		System.out.println("*****DefaultBelief Info end*******");
+		System.out.println(this.debugMessage);
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	public String debugMessage() {
+		return "*****DefaultBelief Info**********\n" + this.id + "\ntick: "
+				+ this.tick + "\nnextTick:" + this.nextTick + "\nmigrate:"
+				+ this.migrate + "\ndebugMessage:" + this.debugMessage
+				+ "\n*****DefaultBelief Info end*******\n";
 	}
 
 	public void notifyTcLock() {
@@ -90,15 +101,22 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
+		System.out.println(this.lifeCycle +" is the lifecycle in DefauleBelief");
 		while (this.nextTick && (this.getLifeCycle() == -1 || this.isNoLife())) {
 			try {
 				synchronized (this.main.getClock().getNowLock()) {
 					this.debugMessage = "1";
-					this.lifeCycle--;
 					while (this.getTick() >= this.main.getClock().getTick()
-							|| this.main.getClock().getNow() == 0)
+							|| this.main.getClock().getNow() == 0){
 						this.main.getClock().getNowLock().wait();
+						if(this.migrate == true && this.nextTick == true)
+							break;
+					}
 					this.debugMessage = "2";
+					if(this.migrate == true && this.nextTick == true){
+						this.nextTick = false;
+						break;
+					}
 				}
 				synchronized (this.tcLock) {
 					this.addTick();
@@ -134,7 +152,8 @@ public class DefaultBelief extends PlanManager implements Runnable,
 			if (!this.migrate) {
 				// System.out.print("ag:" + this.id +
 				// "fini in DefaultBelief.java");
-				this.debugMessage = "4";
+				//this.debugMessage = "4";
+				System.out.print(this.id+"quit ");
 				this.clean(this.pc);
 				this.clean(this.sndMessageBox);
 				this.clean(this.rcvMessageBox);
@@ -143,15 +162,15 @@ public class DefaultBelief extends PlanManager implements Runnable,
 				this.path = null;
 				this.main = null;
 				this.cleanPlans();
-				this.debugMessage = "5";
+				//this.debugMessage = "5";
 			} else
 				try {
-					this.debugMessage = "6";
+					//this.debugMessage = "6";
 					this.setNextTick();
-					this.debugMessage = "NTtrue,waiting";
+					//this.debugMessage = "NTtrue,waiting";
 					this.tcLock.wait();
-					this.debugMessage = "NTfalse, running";
-					//this.printDebugMessage();
+					//this.debugMessage = "NTfalse, running";
+					// this.printDebugMessage();
 				} catch (Throwable e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -169,11 +188,11 @@ public class DefaultBelief extends PlanManager implements Runnable,
 		}
 	}
 
-//	public void migrate() throws IOException {
-//		synchronized (this.tcLock) {
-//			this.nextTick = false;
-//		}
-//	}
+	// public void migrate() throws IOException {
+	// synchronized (this.tcLock) {
+	// this.nextTick = false;
+	// }
+	// }
 
 	public void setMain(MainInterface main) {
 		synchronized (tcLock) {
@@ -221,6 +240,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 	public void addTick() {
 		this.tick++;
 		this.ownTick++;
+		this.lifeCycle--;
 	}
 
 	public void setTick(int tick) {

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Date;
 
 public class SnrQueueGen{
+	private static int id;
 	
 	public static void main(String[] args){
 		new SnrQueueGen(args[0], args[1], args[2], args[3]);
@@ -19,7 +20,7 @@ public class SnrQueueGen{
 	public SnrQueueGen(int snrAmt, String usr, int tick, int prio){
 		Date d = new Date();
 		for(int i = 0; i<snrAmt; i++){
-			File f = new File("snrQueue\\"+d.getTime()+i+"_"+usr+"_"+tick+"_"+prio);
+			File f = new File("snrQueue\\"+d.getTime()+(id++)+"_"+usr+"_"+tick+"_"+prio);
 			try {
 				f.createNewFile();
 				FileWriter fw = new FileWriter(f);
