@@ -101,7 +101,6 @@ public class DefaultBelief extends PlanManager implements Runnable,
 
 	/* Default Action */
 	public void run() {
-		System.out.println(this.lifeCycle +" is the lifecycle in DefauleBelief");
 		while (this.nextTick && (this.getLifeCycle() == -1 || this.isNoLife())) {
 			try {
 				synchronized (this.main.getClock().getNowLock()) {

@@ -11,13 +11,15 @@ public class PerformanceThread implements Runnable {
 	private Lock tcLock;
 	private ServerInformation sInfo;
 	private static double threshold;
+	private boolean miging;
 
 	public PerformanceThread(ServerInformation sInfo) {
 		this.sInfo = sInfo;
 		this.jVM_id = sInfo.getJVM_id();
 		this.loopCount = 0;
 		this.tcLock = new Lock();
-		threshold = 1000;
+		this.miging = false;
+		threshold = 1;
 	}
 
 	@Override
@@ -49,7 +51,8 @@ public class PerformanceThread implements Runnable {
 				} else
 					weakPoint = 0;
 			}
-			this.pickOneSnrToBeMigrated();
+			if (!this.miging)
+				this.pickOneSnrToBeMigrated();
 			this.sInfo.setEventCount(0);
 			this.sInfo.setAgentCount(0);
 
@@ -67,7 +70,7 @@ public class PerformanceThread implements Runnable {
 	}
 
 	private void pickOneSnrToBeMigrated() {
-		if (this.weakPoint == 2) {
+		if (this.weakPoint >= 2) {
 			Scenario c = null;
 			int tickTemp = 0;
 			synchronized (ScenariosMgr.getSnrs()) {
@@ -77,20 +80,21 @@ public class PerformanceThread implements Runnable {
 					Scenario snr = iter.next();
 					int tickRemained = snr.getTicks()
 							- snr.getClock().getTick();
+					
 					if (tickRemained > tickTemp
 							&& this.jVM_id == snr.getHostID()
-							&& !snr.isHasMiged()) {
+							&& !snr.isHasMiged()
+							&& snr.getClock().enoughRemainTick()) {
 						tickTemp = tickRemained;
 						c = snr;
 					}
 				}
 			}
 			if (c != null) {
-				c.setMigrate(this.jVM_id);
-				System.out
-						.println("in PerformanceThread.java, setMigrate fini");
+				new Thread(new DealMigThread(c)).start();
 			} else {
-				System.out.println("in PerformanceThread.java, Scenario is null");
+				System.out
+						.println("in PerformanceThread.java, Scenario is null");
 			}
 			synchronized (this.tcLock) {
 				this.weakPoint = 0;
@@ -101,4 +105,23 @@ public class PerformanceThread implements Runnable {
 	public static double getThreshold() {
 		return threshold;
 	}
+
+	private class DealMigThread implements Runnable {
+		private Scenario s;
+
+		public DealMigThread(Scenario s) {
+			this.s = s;
+		}
+
+		public void run() {
+			synchronized (tcLock) {
+				miging = true;
+			}
+			s.setMigrate(jVM_id);
+			System.out.println("in PerformanceThread.java, setMigrate fini");
+			synchronized (tcLock) {
+				miging = false;
+			}
+		}
+	};
 }

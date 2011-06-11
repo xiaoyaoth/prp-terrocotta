@@ -68,6 +68,10 @@ public class ClockTick implements Runnable, Serializable {
 	public int getTick() {
 		return this.tick;
 	}
+	
+	public boolean enoughRemainTick(){
+		return (this.left - this.tick)>1;
+	}
 
 	public void run() {
 
@@ -91,7 +95,6 @@ public class ClockTick implements Runnable, Serializable {
 				System.out.println(this.start);
 			}
 		}
-		this.print();
 
 		while (!this.migrate && this.tick < this.left) {
 			// System.out.print("this.tick<this.left");
@@ -122,7 +125,7 @@ public class ClockTick implements Runnable, Serializable {
 				}
 			}
 		}
-		this.print();
+
 		if (!this.migrate) {
 			synchronized (this.tickLock) {
 				while (this.now > 0)

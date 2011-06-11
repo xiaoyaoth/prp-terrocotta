@@ -1,11 +1,15 @@
 package simulation.runtime;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
 public class ServerInformation {
 	private final static int PORT = 10000;
-	//private String ip = "192.168.131.1";
+	// private String ip = "192.168.131.1";
 	private int jVM_id;
 	private int perf;
 	private int eventCount;
@@ -14,11 +18,22 @@ public class ServerInformation {
 	private double ratio;
 	private PerformanceThread perfThread;
 	private ArrayList<byte[]> serializedAgents;
+	private String ip;
 
 	public ServerInformation(Integer jVM_id) {
 		this.jVM_id = jVM_id;
 		this.perfThread = new PerformanceThread(this);
 		this.serializedAgents = new ArrayList<byte[]>();
+		try {
+			this.ip = new BufferedReader(new FileReader(new File(
+					"config\\ip.txt"))).readLine();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Thread perfT = new Thread(this.perfThread);
 		perfT.setName("PerformanceThreaddd");
 		perfT.start();
@@ -43,32 +58,33 @@ public class ServerInformation {
 	}
 
 	public synchronized void decAgentTotal() {
-//		try {
-//			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-//					"statistics\\sinfo"+this.jVM_id+".txt"),true);
-//			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-//			bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
-//			bw.close();
-//			fw.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		// try {
+		// java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+		// "statistics\\sinfo"+this.jVM_id+".txt"),true);
+		// java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+		// bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
+		// bw.close();
+		// fw.close();
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		this.agentTotal--;
 	}
 
 	public synchronized void incAgentTotal() {
-//		try {
-//			java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-//					"statistics\\sinfo"+this.jVM_id+".txt"), true);
-//			java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-//			bw.append("incAgentTotal Called\t" + (this.agentTotal + 1)+"\tp\n\r");
-//			bw.close();
-//			fw.close();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		// try {
+		// java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
+		// "statistics\\sinfo"+this.jVM_id+".txt"), true);
+		// java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
+		// bw.append("incAgentTotal Called\t" + (this.agentTotal +
+		// 1)+"\tp\n\r");
+		// bw.close();
+		// fw.close();
+		// } catch (IOException e) {
+		// // TODO Auto-generated catch block
+		// e.printStackTrace();
+		// }
 		this.agentTotal++;
 	}
 
@@ -78,7 +94,7 @@ public class ServerInformation {
 
 	public synchronized double getRatio() {
 		if (this.agentTotal > 0)
-			this.ratio = (double)this.agentCount / this.agentTotal;
+			this.ratio = (double) this.agentCount / this.agentTotal;
 		else
 			this.ratio = Integer.MAX_VALUE;
 		return this.ratio;
@@ -122,5 +138,9 @@ public class ServerInformation {
 
 	public PerformanceThread getPerfThread() {
 		return this.perfThread;
+	}
+	
+	public String getIp(){
+		return this.ip;
 	}
 }

@@ -137,8 +137,8 @@ public class Server implements Runnable, Serializable {
 							+ obj);
 			}
 			synchronized (migbytes) {
-				for (int i = 0; i < migbytes.length; i++)
-					migbytes[i] = 0;
+//				for (int i = 0; i < migbytes.length; i++)
+//					migbytes[i] = 0;
 				migbytes = null;
 			}
 
