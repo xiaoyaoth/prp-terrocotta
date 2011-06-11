@@ -401,15 +401,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 				}
 			this.clk.setMigrate(true);
 			System.out.println("in Scenario.java, setMigrate phase1 fini");
-			//byte[] snrInBytes = this.writeSenarioIntoByteArray(migAgList);
 			this.writeScenarioIntoFile(migAgList,dest);
-//			ServerInformation si = Server.serverInfo.get(dest);
-//			if (si != null) {
-//				si.addMigingAgentsInList(snrInBytes);
-//				System.out.println("in Scenario.java, bytes in MigAgentList");
-//			} else
-//				System.out.println("si is null, "
-//						+ "I am in setMigrate in Scenario.java");
 		} else
 			System.out.println("in Scenario.java, no Proper Server found");
 	}
