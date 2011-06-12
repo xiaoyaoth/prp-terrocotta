@@ -54,6 +54,17 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	transient private Lock tcLock = new Lock();
 	transient private ClockTick clk;
 
+	public Scenario(Scenario s) {
+		this.agentList = new HashMap<Integer, DefaultBelief>(s.agentList);
+		this.idList = new ArrayList<Integer>(s.idList);
+		this.pathList = new ArrayList<Path>(s.pathList);
+		this.caseID = s.caseID;
+		this.hasMiged = s.hasMiged;
+		this.migStart = s.migStart;
+		this.migEnd = s.migEnd;
+		this.p = s.p;
+	}
+
 	public Scenario(Parse p) throws IOException, ParserConfigurationException,
 			SAXException {
 		this.p = p;
@@ -76,7 +87,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		this.execFini = false;
 		this.tcLock = new Lock();
 		this.hostID = hostId;
-		this.migEnd = new java.util.Date().getTime();
+		this.migEnd = WallTime.getInstance().getTime();
 	}
 
 	public synchronized void makeNewClock(ClockTick clk) {
@@ -160,7 +171,8 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			}
 			/* added on March 21 */
 			System.out.println("1. Scenario fini in Scenario.java");
-			if (this.migEnd != 0)
+			if ((this.migEnd != 0 && this.migStart != 0)
+					|| (this.migEnd == 0 && this.migStart == 0))
 				this.output(this.hashCode() + "", this.outputInfo());
 			synchronized (this.tcLock) {
 				// oneCase.caseTable.clear();
@@ -372,7 +384,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public void setMigrate(int hostID) {
 		System.out.println(this.caseID + " calls setMigrate, in Scenario.java");
 		synchronized (this.tcLock) {
-			this.migStart = new java.util.Date().getTime();
+			this.migStart = WallTime.getInstance().getTime();
 		}
 		Integer dest = ScenariosMgr.assign();
 		ArrayList<DefaultBelief> migAgList = new ArrayList<DefaultBelief>();
@@ -399,15 +411,18 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 									+ "##################################\n");
 					this.clk.notifyNowLock();
 				}
-			this.clk.setMigrate(true);
+			if (this.clk != null) {
+				this.clk.setMigrate(true);
+			}
 			System.out.println("in Scenario.java, setMigrate phase1 fini");
-			this.writeScenarioIntoFile(migAgList,dest);
+			this.writeScenarioIntoFile(migAgList, dest);
 		} else
 			System.out.println("in Scenario.java, no Proper Server found");
 	}
-	
-	private void writeScenarioIntoFile(ArrayList<DefaultBelief> migAgList, Integer dest){
-		String filePath = "agentsOut\\"+this.hashCode();
+
+	private void writeScenarioIntoFile(ArrayList<DefaultBelief> migAgList,
+			Integer dest) {
+		String filePath = "agentsOut\\" + this.hashCode();
 		synchronized (this.tcLock) {
 			this.hasMiged = true;
 		}
@@ -419,43 +434,11 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			f = new File(filePath);
 			fos = new FileOutputStream(f);
 			oos = new ObjectOutputStream(fos);
-			synchronized (this.tcLock) {
-				oos.writeObject(this);
-			}
-			System.out.println("write scenario in byte, phase 1 fini");
-			synchronized (this.tcLock) {
-				oos.writeObject(this.clk);
-			}
-			System.out.println("write scenario in byte, phase 2 fini");
-
-			// this.clk.notifyNowLock();/* wake up all the agents, let them die
-			// */
-			for (DefaultBelief ag : migAgList) {
-				try {
-					oos.writeObject(ag);
-					ag.notifyTcLock();
-					System.out.print(ag.getID() + " ");
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("****************");
-					ag.printDebugMessage();
-					System.out.println("****************");
-				}
-			}
-			System.out.println("write scenario in byte, phase 3 fini");
-			this.clk.print();
-			/* wake up clk, let it die, clk fini */
-			this.clk.notifyTickLock();
-			/* wake up Scenario, let it die, scenario fini */
-			this.clk.notifyTcLock();
-			this.clk.print();
-
-			oos.writeObject(null);
+			this.writeScenarioCore(oos, migAgList);
 			oos.close();
 			fos.close();
-			System.out.println("3. mig in file now, Scenario.java");
-			new SendFile(Server.serverInfo.get(dest).getIp(),f);
-			//return baos.toByteArray();
+			new SendFile(Server.serverInfo.get(dest).getIp(), f);
+			/* file is deleted in SendFile.run() */
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("************in Scenario.java***************");
@@ -474,41 +457,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		try {
 			baos = new ByteArrayOutputStream();
 			oos = new ObjectOutputStream(baos);
-			synchronized (this.tcLock) {
-				oos.writeObject(this);
-			}
-			System.out.println("write scenario in byte, phase 1 fini");
-			synchronized (this.tcLock) {
-				oos.writeObject(this.clk);
-			}
-			System.out.println("write scenario in byte, phase 2 fini");
-
-			// this.clk.notifyNowLock();/* wake up all the agents, let them die
-			// */
-			for (DefaultBelief ag : migAgList) {
-				try {
-					oos.writeObject(ag);
-					ag.notifyTcLock();
-					System.out.print(ag.getID() + " ");
-				} catch (Exception e) {
-					e.printStackTrace();
-					System.out.println("****************");
-					ag.printDebugMessage();
-					System.out.println("****************");
-				}
-			}
-			System.out.println("write scenario in byte, phase 3 fini");
-			this.clk.print();
-			/* wake up clk, let it die, clk fini */
-			this.clk.notifyTickLock();
-			/* wake up Scenario, let it die, scenario fini */
-			this.clk.notifyTcLock();
-			this.clk.print();
-
-			oos.writeObject(null);
+			this.writeScenarioCore(oos, migAgList);
 			oos.close();
 			baos.close();
-			System.out.println("3. mig in file now, Scenario.java");
 			return baos.toByteArray();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -518,5 +469,50 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			System.out.println("************in Scenario.java***************");
 		}
 		return null;
+	}
+
+	private void writeScenarioCore(ObjectOutputStream oos,
+			ArrayList<DefaultBelief> migAgList) throws IOException {
+		synchronized (this.tcLock) {
+			Scenario inFileSnr = new Scenario(this);
+			oos.writeObject(inFileSnr);/*
+										 * this line has
+										 * concurrencyModificationException
+										 */
+			oos.flush();
+			inFileSnr = null;
+		}
+		System.out.println("write scenario in byte, phase 1 fini");
+		synchronized (this.tcLock) {
+			oos.writeObject(this.clk);
+			oos.flush();
+		}
+		System.out.println("write scenario in byte, phase 2 fini");
+
+		// this.clk.notifyNowLock();/* wake up all the agents, let them die
+		// */
+		for (DefaultBelief ag : migAgList) {
+			try {
+				oos.writeObject(ag);
+				oos.flush();
+				ag.notifyTcLock();
+				System.out.print(ag.getID() + " ");
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("****************");
+				ag.printDebugMessage();
+				System.out.println("****************");
+			}
+		}
+		System.out.println("write scenario in byte, phase 3 fini");
+		this.clk.print();
+		/* wake up clk, let it die, clk fini */
+		this.clk.notifyTickLock();
+		/* wake up Scenario, let it die, scenario fini */
+		this.clk.notifyTcLock();
+		this.clk.print();
+
+		oos.writeObject(null);
+		System.out.println("3. mig in file now, Scenario.java");
 	}
 }

@@ -3,6 +3,7 @@ package simulation.modeling;
 import java.io.Serializable;
 
 import simulation.runtime.ScenariosMgr;
+import simulation.runtime.WallTime;
 
 public class ClockTick implements Runnable, Serializable {
 	private int tick, left, now;
@@ -91,7 +92,7 @@ public class ClockTick implements Runnable, Serializable {
 		} else {
 			synchronized (tcLock) {
 				this.goOn = true;
-				this.start = new java.util.Date().getTime();
+				this.start = WallTime.getInstance().getTime();
 				System.out.println(this.start);
 			}
 		}
@@ -139,7 +140,7 @@ public class ClockTick implements Runnable, Serializable {
 						e.printStackTrace();
 					}
 				goOn = false;
-				this.end = new java.util.Date().getTime();
+				this.end = WallTime.getInstance().getTime();
 				this.duration = "start:" + this.start + " end:" + this.end
 						+ " duration:" + (this.end - this.start);
 				/*

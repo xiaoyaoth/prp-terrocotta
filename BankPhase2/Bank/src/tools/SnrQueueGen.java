@@ -20,12 +20,13 @@ public class SnrQueueGen{
 	public SnrQueueGen(int snrAmt, String usr, int tick, int prio){
 		Date d = new Date();
 		for(int i = 0; i<snrAmt; i++){
-			File f = new File("snrQueue\\"+d.getTime()+(id++)+"_"+usr+"_"+tick+"_"+prio);
+			File f = new File("snrQueue\\"+d.getTime()+"-"+(id++)+"_"+usr+"_"+tick+"_"+prio);
 			try {
 				f.createNewFile();
 				FileWriter fw = new FileWriter(f);
 				BufferedWriter bw = new BufferedWriter(fw);
 				bw.write(d.getTime()+i+"_"+usr+"_"+tick+"_"+prio);
+				bw.flush();
 				bw.close();
 				fw.close();
 				System.out.println(f.getName());

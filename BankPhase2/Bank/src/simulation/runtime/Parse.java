@@ -42,7 +42,6 @@ public class Parse implements Serializable {
 	}
 
 	public Parse(String usr, int tick, int prior) {
-		this.parseStart = new java.util.Date().getTime();
 		this.hostId = -1;
 		this.usr = usr;
 		this.tick = tick;

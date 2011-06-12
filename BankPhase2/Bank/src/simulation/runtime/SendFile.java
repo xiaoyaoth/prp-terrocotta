@@ -18,13 +18,13 @@ public class SendFile extends Thread {
 	File file;
 	byte byteBuffer[] = new byte[1024];
 	private static final int PORT=10000;
+	private static final String OUTFOLDER = "agentsOut\\";
 
 	public SendFile(String remoteIPString, File file) {
 		try {
-			//System.out.println(remoteIPString + port);
 			this.remoteIPString = remoteIPString;
 			this.file = file;
-			//outFile = new RandomAccessFile(file, "r");
+			this.start();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -42,13 +42,15 @@ public class SendFile extends Thread {
 			//System.out.println("开始发送文件...");
 			while ((amount = outFile.read(byteBuffer)) != -1) {
 				os.write(byteBuffer, 0, amount);
+				os.flush();
 				//System.out.println("文件发送中...");
 			}
 			//System.out.println("Send File complete");
 			outFile.close();
 			os.close();
 			tempSocket.close();
-			this.file.delete();
+			//this.file.delete();
+			this.file.renameTo(new File(OUTFOLDER+"fini"+this.file.getName()));
 		} catch (IOException e) {
 			System.out.println(e.toString());
 			e.printStackTrace();

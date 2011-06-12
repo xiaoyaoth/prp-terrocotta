@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import simulation.modeling.Lock;
+
 public class ServerInformation {
 	private final static int PORT = 10000;
 	// private String ip = "192.168.131.1";

@@ -19,7 +19,7 @@ public class PerformanceThread implements Runnable {
 		this.loopCount = 0;
 		this.tcLock = new Lock();
 		this.miging = false;
-		threshold = 1;
+		threshold = 0.35;
 	}
 
 	@Override
@@ -80,7 +80,7 @@ public class PerformanceThread implements Runnable {
 					Scenario snr = iter.next();
 					int tickRemained = snr.getTicks()
 							- snr.getClock().getTick();
-					
+
 					if (tickRemained > tickTemp
 							&& this.jVM_id == snr.getHostID()
 							&& !snr.isHasMiged()

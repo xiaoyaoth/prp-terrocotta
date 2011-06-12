@@ -38,9 +38,11 @@ public class ScenariosMgr implements Runnable {
 
 		snrPollLock = new Lock();
 
+		/*monitor starts*/
 		Thread monThread = new Thread(mon);
 		monThread.setName("MonitorThread");
 		monThread.start();
+		/*ScenariosMgr starts*/
 		Thread cmThread = new Thread(this);
 		cmThread.setName("ClientMgrThread");
 		cmThread.start();
@@ -56,7 +58,7 @@ public class ScenariosMgr implements Runnable {
 				readCfg();
 				// checkFini();
 				try {
-					Thread.sleep(1000);
+					Thread.sleep(30000);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

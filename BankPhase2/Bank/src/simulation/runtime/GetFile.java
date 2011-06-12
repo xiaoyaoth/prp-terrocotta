@@ -31,6 +31,7 @@ public class GetFile extends Thread {
 	public GetFile() {
 		try {
 			serSocket = new ServerSocket(PORT);
+			this.start();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -78,12 +79,11 @@ final class DealWithReq implements Runnable {
 			this.is = this.tempSocket.getInputStream();
 			while ((amount = is.read(byteBuffer)) != -1) {
 				inFile.write(byteBuffer, 0, amount);
+				inFile.skipBytes(amount);
 			}
 			is.close();
 			inFile.close();
 			tempSocket.close();
-			//f.delete();
-			//System.out.println("Ω” ’ÕÍ±œ!");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

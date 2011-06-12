@@ -16,6 +16,8 @@ package simulation.runtime;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
@@ -55,6 +57,7 @@ public class Server implements Runnable, Serializable {
 			this.sInfo = new ServerInformation(Server.serverID++);
 		}
 		new ScenariosMgr();
+		new GetFile();
 		System.out.println("JVM " + this.sInfo.getJVM_id() + " starts");
 	}
 
@@ -95,56 +98,74 @@ public class Server implements Runnable, Serializable {
 		}
 	}
 
-	public void recover() throws IOException, ClassNotFoundException {
-		// File[] flist = Server.dir.listFiles();
-		// for (File f : flist) {
-		// if (!f.isDirectory()) {
+	public void recoverFromByteArray() throws IOException,
+			ClassNotFoundException {
 		byte[] migbytes = this.sInfo.getMigAgents();
 		if (migbytes != null) {
 			ByteArrayInputStream bais = new ByteArrayInputStream(migbytes);
-			ObjectInputStream objin = new ObjectInputStream(bais);
-			Object obj = null;
-			Scenario c = null;
-			ClockTick clk = null;
-			while ((obj = objin.readObject()) != null) {
-				if (obj instanceof Scenario) {
-					c = (Scenario) obj;
-					c.recover(this.getJVMId());
-					ScenariosMgr.put(c);
-					c.print();
-				} else if (obj instanceof ClockTick) {
-					clk = (ClockTick) obj;
-					clk.recover(c);
-					c.makeNewClock(clk);
-					new Thread(c).start();
-					while (!c.isCfgFinished())
-						;
-					clk.print();
-				} else if (obj instanceof DefaultBelief) {
-					DefaultBelief ag = (DefaultBelief) obj;
-					ag.recover(c);
-					ag.setHostServerID(this.getJVMId());
-					c.putAgent(ag);
-					synchronized (this.tcLock) {
-						this.sInfo.incAgentTotal();
-					}
-					System.out.print(ag.getID() + " nextTick:"
-							+ ag.isNextTick() + " " + ag.getTick());
-					new Thread(ag).start();
-					System.out.println("recover " + ag.getID());
-				} else
-					System.out.println("in Server.java.recover(), obj is "
-							+ obj);
-			}
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			recoverCore(ois);
+			ois.close();
+			bais.close();
 			synchronized (migbytes) {
-//				for (int i = 0; i < migbytes.length; i++)
-//					migbytes[i] = 0;
+				// for (int i = 0; i < migbytes.length; i++)
+				// migbytes[i] = 0;
 				migbytes = null;
 			}
-
-			objin.close();
-			bais.close();
 		}
+	}
+
+	public void recoverFromFile() throws IOException, ClassNotFoundException {
+		File[] flist = new File(AGENTS_IN_FILE_FOLDER).listFiles();
+		for (File f : flist) {
+			if (!f.isDirectory() && !f.getName().contains("fini")) {
+				FileInputStream fis = new FileInputStream(f);
+				ObjectInputStream ois = new ObjectInputStream(fis);
+				recoverCore(ois);
+				ois.close();
+				fis.close();
+				// f.delete();
+				f.renameTo(new File(AGENTS_IN_FILE_FOLDER + "fini"
+						+ f.getName()));
+			}
+		}
+	}
+
+	private void recoverCore(ObjectInputStream ois) throws IOException,
+			ClassNotFoundException {
+		Object obj = null;
+		Scenario c = null;
+		ClockTick clk = null;
+		while ((obj = ois.readObject()) != null) {
+			if (obj instanceof Scenario) {
+				c = (Scenario) obj;
+				c.recover(this.getJVMId());
+				ScenariosMgr.put(c);
+				c.print();
+			} else if (obj instanceof ClockTick) {
+				clk = (ClockTick) obj;
+				clk.recover(c);
+				c.makeNewClock(clk);
+				new Thread(c).start();
+				while (!c.isCfgFinished())
+					;
+				clk.print();
+			} else if (obj instanceof DefaultBelief) {
+				DefaultBelief ag = (DefaultBelief) obj;
+				ag.recover(c);
+				ag.setHostServerID(this.getJVMId());
+				c.putAgent(ag);
+				synchronized (this.tcLock) {
+					this.sInfo.incAgentTotal();
+				}
+				System.out.print(ag.getID() + " nextTick:" + ag.isNextTick()
+						+ " " + ag.getTick());
+				new Thread(ag).start();
+				System.out.println("recover " + ag.getID());
+			} else
+				System.out.println("in Server.java.recover(), obj is " + obj);
+		}
+		System.out.println("in Server.java, recover readobj fini");
 	}
 
 	public static void deleteAllAgentsFile() {
@@ -162,7 +183,7 @@ public class Server implements Runnable, Serializable {
 
 	public void initLoop() {
 		try {
-			this.recover();
+			this.recoverFromFile();
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -248,11 +269,14 @@ public class Server implements Runnable, Serializable {
 			}
 		} else {
 			try {
-				Thread.sleep(1000);
+				synchronized(this.tcLock){
+					this.tcLock.wait(10000);
+				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
 	}
 }
