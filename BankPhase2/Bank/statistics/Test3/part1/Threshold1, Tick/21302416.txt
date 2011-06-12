@@ -1,0 +1,3 @@
+start:1307888574123 end:1307888881149 duration:307026
+usr:test10 tick:100 prior:1
+migStart: 0 migEnd:0 migCost:0
