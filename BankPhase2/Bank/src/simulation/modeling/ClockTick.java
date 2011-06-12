@@ -75,7 +75,7 @@ public class ClockTick implements Runnable, Serializable {
 	}
 
 	public void run() {
-
+		
 		System.out.println("in ClockTick.java now is " + this.now);
 
 		if (this.migrate) {

@@ -152,6 +152,11 @@ public class Parse implements Serializable {
 			}
 		}
 	}
+	
+	public String toString(){
+		String res = "#"+this.tick+"_"+this.totalAgentNum+"_"+this.prior+"#";
+		return res;
+	}
 
 	public static void main(String[] args) {
 

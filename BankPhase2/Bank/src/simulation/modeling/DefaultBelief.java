@@ -128,7 +128,7 @@ public class DefaultBelief extends PlanManager implements Runnable,
 						this.nextTick = false;
 					}
 					this.main.getClock().decNow();
-					Server.serverInfo.get(this.hostServerID).addAgentCount();
+					Server.serverInfo.get(this.hostServerID).addAgentCountTemp();
 					this.debugMessage = "3";
 				}
 			} catch (Exception e) {

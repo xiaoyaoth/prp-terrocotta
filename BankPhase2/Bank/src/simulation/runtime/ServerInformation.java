@@ -7,8 +7,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
-import simulation.modeling.Lock;
-
 public class ServerInformation {
 	private final static int PORT = 10000;
 	// private String ip = "192.168.131.1";
@@ -16,6 +14,7 @@ public class ServerInformation {
 	private int perf;
 	private int eventCount;
 	private int agentCount;
+	private int agentCountTemp;
 	private int agentTotal;
 	private double ratio;
 	private PerformanceThread perfThread;
@@ -37,6 +36,7 @@ public class ServerInformation {
 			e.printStackTrace();
 		}
 		Thread perfT = new Thread(this.perfThread);
+		perfT.setPriority(8);
 		perfT.setName("PerformanceThreaddd");
 		perfT.start();
 	}
@@ -55,39 +55,24 @@ public class ServerInformation {
 		this.eventCount++;
 	}
 
-	public synchronized void addAgentCount() {
-		this.agentCount++;
+	public synchronized void addAgentCountTemp() {
+		this.agentCountTemp++;
 	}
-
+	
 	public synchronized void decAgentTotal() {
-		// try {
-		// java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-		// "statistics\\sinfo"+this.jVM_id+".txt"),true);
-		// java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-		// bw.append("decAgentTotal Called\t" + (this.agentTotal - 1)+"\tn\n");
-		// bw.close();
-		// fw.close();
-		// } catch (IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
 		this.agentTotal--;
 	}
 
 	public synchronized void incAgentTotal() {
-		// try {
-		// java.io.FileWriter fw = new java.io.FileWriter(new java.io.File(
-		// "statistics\\sinfo"+this.jVM_id+".txt"), true);
-		// java.io.BufferedWriter bw = new java.io.BufferedWriter(fw);
-		// bw.append("incAgentTotal Called\t" + (this.agentTotal +
-		// 1)+"\tp\n\r");
-		// bw.close();
-		// fw.close();
-		// } catch (IOException e) {
-		// // TODO Auto-generated catch block
-		// e.printStackTrace();
-		// }
 		this.agentTotal++;
+	}
+	
+	public synchronized void incAgentTotal(int amt){
+		this.agentTotal+=amt;
+	}
+	
+	public synchronized int getAgentCountTemp(){
+		return this.agentCountTemp;
 	}
 
 	public synchronized int getPerf() {
@@ -100,38 +85,18 @@ public class ServerInformation {
 		else
 			this.ratio = Integer.MAX_VALUE;
 		return this.ratio;
-	}
+	}	
 
 	public int getAgentTotal() {
 		return agentTotal;
-	}
-
-	public synchronized void setRatio(double ratio) {
-		this.ratio = ratio;
-	}
-
-	public synchronized void setAgentCount(int agentCount) {
-		this.agentCount = agentCount;
 	}
 
 	public int getAgentCount() {
 		return agentCount;
 	}
 
-	public synchronized void setEventCount(int eventCount) {
-		this.eventCount = eventCount;
-	}
-
 	public int getEventCount() {
 		return eventCount;
-	}
-
-	public synchronized void setPerf(int perf) {
-		this.perf = perf;
-	}
-
-	public synchronized void setJVM_id(int jVM_id) {
-		this.jVM_id = jVM_id;
 	}
 
 	public int getJVM_id() {
@@ -144,5 +109,30 @@ public class ServerInformation {
 	
 	public String getIp(){
 		return this.ip;
+	}
+	
+	
+	public synchronized void setAgentCountTemp(int count){
+		this.agentCountTemp = 0;
+	}
+	
+	public synchronized void setRatio(){
+		if (this.agentTotal > 0)
+			this.ratio = (double)this.agentCountTemp/(double)this.agentTotal;
+		else
+			this.ratio = Integer.MAX_VALUE;
+	}
+	
+	public synchronized void setAgentCount(){
+		this.agentCount = this.agentCountTemp;
+	}
+	
+	public synchronized void cleanData(){
+		this.agentCountTemp = 0;
+		this.eventCount = 0;
+	}	
+
+	public synchronized void setPerf(int perf) {
+		this.perf = perf;
 	}
 }

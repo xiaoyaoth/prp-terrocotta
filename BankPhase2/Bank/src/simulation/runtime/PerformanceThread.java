@@ -19,7 +19,7 @@ public class PerformanceThread implements Runnable {
 		this.loopCount = 0;
 		this.tcLock = new Lock();
 		this.miging = false;
-		threshold = 0.35;
+		threshold = 1;
 	}
 
 	@Override
@@ -27,14 +27,10 @@ public class PerformanceThread implements Runnable {
 		System.out.println("in PerformanceThread.java, threshold:" + threshold);
 		// TODO Auto-generated method stub
 		while (true) {
-			if (this.sInfo.getAgentTotal() > 0)
-				this.sInfo.setRatio((double) this.sInfo.getAgentCount()
-						/ (double) this.sInfo.getAgentTotal());
-			else
-				this.sInfo.setRatio(Integer.MAX_VALUE);
 			synchronized (this.tcLock) {
 				this.loopCount++;
-
+				this.sInfo.setAgentCount();
+				this.sInfo.setRatio();
 				System.out.println(" LoopCount:" + this.loopCount
 						+ " EventCount:" + this.sInfo.getEventCount()
 						+ " AgentCount:" + this.sInfo.getAgentCount()
@@ -50,11 +46,14 @@ public class PerformanceThread implements Runnable {
 						weakPoint = 0;
 				} else
 					weakPoint = 0;
+				if(this.sInfo.getRatio()>threshold)
+					synchronized(ScenariosMgr.getSnrs()){
+						ScenariosMgr.getSnrs().notifyAll();
+					}
 			}
 			if (!this.miging)
 				this.pickOneSnrToBeMigrated();
-			this.sInfo.setEventCount(0);
-			this.sInfo.setAgentCount(0);
+			this.sInfo.cleanData();
 
 			synchronized (Server.serverInfo) {
 				this.sInfo.setPerf(this.machineAbility);

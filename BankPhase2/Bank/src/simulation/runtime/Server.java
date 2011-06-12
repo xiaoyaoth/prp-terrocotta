@@ -240,26 +240,14 @@ public class Server implements Runnable, Serializable {
 						synchronized (oneCase.getIDList()) {
 							oneCase.getIDList().add(ag.getID());
 						}
-						new Thread(ag).start();
-						/* added on May 2nd */
+						Thread agThread = new Thread(ag);
+						agThread.setPriority(oneCase.getPriority());
+						agThread.start();
 						args = null;
-						synchronized (tcLock) {
-							this.sInfo.incAgentTotal();
-						}
-						// one = null;
-						/**/
 					}
 				}
-				/*
-				 * added on May 2nd table = null; synchronized (oneCase) {
-				 * oneCase.setTable(null); } /*
-				 */
 				System.out.println("[This scenario is completely arranged!]");
 				System.out.println();
-
-				// oneCase.control(1, oneCase.getTicks());
-				// if (!oneCase.getClock().isGoOn())
-				// oneCase.startClock();
 				synchronized (oneCase.getTcLock()) {
 					oneCase.getTcLock().notify();
 				}

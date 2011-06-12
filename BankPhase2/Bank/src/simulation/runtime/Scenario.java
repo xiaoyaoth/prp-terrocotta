@@ -129,6 +129,10 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	public int getTicks() {
 		return this.p.getTick();
 	}
+	
+	public int getPriority(){
+		return this.p.getPrior();
+	}
 
 	public ArrayList<Func> getPC() {
 		return this.pc;
@@ -192,6 +196,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 			}
 			synchronized (ScenariosMgr.getSnrs()) {
 				ScenariosMgr.getSnrs().notifyAll();
+				System.out.println("in Scenario.java, adjustLock notified");
 			}
 			/* fini */
 		} catch (Exception e) {
@@ -217,7 +222,9 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 	}
 
 	public void startClock() {
-		new Thread(clk).start();
+		Thread clkThread = new Thread(clk);
+		clkThread.setPriority(this.p.getPrior());
+		clkThread.start();
 		System.out.println("clk started, in Scenario.java");
 	}
 
