@@ -14,7 +14,7 @@ import java.util.Comparator;
 
 import javax.imageio.ImageIO;
 
-public class NewDiagram {
+public class Test2NewDiagram {
 
 	ArrayList<Data> dlist = new ArrayList<Data>();
 	private long start;
@@ -23,7 +23,7 @@ public class NewDiagram {
 	private int factor = 1000;
 	private int unit1 = 100;
 	private int unit2 = 10;
-	private int anchor = 40;
+	private int anchor = 20;
 	private String filename;
 	private BufferedImage bi;
 	private static final String ROOT = "statistics\\Test2\\";
@@ -31,21 +31,22 @@ public class NewDiagram {
 	public static void main(String args[]) {
 		File dir = new File("statistics\\Test2");
 		File[] flist = dir.listFiles();
-		for(File f: flist){
-			new NewDiagram(f);
+		for (File f : flist) {
+			if (f.isDirectory() && !f.getName().equals(".svn"))
+				new Test2NewDiagram(f);
 		}
 	}
-	
-	public NewDiagram(File f){
+
+	public Test2NewDiagram(File f) {
 		this(f.getName());
 	}
 
-	public NewDiagram(String filename) {
+	public Test2NewDiagram(String filename) {
 		super();
 		this.filename = filename;
 		this.start = Long.MAX_VALUE;
 		this.end = 0;
-		File dir = new File(ROOT+this.filename);
+		File dir = new File(ROOT + this.filename);
 		try {
 			this.readData(dir);
 		} catch (IOException e) {
@@ -55,7 +56,7 @@ public class NewDiagram {
 		int i = this.dlist.size();
 		this.duration = (int) (this.end - this.start);
 		int width = 2 * anchor + (int) (this.duration / this.factor);
-		int height = 2 * anchor + unit2 * (2 + i);
+		int height = 3 * anchor + unit2 * (2 + i);
 		bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D ig2 = bi.createGraphics();
 		Comparator<Data> comp = new Comparator<Data>() {
@@ -73,14 +74,14 @@ public class NewDiagram {
 		ig2.clearRect(0, 0, width, height);
 		this.paint(ig2);
 		try {
-			ImageIO.write(bi, "png", new File(ROOT+dir.getName()+".png"));
+			ImageIO.write(bi, "png", new File("statistics\\Test2Res\\" + dir.getName() + ".png"));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public void paint(Graphics2D g) {
+	private void paint(Graphics2D g) {
 		int ypos = anchor + unit2 * (2 + this.dlist.size());
 		g.setPaint(Color.BLACK);
 		g.drawLine(anchor, anchor, anchor, ypos);
@@ -89,36 +90,40 @@ public class NewDiagram {
 		g.drawString(this.dateFormat(this.start), anchor + 1, ypos);
 		g.drawString(this.dateFormat(this.end), xpos - 50, ypos);
 		xpos = anchor;
-		g.drawString("AgNum:"+this.dlist.size()+" duration:" + this.duration / 1000 + "s",
-				xpos+10, ypos + 10);
+		int totalCost=0;
+		for(Data d:this.dlist)
+			totalCost+=d.duration;
+		String printInfo ="AgNum:" + this.dlist.size() + ", duration:"
+		+ this.duration / 1000 + "s, total cost:"+totalCost/1000+"s";
+		g.drawString(printInfo, xpos + 1, ypos + 20);
 		for (int i = 0; i < this.dlist.size(); i++)
 			this.drawDataRect(g, i);
 	}
 
 	private void readData(File dir) throws IOException {
-		File[] flist = dir.listFiles();
 		System.out.println(dir);
+		File[] flist = dir.listFiles();
 		for (File f : flist) {
-			BufferedReader br = new BufferedReader(new FileReader(f));
-			Data d = new Data();
-			d.readData(br);
-			if (d.start < this.start)
-				this.start = d.start;
-			if (d.end > this.end)
-				this.end = d.end;
-			this.dlist.add(d);
+			if (!f.getName().equals(".svn")) {
+				BufferedReader br = new BufferedReader(new FileReader(f));
+				Data d = new Data();
+				d.readData(br);
+				if (d.start < this.start)
+					this.start = d.start;
+				if (d.end > this.end)
+					this.end = d.end;
+				this.dlist.add(d);
+			}
 		}
 	}
 
 	private void drawDataRect(Graphics2D g, int i) {
-		System.out.println(i + " " + this.start + " " + this.end + "\n"
-				+ this.dlist.get(i) + "");
 		int s = (int) (this.dlist.get(i).start - this.start) / this.factor;
 		int d = this.dlist.get(i).duration / this.factor;
 		int ms = (int) (this.dlist.get(i).migStart - this.start) / this.factor;
 		int mc = this.dlist.get(i).migCost / this.factor;
 
-		System.out.println(s + " " + d + " " + ms + " " + mc + " " + i + "\n");
+		//System.out.println(s + " " + d + " " + ms + " " + mc + " " + i + "\n");
 		g.setPaint(Color.RED);
 		g.fillRect(anchor + s, anchor + unit2 * (1 + i), d, (int) (unit2 * 0.8));
 		if (ms >= 0) {
