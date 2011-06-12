@@ -2,6 +2,8 @@ package tools;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -10,11 +12,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import javax.swing.JFrame;
+import javax.imageio.ImageIO;
 
-public class Diagram extends JFrame {
+public class NewDiagram {
 
-	ArrayList<NewData> dlist = new ArrayList<NewData>();
+	ArrayList<Data> dlist = new ArrayList<Data>();
 	private long start;
 	private long end;
 	private int duration;
@@ -22,31 +24,42 @@ public class Diagram extends JFrame {
 	private int unit1 = 100;
 	private int unit2 = 10;
 	private int anchor = 40;
-	private String filename = "F:\\Workspace\\Bank\\statistics\\Test2\\11snr1Threshold";
+	private String filename;
+	private BufferedImage bi;
+	private static final String ROOT = "statistics\\Test2\\";
 
 	public static void main(String args[]) {
-		new Diagram().setVisible(true);
+		File dir = new File("statistics\\Test2");
+		File[] flist = dir.listFiles();
+		for(File f: flist){
+			new NewDiagram(f);
+		}
+	}
+	
+	public NewDiagram(File f){
+		this(f.getName());
 	}
 
-	public Diagram() {
+	public NewDiagram(String filename) {
 		super();
-
+		this.filename = filename;
 		this.start = Long.MAX_VALUE;
 		this.end = 0;
-		File dir = new File(this.filename);
+		File dir = new File(ROOT+this.filename);
 		try {
 			this.readData(dir);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		this.duration = (int) (this.end - this.start);
-		this.setTitle(dir.getName() + " " + this.duration + "ms");
 		int i = this.dlist.size();
-		this.setSize(2 * anchor + (int) (this.duration / this.factor), 2
-				* anchor + unit2 * (2 + i));
-		Comparator<NewData> comp = new Comparator<NewData>() {
-			public int compare(NewData d1, NewData d2) {
+		this.duration = (int) (this.end - this.start);
+		int width = 2 * anchor + (int) (this.duration / this.factor);
+		int height = 2 * anchor + unit2 * (2 + i);
+		bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D ig2 = bi.createGraphics();
+		Comparator<Data> comp = new Comparator<Data>() {
+			public int compare(Data d1, Data d2) {
 				if (d1.start > d2.start)
 					return 1;
 				else if (d1.start < d2.start)
@@ -56,28 +69,38 @@ public class Diagram extends JFrame {
 			}
 		};
 		Collections.sort(this.dlist, comp);
+		ig2.setBackground(Color.WHITE);
+		ig2.clearRect(0, 0, width, height);
+		this.paint(ig2);
+		try {
+			ImageIO.write(bi, "png", new File(ROOT+dir.getName()+".png"));
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public void paint(Graphics g) {
-
-		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // 点击关闭，则关闭并退出整个程序
+	public void paint(Graphics2D g) {
 		int ypos = anchor + unit2 * (2 + this.dlist.size());
+		g.setPaint(Color.BLACK);
 		g.drawLine(anchor, anchor, anchor, ypos);
 		int xpos = anchor + this.duration / factor;
 		g.drawLine(xpos, anchor, xpos, ypos);
 		g.drawString(this.dateFormat(this.start), anchor + 1, ypos);
 		g.drawString(this.dateFormat(this.end), xpos - 50, ypos);
-		xpos = anchor + this.duration/(2*factor);
-		g.drawString("duration:"+(this.end-this.start)/1000+"s",xpos-50, ypos+10);
+		xpos = anchor;
+		g.drawString("AgNum:"+this.dlist.size()+" duration:" + this.duration / 1000 + "s",
+				xpos+10, ypos + 10);
 		for (int i = 0; i < this.dlist.size(); i++)
 			this.drawDataRect(g, i);
 	}
 
 	private void readData(File dir) throws IOException {
 		File[] flist = dir.listFiles();
+		System.out.println(dir);
 		for (File f : flist) {
 			BufferedReader br = new BufferedReader(new FileReader(f));
-			NewData d = new NewData();
+			Data d = new Data();
 			d.readData(br);
 			if (d.start < this.start)
 				this.start = d.start;
@@ -87,7 +110,7 @@ public class Diagram extends JFrame {
 		}
 	}
 
-	private void drawDataRect(Graphics g, int i) {
+	private void drawDataRect(Graphics2D g, int i) {
 		System.out.println(i + " " + this.start + " " + this.end + "\n"
 				+ this.dlist.get(i) + "");
 		int s = (int) (this.dlist.get(i).start - this.start) / this.factor;
@@ -96,10 +119,10 @@ public class Diagram extends JFrame {
 		int mc = this.dlist.get(i).migCost / this.factor;
 
 		System.out.println(s + " " + d + " " + ms + " " + mc + " " + i + "\n");
-		g.setColor(Color.RED);
+		g.setPaint(Color.RED);
 		g.fillRect(anchor + s, anchor + unit2 * (1 + i), d, (int) (unit2 * 0.8));
 		if (ms >= 0) {
-			g.setColor(Color.YELLOW);
+			g.setPaint(Color.YELLOW);
 			g.fillRect(anchor + ms, anchor + unit2 * (1 + i), mc,
 					(int) (unit2 * 0.8));
 		}
@@ -114,7 +137,7 @@ public class Diagram extends JFrame {
 	}
 }
 
-class Data {
+class NewData {
 	long start;
 	long end;
 	int duration;
@@ -125,7 +148,7 @@ class Data {
 	long migEnd;
 	int migCost;
 
-	public Data() {
+	public NewData() {
 
 	}
 
@@ -219,7 +242,7 @@ class Data {
 				+ this.migStart + " " + this.migEnd + " " + this.migCost;
 	}
 
-	public Data(long s, long e, int d, String u, int t, int p, long ms,
+	public NewData(long s, long e, int d, String u, int t, int p, long ms,
 			long me, int mc) {
 		this.start = s;
 		this.end = e;
