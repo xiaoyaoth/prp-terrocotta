@@ -28,7 +28,7 @@ public class ScenariosMgr implements Runnable {
 	private static int finiCaseNum;
 	private static int snrID;
 	private static Lock snrPollLock;
-	private static final int QUEUE_ARRAY_SIZE = 4;
+	private static final int QUEUE_ARRAY_SIZE = 2;
 	private static boolean debug = false;
 
 	public ScenariosMgr() {

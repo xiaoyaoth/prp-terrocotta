@@ -383,7 +383,7 @@ public class Scenario implements Runnable, MainInterface, Serializable {
 		String execDuration = this.clk.getDuration();
 		String basicInfo = "usr:" + this.p.getUsr() + " tick:"
 				+ this.p.getTick() + " prior:" + this.p.getPrior();
-		String migInfo = "migStart: " + this.migStart + " migEnd:"
+		String migInfo = "migStart:" + this.migStart + " migEnd:"
 				+ this.migEnd + " migCost:" + (this.migEnd - this.migStart);
 		return execDuration + "\n" + basicInfo + "\n" + migInfo;
 	}

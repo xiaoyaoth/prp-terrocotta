@@ -36,6 +36,15 @@ public class NewExecSeq {
 			}
 		}else if(sel == 2) {
 			new SnrQueueGen(1, "test100",10,1);
+		}else if (sel == 3) {
+			new SnrQueueGen(1, "test100", 30, 1);
+			in.nextLine();
+			for (int i = 1; i < 4; i++) {
+				// new SnrQueueGen(1, "test100", 15, 1);
+				new SnrQueueGen(1, "test100", 20, 1);
+				new SnrQueueGen(1, "test10", 100, 1);
+				new SnrQueueGen(1, "test50", 30, 1);
+			}
 		}
 	}
 }
